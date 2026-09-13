@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Icône originale de l'application « courses ».
+  Un caddie minimaliste contenant une tomate, une baguette et une feuille de salade,
+  pendant qu'une orange est en train d'y être déposée.
+  Dessin sur une grille 48×48 placée au centre d'un canevas 108×108 (zone sûre des icônes
+  adaptatives Android). Les vector drawables de app/src/main/res/drawable reprennent ces tracés.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 108 108">
+  <rect width="108" height="108" rx="24" fill="#F3EBDD"/>
+  <g transform="translate(24 24) scale(1.25)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Aliments derrière le panier -->
+    <circle cx="21" cy="15.5" r="5" fill="#E0583A"/>
+    <path d="M28 17 L35 6.5" stroke="#D9A35A" stroke-width="4.4" fill="none"/>
+    <path d="M31 17 C31 11 36 8 40 9 C40 13 37 17 31 17 Z" fill="#6BA368"/>
+    <!-- Aliment en train d'être déposé -->
+    <circle cx="15" cy="5" r="3.2" fill="#F2A33A"/>
+    <path d="M15 1.8 L16 0.6" stroke="#6BA368" stroke-width="1.2" fill="none"/>
+    <path d="M9.5 1.5 L11 3 M8.5 6 L10.3 6.3" stroke="#3B3A36" stroke-width="1.2" fill="none" opacity="0.6"/>
+    <!-- Caddie -->
+    <path d="M4 10 L8 10 L13 30" stroke="#3B3A36" stroke-width="2.2" fill="none"/>
+    <path d="M11 17 L42 17 L38.5 30 L14 30 Z" fill="#3B3A36"/>
+    <path d="M19 20 L20 27 M26.5 20 L26.5 27 M34 20 L33 27" stroke="#F3EBDD" stroke-width="1.4" fill="none"/>
+    <path d="M13 30 L14.5 34 L38 34" stroke="#3B3A36" stroke-width="2.2" fill="none"/>
+    <circle cx="17" cy="39" r="2.4" fill="#3B3A36"/>
+    <circle cx="35" cy="39" r="2.4" fill="#3B3A36"/>
+  </g>
+</svg>

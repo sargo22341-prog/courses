@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon variant: single colour, tinted by the launcher. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="1.25"
+        android:scaleY="1.25"
+        android:translateX="24"
+        android:translateY="24">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M16,15.5 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+        <path
+            android:pathData="M28,17 L35,6.5"
+            android:strokeColor="#FF000000"
+            android:strokeLineCap="round"
+            android:strokeWidth="4.4" />
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M31,17 C31,11 36,8 40,9 C40,13 37,17 31,17 Z" />
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M11.8,5 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0" />
+        <path
+            android:pathData="M4,10 L8,10 L13,30 M13,30 L14.5,34 L38,34"
+            android:strokeColor="#FF000000"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="2.2" />
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M11,17 L42,17 L38.5,30 L14,30 Z M14.6,39 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0 M32.6,39 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0" />
+    </group>
+</vector>

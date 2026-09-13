@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Home Assistant token is encrypted with a non-exportable Android Keystore key: a restored
+    copy could never be decrypted, and the server address describes the user's home network.
+    Both are excluded from cloud backup and device transfer. Lists and items are kept.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/home_assistant.preferences_pb" />
+        <exclude domain="file" path="datastore/secrets.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/home_assistant.preferences_pb" />
+        <exclude domain="file" path="datastore/secrets.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

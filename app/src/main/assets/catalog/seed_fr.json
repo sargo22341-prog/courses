@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "name": "Produits laitiers",
+      "products": [
+        { "name": "Lait", "variants": ["Lait demi-écrémé", "Lait entier", "Lait écrémé", "Lait d'amande", "Lait d'avoine", "Lait de soja", "Lait de coco", "Lait sans lactose"] },
+        { "name": "Beurre", "variants": ["Beurre doux", "Beurre demi-sel", "Beurre salé"] },
+        { "name": "Crème fraîche", "aliases": ["crème"], "variants": ["Crème fraîche épaisse", "Crème liquide", "Crème fraîche légère"] },
+        { "name": "Yaourts", "aliases": ["yogourt", "yaourt"], "variants": ["Yaourts nature", "Yaourts aux fruits", "Yaourts grecs"] },
+        { "name": "Fromage", "variants": ["Fromage râpé", "Emmental", "Comté", "Camembert", "Mozzarella", "Chèvre", "Parmesan", "Roquefort", "Raclette", "Feta"] },
+        { "name": "Fromage blanc" },
+        { "name": "Petits suisses" },
+        { "name": "Crèmes dessert" },
+        { "name": "Œufs", "aliases": ["oeuf", "oeufs"], "variants": ["Œufs bio", "Œufs plein air"] }
+      ]
+    },
+    {
+      "name": "Boulangerie",
+      "products": [
+        { "name": "Pain", "variants": ["Pain complet", "Pain de mie", "Pain aux céréales", "Pain de campagne", "Pain burger"] },
+        { "name": "Baguette", "aliases": ["pain baguette"], "variants": ["Baguette tradition"] },
+        { "name": "Croissants" },
+        { "name": "Pains au chocolat", "aliases": ["chocolatines"] },
+        { "name": "Brioche" },
+        { "name": "Biscottes" },
+        { "name": "Tortillas", "aliases": ["wraps"] }
+      ]
+    },
+    {
+      "name": "Fruits",
+      "products": [
+        { "name": "Pommes", "aliases": ["pomme"], "variants": ["Pommes Golden", "Pommes Gala", "Pommes Granny"] },
+        { "name": "Poires" },
+        { "name": "Bananes", "aliases": ["banane"] },
+        { "name": "Oranges", "variants": ["Oranges à jus"] },
+        { "name": "Citrons", "aliases": ["citron"], "variants": ["Citrons verts"] },
+        { "name": "Clémentines", "aliases": ["mandarines"] },
+        { "name": "Fraises" },
+        { "name": "Framboises" },
+        { "name": "Myrtilles" },
+        { "name": "Raisin" },
+        { "name": "Kiwis" },
+        { "name": "Ananas" },
+        { "name": "Mangue" },
+        { "name": "Melon" },
+        { "name": "Pastèque" },
+        { "name": "Pêches", "variants": ["Nectarines"] },
+        { "name": "Abricots" },
+        { "name": "Cerises" },
+        { "name": "Avocats", "aliases": ["avocat"] }
+      ]
+    },
+    {
+      "name": "Légumes",
+      "products": [
+        { "name": "Tomates", "aliases": ["tomate"], "variants": ["Tomates cerises", "Tomates concassées", "Tomates pelées", "Tomates grappe"] },
+        { "name": "Pommes de terre", "aliases": ["patates"], "variants": ["Pommes de terre nouvelles"] },
+        { "name": "Carottes", "aliases": ["carotte"] },
+        { "name": "Oignons", "aliases": ["oignon"], "variants": ["Oignons rouges", "Oignons nouveaux"] },
+        { "name": "Ail" },
+        { "name": "Échalotes" },
+        { "name": "Salade", "variants": ["Laitue", "Mâche", "Roquette", "Batavia", "Iceberg"] },
+        { "name": "Concombre" },
+        { "name": "Courgettes", "aliases": ["courgette"] },
+        { "name": "Aubergines" },
+        { "name": "Poivrons", "variants": ["Poivrons rouges", "Poivrons verts", "Poivrons jaunes"] },
+        { "name": "Brocolis" },
+        { "name": "Chou-fleur" },
+        { "name": "Haricots verts" },
+        { "name": "Petits pois" },
+        { "name": "Épinards" },
+        { "name": "Champignons", "variants": ["Champignons de Paris"] },
+        { "name": "Poireaux" },
+        { "name": "Céleri" },
+        { "name": "Radis" },
+        { "name": "Maïs" },
+        { "name": "Potiron", "aliases": ["citrouille", "courge"] },
+        { "name": "Herbes fraîches", "variants": ["Persil", "Coriandre", "Basilic", "Ciboulette", "Menthe"] }
+      ]
+    },
+    {
+      "name": "Viandes et poissons",
+      "products": [
+        { "name": "Poulet", "variants": ["Blancs de poulet", "Cuisses de poulet", "Poulet entier"] },
+        { "name": "Bœuf", "aliases": ["boeuf"], "variants": ["Steaks hachés", "Viande hachée", "Rôti de bœuf", "Entrecôte"] },
+        { "name": "Porc", "variants": ["Côtes de porc", "Filet mignon", "Rôti de porc"] },
+        { "name": "Jambon", "variants": ["Jambon blanc", "Jambon cru"] },
+        { "name": "Lardons" },
+        { "name": "Saucisses", "variants": ["Merguez", "Chipolatas", "Saucisses de Strasbourg"] },
+        { "name": "Saucisson" },
+        { "name": "Dinde", "variants": ["Escalopes de dinde"] },
+        { "name": "Agneau", "variants": ["Gigot d'agneau"] },
+        { "name": "Saumon", "variants": ["Saumon fumé", "Pavés de saumon"] },
+        { "name": "Thon", "variants": ["Thon en boîte"] },
+        { "name": "Cabillaud" },
+        { "name": "Crevettes" },
+        { "name": "Sardines" }
+      ]
+    },
+    {
+      "name": "Épicerie salée",
+      "products": [
+        { "name": "Pâtes", "aliases": ["pasta"], "variants": ["Spaghetti", "Penne", "Coquillettes", "Tagliatelles", "Lasagnes", "Macaronis"] },
+        { "name": "Riz", "variants": ["Riz basmati", "Riz complet", "Riz rond"] },
+        { "name": "Semoule" },
+        { "name": "Quinoa" },
+        { "name": "Lentilles" },
+        { "name": "Pois chiches" },
+        { "name": "Farine" },
+        { "name": "Huile", "variants": ["Huile d'olive", "Huile de tournesol", "Huile de colza"] },
+        { "name": "Vinaigre", "variants": ["Vinaigre balsamique"] },
+        { "name": "Moutarde" },
+        { "name": "Mayonnaise" },
+        { "name": "Ketchup" },
+        { "name": "Sel" },
+        { "name": "Poivre" },
+        { "name": "Épices", "variants": ["Curry", "Paprika", "Cumin", "Herbes de Provence"] },
+        { "name": "Bouillon", "aliases": ["bouillon cube"] },
+        { "name": "Sauce tomate", "variants": ["Coulis de tomate", "Concentré de tomate"] },
+        { "name": "Conserves", "variants": ["Maïs en boîte", "Haricots rouges"] },
+        { "name": "Chips" },
+        { "name": "Olives" },
+        { "name": "Soupe" }
+      ]
+    },
+    {
+      "name": "Épicerie sucrée",
+      "products": [
+        { "name": "Sucre", "variants": ["Sucre en poudre", "Sucre roux", "Sucre glace"] },
+        { "name": "Café", "variants": ["Café moulu", "Café en grains", "Capsules de café"] },
+        { "name": "Thé", "aliases": ["infusion", "tisane"] },
+        { "name": "Chocolat", "variants": ["Chocolat noir", "Chocolat au lait", "Chocolat en poudre"] },
+        { "name": "Céréales", "aliases": ["muesli"] },
+        { "name": "Confiture" },
+        { "name": "Miel" },
+        { "name": "Pâte à tartiner" },
+        { "name": "Biscuits", "aliases": ["gâteaux secs"] },
+        { "name": "Compote" },
+        { "name": "Levure chimique" },
+        { "name": "Bonbons" }
+      ]
+    },
+    {
+      "name": "Surgelés",
+      "products": [
+        { "name": "Glaces", "aliases": ["crème glacée"] },
+        { "name": "Frites surgelées" },
+        { "name": "Légumes surgelés" },
+        { "name": "Pizza surgelée" },
+        { "name": "Poisson pané" }
+      ]
+    },
+    {
+      "name": "Boissons",
+      "products": [
+        { "name": "Eau", "variants": ["Eau minérale", "Eau gazeuse"] },
+        { "name": "Jus d'orange", "aliases": ["jus"] },
+        { "name": "Jus de pomme" },
+        { "name": "Sodas", "aliases": ["soda"] },
+        { "name": "Sirop" },
+        { "name": "Bière", "aliases": ["bières"] },
+        { "name": "Vin", "variants": ["Vin rouge", "Vin blanc", "Vin rosé"] },
+        { "name": "Champagne" }
+      ]
+    },
+    {
+      "name": "Traiteur",
+      "products": [
+        { "name": "Pâte feuilletée" },
+        { "name": "Pâte brisée" },
+        { "name": "Pâte à pizza" },
+        { "name": "Houmous" },
+        { "name": "Tofu" },
+        { "name": "Pâtes fraîches", "variants": ["Ravioli"] }
+      ]
+    },
+    {
+      "name": "Hygiène et maison",
+      "products": [
+        { "name": "Papier toilette", "aliases": ["PQ"] },
+        { "name": "Essuie-tout", "aliases": ["sopalin"] },
+        { "name": "Mouchoirs" },
+        { "name": "Liquide vaisselle" },
+        { "name": "Pastilles lave-vaisselle" },
+        { "name": "Lessive" },
+        { "name": "Adoucissant" },
+        { "name": "Éponges" },
+        { "name": "Sacs poubelle" },
+        { "name": "Papier aluminium" },
+        { "name": "Film alimentaire" },
+        { "name": "Dentifrice" },
+        { "name": "Brosse à dents" },
+        { "name": "Gel douche" },
+        { "name": "Shampoing" },
+        { "name": "Savon" },
+        { "name": "Déodorant" },
+        { "name": "Coton" }
+      ]
+    },
+    {
+      "name": "Bébé et animaux",
+      "products": [
+        { "name": "Couches" },
+        { "name": "Lingettes" },
+        { "name": "Croquettes", "variants": ["Croquettes chat", "Croquettes chien"] },
+        { "name": "Litière" }
+      ]
+    }
+  ]
+}

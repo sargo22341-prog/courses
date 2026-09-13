@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <!-- Home Assistant is self-hosted and frequently reached over plain HTTP on the local network
+         (http://homeassistant.local:8123). Android cannot express "cleartext only for the host the
+         user typed", so cleartext stays allowed; OpenFoodFacts is always called over HTTPS. -->
+    <base-config
+        cleartextTrafficPermitted="true"
+        tools:ignore="InsecureBaseConfiguration">
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- Self-hosted instances are often signed by a private CA installed by the user. -->
+            <certificates src="user" tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

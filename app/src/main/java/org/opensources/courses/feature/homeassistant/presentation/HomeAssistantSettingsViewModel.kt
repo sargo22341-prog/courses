@@ -31,7 +31,7 @@ class HomeAssistantSettingsViewModel
         private val configRepository: HaConfigRepository,
         private val gateway: HomeAssistantGateway,
         private val linkRepository: HaListLinkRepository,
-        listRepository: ShoppingListRepository,
+        private val listRepository: ShoppingListRepository,
         private val syncCoordinator: SyncCoordinator,
     ) : ViewModel() {
         var urlInput by mutableStateOf("")
@@ -43,6 +43,7 @@ class HomeAssistantSettingsViewModel
         private val sync = MutableStateFlow<HaActionStatus>(HaActionStatus.Idle)
         private val remoteLists = MutableStateFlow<RemoteListsState>(RemoteListsState.NotLoaded)
         private val pickerListId = MutableStateFlow<String?>(null)
+        private val setupListIds = MutableStateFlow<List<String>>(emptyList())
 
         val uiState: StateFlow<HaSettingsUiState> =
             combine(
@@ -50,9 +51,9 @@ class HomeAssistantSettingsViewModel
                 listRepository.observeLists(),
                 linkRepository.observeTrackedEntityIds(),
                 combine(connection, sync, ::Pair),
-                combine(remoteLists, pickerListId, ::Pair),
-            ) { config, lists, tracked, (connectionStatus, syncStatus), (remote, picker) ->
-                HaSettingsUiState(config, lists, tracked, connectionStatus, syncStatus, remote, picker)
+                combine(remoteLists, pickerListId, setupListIds, ::Triple),
+            ) { config, lists, tracked, (connectionStatus, syncStatus), (remote, picker, setup) ->
+                HaSettingsUiState(config, lists, tracked, connectionStatus, syncStatus, remote, picker, setup)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HaSettingsUiState())
 
         init {
@@ -61,6 +62,7 @@ class HomeAssistantSettingsViewModel
                 if (urlInput.isEmpty()) urlInput = config.baseUrl
                 if (config.enabled && config.isConfigured) loadRemoteLists()
             }
+            viewModelScope.launch { startListsSetup() }
         }
 
         fun onUrlChange(value: String) {
@@ -147,18 +149,24 @@ class HomeAssistantSettingsViewModel
             if (remoteLists.value !is RemoteListsState.Loaded) viewModelScope.launch { loadRemoteLists() }
         }
 
-        fun closePicker() {
+        fun setAutoCreateLists(enabled: Boolean) {
+            viewModelScope.launch { configRepository.setAutoCreateLists(enabled) }
+        }
+
+        /** Closing the picker during the first setup leaves the list on this phone only. */
+        fun closePicker(listId: String) {
             pickerListId.value = null
+            completeSetupStep(listId)
         }
 
         fun linkToExisting(
             listId: String,
             entityId: String,
-        ) = changeLink { linkRepository.linkToExisting(listId, entityId) }
+        ) = changeLink(listId) { linkRepository.linkToExisting(listId, entityId) }
 
-        fun createInHomeAssistant(listId: String) = changeLink { linkRepository.createInHomeAssistant(listId) }
+        fun createInHomeAssistant(listId: String) = changeLink(listId) { linkRepository.createInHomeAssistant(listId) }
 
-        fun unlink(listId: String) = changeLink { linkRepository.unlink(listId) }
+        fun unlink(listId: String) = changeLink(listId) { linkRepository.unlink(listId) }
 
         fun syncNow() {
             viewModelScope.launch {
@@ -167,12 +175,39 @@ class HomeAssistantSettingsViewModel
             }
         }
 
-        private fun changeLink(block: suspend () -> Unit) {
+        private fun changeLink(
+            listId: String,
+            block: suspend () -> Unit,
+        ) {
             pickerListId.value = null
+            completeSetupStep(listId)
             viewModelScope.launch {
                 block()
                 syncCoordinator.requestSync()
             }
+        }
+
+        /**
+         * First setup: once Home Assistant is enabled and configured, each list that existed before
+         * is offered in turn (create it in Home Assistant, link it to an existing list, or keep it
+         * local). Asked only once; later lists follow the automatic creation setting.
+         */
+        private suspend fun startListsSetup() {
+            configRepository.config.first { it.enabled && it.isConfigured && !it.listsSetupDone }
+            val unsynchronized = listRepository.observeLists().first().filterNot { it.isSynchronized }.map { it.id }
+            if (unsynchronized.isEmpty()) {
+                configRepository.setListsSetupDone()
+                return
+            }
+            setupListIds.value = unsynchronized
+            if (remoteLists.value !is RemoteListsState.Loaded) loadRemoteLists()
+        }
+
+        private fun completeSetupStep(listId: String) {
+            val remaining = setupListIds.value - listId
+            if (remaining.size == setupListIds.value.size) return
+            setupListIds.value = remaining
+            if (remaining.isEmpty()) viewModelScope.launch { configRepository.setListsSetupDone() }
         }
 
         private suspend fun loadRemoteLists() {

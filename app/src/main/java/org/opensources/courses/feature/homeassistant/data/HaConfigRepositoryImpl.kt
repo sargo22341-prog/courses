@@ -34,6 +34,8 @@ class HaConfigRepositoryImpl
                     hasToken = preferences[HAS_TOKEN] ?: false,
                     listMode = preferences[LIST_MODE]?.let { runCatching { HaListMode.valueOf(it) }.getOrNull() } ?: HaListMode.ALL_LISTS,
                     autoSync = preferences[AUTO_SYNC] ?: true,
+                    autoCreateLists = preferences[AUTO_CREATE_LISTS] ?: true,
+                    listsSetupDone = preferences[LISTS_SETUP_DONE] ?: false,
                 )
             }
 
@@ -78,6 +80,14 @@ class HaConfigRepositoryImpl
             dataStore.edit { it[AUTO_SYNC] = enabled }
         }
 
+        override suspend fun setAutoCreateLists(enabled: Boolean) {
+            dataStore.edit { it[AUTO_CREATE_LISTS] = enabled }
+        }
+
+        override suspend fun setListsSetupDone() {
+            dataStore.edit { it[LISTS_SETUP_DONE] = true }
+        }
+
         private companion object {
             const val TOKEN_SECRET = "home_assistant_token"
             val ENABLED = booleanPreferencesKey("enabled")
@@ -85,5 +95,7 @@ class HaConfigRepositoryImpl
             val HAS_TOKEN = booleanPreferencesKey("has_token")
             val LIST_MODE = stringPreferencesKey("list_mode")
             val AUTO_SYNC = booleanPreferencesKey("auto_sync")
+            val AUTO_CREATE_LISTS = booleanPreferencesKey("auto_create_lists")
+            val LISTS_SETUP_DONE = booleanPreferencesKey("lists_setup_done")
         }
     }

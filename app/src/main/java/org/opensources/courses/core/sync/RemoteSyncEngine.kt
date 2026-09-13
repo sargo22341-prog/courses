@@ -13,6 +13,9 @@ interface RemoteSyncEngine {
     /** True when changes should be pushed/pulled without an explicit user action. */
     val isAutoSyncEnabled: Flow<Boolean>
 
+    /** True when a list created now must be synchronised from the start (created remotely at the next sync). */
+    suspend fun synchronizesNewLists(): Boolean
+
     suspend fun synchronize(): SyncOutcome
 }
 

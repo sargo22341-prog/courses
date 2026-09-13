@@ -21,15 +21,23 @@ import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.StatusText
+import org.opensources.courses.core.designsystem.component.SwitchRow
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.lists.domain.ShoppingList
 
 @Composable
 fun HaLinkedListsCard(
     state: HaSettingsUiState,
+    onAutoCreateChange: (Boolean) -> Unit,
     onChoose: (String) -> Unit,
 ) {
     SettingsCard(stringResource(R.string.ha_lists_section)) {
+        SwitchRow(stringResource(R.string.ha_auto_create_lists), state.config.autoCreateLists, onAutoCreateChange)
+        Text(
+            text = stringResource(if (state.config.autoCreateLists) R.string.ha_auto_create_on else R.string.ha_auto_create_off),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         state.lists.forEach { list ->
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.weight(1f)) {
@@ -68,6 +76,9 @@ fun HaListPickerDialog(
         title = { Text(stringResource(R.string.ha_picker_title, list.name)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (state.isSetupPicker) {
+                    Text(stringResource(R.string.ha_setup_intro), style = MaterialTheme.typography.bodyMedium)
+                }
                 when (val remote = state.remoteLists) {
                     RemoteListsState.Loading, RemoteListsState.NotLoaded -> StatusText(stringResource(R.string.ha_picker_loading), isError = false)
                     is RemoteListsState.Failed -> StatusText(stringResource(remote.message.text), isError = true)
@@ -92,7 +103,9 @@ fun HaListPickerDialog(
                 PickerRow(label = stringResource(R.string.ha_picker_none), detail = null, selected = !list.isSynchronized, onClick = onUnlink)
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(if (state.isSetupPicker) R.string.ha_setup_later else R.string.action_cancel)) }
+        },
     )
 }
 

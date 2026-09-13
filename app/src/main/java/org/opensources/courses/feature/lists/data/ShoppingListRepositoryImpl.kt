@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.core.model.SyncStatus
+import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.lists.domain.ShoppingList
@@ -17,6 +18,7 @@ class ShoppingListRepositoryImpl
     constructor(
         private val dao: ShoppingListDao,
         private val queue: SyncQueue,
+        private val remoteSync: RemoteSyncEngine,
         private val transactions: TransactionRunner,
         private val clock: Clock,
     ) : ShoppingListRepository {
@@ -26,20 +28,34 @@ class ShoppingListRepositoryImpl
 
         override fun observeDefaultList(): Flow<ShoppingList?> = dao.observeDefault().map { it?.toDomain() }
 
-        override suspend fun createList(name: String): ShoppingList =
-            transactions.inTransaction {
-                val now = clock.millis()
-                val entity =
-                    ShoppingListEntity(
-                        localId = UUID.randomUUID().toString(),
-                        name = name,
-                        isDefault = dao.getDefault() == null,
-                        createdAt = now,
-                        updatedAt = now,
-                    )
-                dao.insert(entity)
-                entity.toDomain()
-            }
+        /**
+         * When the remote asks for it (automatic list creation enabled), the list is synchronised from
+         * the start: its creation is queued in the same transaction, so it cannot be forgotten.
+         */
+        override suspend fun createList(name: String): ShoppingList {
+            val synchronize = remoteSync.synchronizesNewLists()
+            return transactions.inTransaction { insertList(name, synchronize) }
+        }
+
+        private suspend fun insertList(
+            name: String,
+            synchronize: Boolean,
+        ): ShoppingList {
+            val now = clock.millis()
+            val entity =
+                ShoppingListEntity(
+                    localId = UUID.randomUUID().toString(),
+                    name = name,
+                    isDefault = dao.getDefault() == null,
+                    createdAt = now,
+                    updatedAt = now,
+                    createdByApp = synchronize,
+                    syncStatus = if (synchronize) SyncStatus.PENDING else SyncStatus.LOCAL_ONLY,
+                )
+            dao.insert(entity)
+            if (synchronize) queue.enqueue(SyncOperationType.CREATE_LIST, listLocalId = entity.localId)
+            return entity.toDomain()
+        }
 
         override suspend fun renameList(
             id: String,
@@ -89,13 +105,15 @@ class ShoppingListRepositoryImpl
 
         override suspend fun setDefaultList(id: String) = dao.setDefault(id)
 
-        override suspend fun ensureDefaultList(name: String): ShoppingList =
-            transactions.inTransaction {
+        override suspend fun ensureDefaultList(name: String): ShoppingList {
+            val synchronize = remoteSync.synchronizesNewLists()
+            return transactions.inTransaction {
                 dao.getDefault()?.toDomain()
                     ?: dao.getAll().firstOrNull()?.let { existing ->
                         dao.setDefault(existing.localId)
                         existing.copy(isDefault = true).toDomain()
                     }
-                    ?: createList(name)
+                    ?: insertList(name, synchronize)
             }
+        }
     }

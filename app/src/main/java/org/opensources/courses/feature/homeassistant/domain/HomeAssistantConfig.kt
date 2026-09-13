@@ -8,12 +8,20 @@ enum class HaListMode {
     APP_CREATED_ONLY,
 }
 
+/**
+ * @property autoCreateLists a list created in the app is created in Home Assistant automatically;
+ * when off, the user links it by hand.
+ * @property listsSetupDone the user was already asked what to do with the lists that existed before
+ * Home Assistant was set up.
+ */
 data class HomeAssistantConfig(
     val enabled: Boolean,
     val baseUrl: String,
     val hasToken: Boolean,
     val listMode: HaListMode,
     val autoSync: Boolean,
+    val autoCreateLists: Boolean = true,
+    val listsSetupDone: Boolean = false,
 ) {
     val isConfigured: Boolean get() = baseUrl.isNotBlank() && hasToken
 

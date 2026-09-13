@@ -16,6 +16,7 @@ import kotlinx.serialization.json.put
 import org.opensources.courses.feature.homeassistant.domain.HaCreatedList
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
@@ -118,7 +119,28 @@ class HomeAssistantClient
             credentials: HaCredentials,
             name: String,
         ): HaCreatedList {
-            val existing = getTodoLists(credentials).map { it.entityId }.toSet()
+            val lists = getTodoLists(credentials)
+            val existing = lists.map { it.entityId }.toSet()
+            val takenNames = lists.map { it.name }.toMutableSet()
+            repeat(CREATE_ATTEMPTS) {
+                val candidate = HaListNameAllocator.uniqueName(name, takenNames)
+                val created = submitLocalTodoFlow(credentials, candidate)
+                if (created.type == FLOW_ABORT && created.reason == ALREADY_CONFIGURED) {
+                    // A Local To-do list without a visible entity (disabled…) already uses this name.
+                    takenNames += candidate
+                    return@repeat
+                }
+                if (created.type != FLOW_CREATE_ENTRY) throw HomeAssistantException(HaErrorKind.REJECTED)
+                val entryId = (created.result as? JsonObject)?.get("entry_id")?.jsonPrimitive?.contentOrNull
+                return HaCreatedList(awaitNewEntity(credentials, existing), entryId, candidate)
+            }
+            throw HomeAssistantException(HaErrorKind.REJECTED)
+        }
+
+        private suspend fun submitLocalTodoFlow(
+            credentials: HaCredentials,
+            name: String,
+        ): ConfigFlowDto {
             val form =
                 call {
                     api.configFlow(
@@ -131,21 +153,22 @@ class HomeAssistantClient
                     )
                 }
             val flowId = form.flowId ?: throw HomeAssistantException(HaErrorKind.PROTOCOL)
-            val created =
-                call {
-                    api.configFlow(
-                        credentials.url("/api/config/config_entries/flow/$flowId"),
-                        credentials.bearer(),
-                        buildJsonObject { put("todo_list_name", name) },
-                    )
-                }
-            if (created.type != "create_entry") throw HomeAssistantException(HaErrorKind.REJECTED)
-            val entryId = (created.result as? JsonObject)?.get("entry_id")?.jsonPrimitive?.contentOrNull
-            // The entity is registered asynchronously after the config entry is created.
+            return call {
+                api.configFlow(
+                    credentials.url("/api/config/config_entries/flow/$flowId"),
+                    credentials.bearer(),
+                    buildJsonObject { put("todo_list_name", name) },
+                )
+            }
+        }
+
+        /** The entity is registered asynchronously after the config entry is created. */
+        private suspend fun awaitNewEntity(
+            credentials: HaCredentials,
+            existing: Set<String>,
+        ): String {
             repeat(ENTITY_POLL_ATTEMPTS) {
-                getTodoLists(credentials).firstOrNull { it.entityId !in existing }?.let {
-                    return HaCreatedList(it.entityId, entryId)
-                }
+                getTodoLists(credentials).firstOrNull { it.entityId !in existing }?.let { return it.entityId }
                 delay(ENTITY_POLL_DELAY_MILLIS)
             }
             throw HomeAssistantException(HaErrorKind.PROTOCOL)
@@ -200,6 +223,10 @@ class HomeAssistantClient
             const val TODO_DOMAIN = "todo."
             const val FEATURE_SET_DESCRIPTION = 64
             const val LOCAL_TODO_HANDLER = "local_todo"
+            const val FLOW_CREATE_ENTRY = "create_entry"
+            const val FLOW_ABORT = "abort"
+            const val ALREADY_CONFIGURED = "already_configured"
+            const val CREATE_ATTEMPTS = 5
             const val ENTITY_POLL_ATTEMPTS = 6
             const val ENTITY_POLL_DELAY_MILLIS = 500L
         }

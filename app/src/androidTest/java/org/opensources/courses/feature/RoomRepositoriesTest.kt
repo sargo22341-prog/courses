@@ -58,6 +58,19 @@ class RoomRepositoriesTest {
         }
 
     @Test
+    fun newListIsQueuedForCreationWhenAutomaticCreationIsOn() =
+        runTest {
+            repositories.remoteSync.newListsSynchronized = true
+
+            val list = repositories.lists.createList("BBQ")
+            repositories.items.addItem(NewShoppingItem(list.id, "Merguez"))
+
+            assertEquals(SyncStatus.PENDING, list.syncStatus)
+            assertTrue(list.createdByApp)
+            assertEquals(listOf(SyncOperationType.CREATE_LIST, SyncOperationType.CREATE_ITEM), repositories.queue.pending().map { it.type })
+        }
+
+    @Test
     fun deletingSynchronisedItemKeepsHiddenTombstoneUntilSynced() =
         runTest {
             val list = repositories.lists.createList("Courses")

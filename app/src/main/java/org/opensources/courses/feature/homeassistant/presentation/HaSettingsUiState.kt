@@ -92,8 +92,16 @@ data class HaSettingsUiState(
     val sync: HaActionStatus = HaActionStatus.Idle,
     val remoteLists: RemoteListsState = RemoteListsState.NotLoaded,
     val pickerListId: String? = null,
+    /** Lists that existed before Home Assistant was set up and still wait for the user's choice. */
+    val setupListIds: List<String> = emptyList(),
 ) {
-    val pickerList: ShoppingList? get() = lists.firstOrNull { it.id == pickerListId }
+    /** The list chosen by the user, otherwise the next list of the first setup. */
+    val pickerList: ShoppingList?
+        get() =
+            pickerListId?.let { id -> lists.firstOrNull { it.id == id } }
+                ?: setupListIds.firstNotNullOfOrNull { id -> lists.firstOrNull { it.id == id } }
+
+    val isSetupPicker: Boolean get() = pickerListId == null && pickerList != null
 
     /** Home Assistant lists offered in the picker, according to the selected mode. */
     val pickerOptions: List<HaTodoList>

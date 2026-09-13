@@ -2,6 +2,7 @@ package org.opensources.courses.feature.homeassistant.data.sync
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncFailure
@@ -44,6 +45,8 @@ class HomeAssistantSyncEngine
 
         override val isAutoSyncEnabled: Flow<Boolean> =
             config.config.map { it.enabled && it.isConfigured && it.autoSync }.distinctUntilChanged()
+
+        override suspend fun synchronizesNewLists(): Boolean = config.config.first().let { it.enabled && it.isConfigured && it.autoCreateLists }
 
         override suspend fun synchronize(): SyncOutcome {
             val credentials = config.credentials() ?: return SyncOutcome.Skipped
@@ -94,10 +97,11 @@ class HomeAssistantSyncEngine
                 }
             }
             val creation = listOperations.firstOrNull { it.type == SyncOperationType.CREATE_LIST } ?: return null
+            // The remote name may differ (« Courses 2 ») when the name is already taken in Home Assistant.
             val created = gateway.createList(credentials, list.name)
-            store.setListRemote(list.localId, created.entityId, created.configEntryId, list.name)
+            store.setListRemote(list.localId, created.entityId, created.configEntryId, created.name)
             queue.complete(listOf(creation.id))
-            return HaTodoList(created.entityId, list.name, supportsDescription = true)
+            return HaTodoList(created.entityId, created.name, supportsDescription = true)
         }
 
         private suspend fun sendListDeletions(credentials: HaCredentials): Int {

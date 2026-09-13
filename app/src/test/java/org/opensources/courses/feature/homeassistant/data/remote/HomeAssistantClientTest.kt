@@ -111,6 +111,46 @@ class HomeAssistantClientTest {
         }
 
     @Test
+    fun `list created with a name already used in Home Assistant gets a number`() =
+        runTest {
+            respond("""[{"entity_id":"todo.courses","attributes":{"friendly_name":"Courses","supported_features":127}}]""")
+            respond("""{"type":"form","flow_id":"f1"}""")
+            respond("""{"type":"create_entry","flow_id":"f1","result":{"entry_id":"e1"}}""")
+            respond(
+                """
+                [{"entity_id":"todo.courses","attributes":{"friendly_name":"Courses"}},
+                 {"entity_id":"todo.courses_2","attributes":{"friendly_name":"Courses 2"}}]
+                """.trimIndent(),
+            )
+
+            val created = client.createList(credentials, "Courses")
+
+            assertEquals("todo.courses_2", created.entityId)
+            assertEquals("e1", created.configEntryId)
+            assertEquals("Courses 2", created.name)
+            server.takeRequest()
+            server.takeRequest()
+            val submitted = server.takeRequest().body?.utf8().orEmpty()
+            assertTrue(submitted, submitted.contains("\"todo_list_name\":\"Courses 2\""))
+        }
+
+    @Test
+    fun `name refused by Local To-do is retried with the next number`() =
+        runTest {
+            respond("[]")
+            respond("""{"type":"form","flow_id":"f1"}""")
+            respond("""{"type":"abort","flow_id":"f1","reason":"already_configured"}""")
+            respond("""{"type":"form","flow_id":"f2"}""")
+            respond("""{"type":"create_entry","flow_id":"f2","result":{"entry_id":"e2"}}""")
+            respond("""[{"entity_id":"todo.courses_2","attributes":{"friendly_name":"Courses 2"}}]""")
+
+            val created = client.createList(credentials, "Courses")
+
+            assertEquals("Courses 2", created.name)
+            assertEquals("todo.courses_2", created.entityId)
+        }
+
+    @Test
     fun `refused token is reported as unauthorized`() =
         runTest {
             respond("""{"message":"401: Unauthorized"}""", code = 401)

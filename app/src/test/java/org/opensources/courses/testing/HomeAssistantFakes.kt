@@ -11,6 +11,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaCreatedList
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
+import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
@@ -39,6 +40,14 @@ class FakeHaConfigRepository(
     override suspend fun setListMode(mode: HaListMode) = Unit
 
     override suspend fun setAutoSync(enabled: Boolean) = Unit
+
+    override suspend fun setAutoCreateLists(enabled: Boolean) {
+        config.value = config.value.copy(autoCreateLists = enabled)
+    }
+
+    override suspend fun setListsSetupDone() {
+        config.value = config.value.copy(listsSetupDone = true)
+    }
 }
 
 /** A tiny in-memory Home Assistant with the to-do semantics the engine relies on. */
@@ -123,9 +132,10 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         name: String,
     ): HaCreatedList {
         check()
-        val entityId = "todo.${name.lowercase()}"
-        lists[entityId] = HaTodoList(entityId, name, supportsDescription = true)
-        return HaCreatedList(entityId, "entry-$entityId")
+        val unique = HaListNameAllocator.uniqueName(name, lists.values.map { it.name })
+        val entityId = "todo.${unique.lowercase().replace(' ', '_')}"
+        lists[entityId] = HaTodoList(entityId, unique, supportsDescription = true)
+        return HaCreatedList(entityId, "entry-$entityId", unique)
     }
 
     override suspend fun deleteList(

@@ -186,9 +186,21 @@ Entièrement **facultatif** : l'application fonctionne sans. Écran **Réglages 
 - tester la connexion ;
 - mode d'affichage des listes : **Toutes les listes** ou **Uniquement les listes créées par cette
   application** ;
+- **Créer automatiquement les nouvelles listes** (activé par défaut) : toute liste créée dans
+  l'application est aussitôt marquée à synchroniser (`CREATE_LIST` écrit dans la même transaction
+  que la liste) et créée dans Home Assistant à la synchronisation suivante. Désactivé, une nouvelle
+  liste reste locale jusqu'à ce que l'utilisateur la lie avec « Choisir » ;
+- **premier paramétrage** : dès que Home Assistant est activé et configuré, chaque liste qui existait
+  déjà et n'est pas synchronisée est proposée tour à tour (créer dans Home Assistant, lier à une
+  liste existante, ne pas synchroniser, ou « Plus tard »). Cette question n'est posée qu'une fois
+  (`lists_setup_done` dans DataStore) ;
 - pour chaque liste locale : lier à une liste `todo.*` existante, **créer** la liste dans Home
   Assistant (intégration *Local To-do*, créée par l'application et mémorisée dans
   `ha_tracked_lists`), ou ne pas synchroniser ;
+- **noms déjà pris** : si une liste `todo.*` de Home Assistant porte déjà ce nom (casse, accents et
+  ponctuation ignorés), un numéro est ajouté côté Home Assistant (« Courses 2 », « Courses 3 »…,
+  `HaListNameAllocator`) ; le nom local ne change pas. Si *Local To-do* refuse quand même le nom
+  (`already_configured`, liste masquée), le numéro suivant est essayé ;
 - synchronisation automatique et « Synchroniser maintenant ».
 
 API utilisées (REST) : `GET /api/`, `GET /api/states`,
@@ -308,6 +320,7 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
 | File de synchronisation | `SyncQueueTest` |
 | Conflits | `ConflictResolverTest` |
 | Synchronisation Home Assistant | `HomeAssistantSyncEngineTest`, `HomeAssistantClientTest` (MockWebServer), `ItemDescriptionCodecTest` |
+| Création automatique des listes, noms déjà pris, premier paramétrage | `HaListNameAllocatorTest`, `HomeAssistantClientTest`, `HomeAssistantSyncEngineTest`, `RoomRepositoriesTest`, `HaListPickerDialogTest` |
 | Âge du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
 | Parcours UI | `ShoppingScreenTest`, `WelcomeScreenTest`, `HaConnectionCardTest` |
@@ -350,6 +363,10 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
 - **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement
   (`NetworkSecurityConfigTest`), mais le test complet n'est effectif que sur un appareil où une
   autorité de certification utilisateur est installée ; il est ignoré sinon.
-- **Synchronisation Home Assistant vérifiée par tests automatisés uniquement** (moteur avec un Home
-  Assistant simulé en mémoire, client HTTP contre MockWebServer) : pas encore validée contre une
-  instance réelle.
+- **Synchronisation Home Assistant vérifiée surtout par tests automatisés** (moteur avec un Home
+  Assistant simulé en mémoire, client HTTP contre MockWebServer). Les requêtes brutes ont été
+  vérifiées contre une instance réelle (création *Local To-do*, refus `already_configured` d'un nom
+  déjà pris, `add_item` avec description, `get_items`, suppression de l'entrée), mais le parcours
+  complet de l'application contre une vraie instance reste à valider.
+- **Création automatique** : elle ne s'applique qu'aux listes créées après l'activation du
+  réglage ; une liste passée en « Ne pas synchroniser » n'est jamais recréée automatiquement.

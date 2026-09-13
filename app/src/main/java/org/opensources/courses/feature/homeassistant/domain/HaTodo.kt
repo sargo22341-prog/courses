@@ -17,7 +17,9 @@ data class HaTodoItem(
     val description: String?,
 )
 
+/** @property name the name actually used in Home Assistant (see [HaListNameAllocator]). */
 data class HaCreatedList(
     val entityId: String,
     val configEntryId: String?,
+    val name: String,
 )

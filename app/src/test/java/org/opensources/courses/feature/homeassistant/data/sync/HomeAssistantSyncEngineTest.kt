@@ -186,6 +186,36 @@ class HomeAssistantSyncEngineTest {
         }
 
     @Test
+    fun `list created with a name taken in Home Assistant is created with a number`() =
+        runTest {
+            store.lists["list-2"] = SyncListRef("list-2", "Courses", remoteId = null)
+            queue.enqueue(SyncOperationType.CREATE_LIST, "list-2")
+            store.items["b"] = SyncItemRef("b", "list-2", "Pain", 1.0, null, false, null, false)
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list-2", "b")
+
+            assertEquals(SyncOutcome.Success, engine.synchronize())
+
+            assertEquals("Courses 2", gateway.lists.getValue("todo.courses_2").name)
+            assertEquals("todo.courses_2", store.lists.getValue("list-2").remoteId)
+            assertEquals("Courses", store.lists.getValue("list-2").name)
+            assertEquals("Pain", gateway.remote("todo.courses_2").single().summary)
+            assertTrue(gateway.remote(ENTITY).isEmpty())
+        }
+
+    @Test
+    fun `new lists are synchronised only when automatic creation is on`() =
+        runTest {
+            assertTrue(engine.synchronizesNewLists())
+
+            config.setAutoCreateLists(false)
+            assertFalse(engine.synchronizesNewLists())
+
+            config.setAutoCreateLists(true)
+            config.config.value = config.config.value.copy(enabled = false)
+            assertFalse(engine.synchronizesNewLists())
+        }
+
+    @Test
     fun `list deleted in Home Assistant is unlinked but kept locally`() =
         runTest {
             gateway.lists.clear()

@@ -46,4 +46,6 @@ data class ConfigFlowDto(
     val type: String? = null,
     @SerialName("flow_id") val flowId: String? = null,
     val result: JsonElement? = null,
+    /** Why the flow aborted, e.g. `already_configured` when the list name is taken. */
+    val reason: String? = null,
 )

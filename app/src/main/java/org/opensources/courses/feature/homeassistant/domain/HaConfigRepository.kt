@@ -25,4 +25,8 @@ interface HaConfigRepository {
     suspend fun setListMode(mode: HaListMode)
 
     suspend fun setAutoSync(enabled: Boolean)
+
+    suspend fun setAutoCreateLists(enabled: Boolean)
+
+    suspend fun setListsSetupDone()
 }

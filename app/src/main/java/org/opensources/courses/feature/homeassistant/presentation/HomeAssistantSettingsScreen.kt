@@ -61,7 +61,7 @@ fun HomeAssistantRoute(
             )
             if (state.config.enabled) {
                 ListModeCard(state.config.listMode, viewModel::setListMode)
-                HaLinkedListsCard(state, onChoose = viewModel::openPicker)
+                HaLinkedListsCard(state, onAutoCreateChange = viewModel::setAutoCreateLists, onChoose = viewModel::openPicker)
                 SyncCard(state, onAutoSyncChange = viewModel::setAutoSync, onSyncNow = viewModel::syncNow)
             }
         }
@@ -86,7 +86,7 @@ fun HomeAssistantRoute(
             onLink = { entityId -> viewModel.linkToExisting(list.id, entityId) },
             onCreate = { viewModel.createInHomeAssistant(list.id) },
             onUnlink = { viewModel.unlink(list.id) },
-            onDismiss = viewModel::closePicker,
+            onDismiss = { viewModel.closePicker(list.id) },
         )
     }
 }

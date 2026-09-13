@@ -138,6 +138,11 @@
     <string name="ha_mode_all">Toutes les listes</string>
     <string name="ha_mode_app">Uniquement les listes créées par cette application</string>
     <string name="ha_lists_section">Listes synchronisées</string>
+    <string name="ha_auto_create_lists">Créer automatiquement les nouvelles listes</string>
+    <string name="ha_auto_create_on">Chaque liste créée dans l’application est aussi créée dans Home Assistant. Si le nom y existe déjà, un numéro est ajouté (« Courses 2 »).</string>
+    <string name="ha_auto_create_off">Les nouvelles listes restent sur ce téléphone : liez-les avec « Choisir ».</string>
+    <string name="ha_setup_intro">Cette liste existe déjà sur ce téléphone. Créez-la dans Home Assistant, liez-la à une liste existante ou gardez-la uniquement ici.</string>
+    <string name="ha_setup_later">Plus tard</string>
     <string name="ha_list_not_synced">Non synchronisée</string>
     <string name="ha_list_pending_creation">Création dans Home Assistant en attente</string>
     <string name="ha_list_linked">Liée à %1$s</string>

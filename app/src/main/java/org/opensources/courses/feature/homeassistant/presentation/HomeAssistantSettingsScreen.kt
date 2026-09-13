@@ -25,6 +25,7 @@ import org.opensources.courses.core.designsystem.component.RadioRow
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.StatusText
 import org.opensources.courses.core.designsystem.component.SwitchRow
+import org.opensources.courses.core.scanner.rememberQrCodeScanner
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 
 @Composable
@@ -33,6 +34,7 @@ fun HomeAssistantRoute(
     viewModel: HomeAssistantSettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val scanQrCode = rememberQrCodeScanner(onScanned = viewModel::onTokenScanned, onUnavailable = viewModel::onScannerUnavailable)
     Scaffold(
         topBar = { BackTopBar(stringResource(R.string.ha_title), onBack) },
         containerColor = MaterialTheme.colorScheme.background,
@@ -48,6 +50,7 @@ fun HomeAssistantRoute(
                 token = viewModel.tokenInput,
                 onUrlChange = viewModel::onUrlChange,
                 onTokenChange = viewModel::onTokenChange,
+                onScanToken = scanQrCode,
                 onEnabledChange = viewModel::setEnabled,
                 onSave = viewModel::save,
                 onTest = viewModel::testConnection,

@@ -2,14 +2,21 @@ package org.opensources.courses.feature.homeassistant.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -26,6 +33,7 @@ fun HaConnectionCard(
     token: String,
     onUrlChange: (String) -> Unit,
     onTokenChange: (String) -> Unit,
+    onScanToken: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onSave: () -> Unit,
     onTest: () -> Unit,
@@ -50,6 +58,16 @@ fun HaConnectionCard(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(onClick = onScanToken) {
+            Icon(painterResource(R.drawable.ic_qr_code), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.ha_scan_token))
+        }
+        Text(
+            text = stringResource(R.string.ha_scan_token_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             FilledTonalButton(onClick = onSave) { Text(stringResource(R.string.ha_save)) }

@@ -17,6 +17,7 @@ import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
+import org.opensources.courses.feature.homeassistant.domain.HaTokenParser
 import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
@@ -68,6 +69,21 @@ class HomeAssistantSettingsViewModel
 
         fun onTokenChange(value: String) {
             tokenInput = value
+        }
+
+        /** Content of a scanned QR code: accepted only if it is a Home Assistant token. */
+        fun onTokenScanned(scanned: String) {
+            val token = HaTokenParser.parse(scanned)
+            if (token == null) {
+                connection.value = HaActionStatus.Done(HaMessage.INVALID_TOKEN_QR)
+                return
+            }
+            tokenInput = token
+            connection.value = HaActionStatus.Done(HaMessage.TOKEN_SCANNED)
+        }
+
+        fun onScannerUnavailable() {
+            connection.value = HaActionStatus.Done(HaMessage.SCANNER_UNAVAILABLE)
         }
 
         fun save() {

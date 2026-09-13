@@ -37,10 +37,13 @@ synchronisation **facultative** avec Home Assistant.
 | Préférences | DataStore Preferences |
 | Réseau | Retrofit 3 + OkHttp 5 + Kotlin Serialization |
 | Sécurité | Android Keystore (AES-256-GCM) |
+| Scan QR du token | Google Code Scanner (services Google Play, sans permission caméra) |
 | Build | AGP 9.4, Gradle 9.7, KSP |
 
 Aucune autre bibliothèque : pas d'analytics, pas de WorkManager (voir
-[Choix d'architecture](#choix-darchitecture)), pas de bibliothèque d'images ni de police.
+[Choix d'architecture](#choix-darchitecture)), pas de bibliothèque d'images ni de police. Le
+scanner de QR code est la seule dépendance aux services Google Play ; il évite d'embarquer
+CameraX, un décodeur et une permission caméra pour une action ponctuelle.
 
 ## Architecture
 
@@ -174,7 +177,11 @@ Entièrement **facultatif** : l'application fonctionne sans. Écran **Réglages 
 
 - activer / désactiver la synchronisation ;
 - adresse (`http://homeassistant.local:8123`, le schéma est ajouté si absent) ;
-- token d'accès longue durée (stocké chiffré, jamais réaffiché) ;
+- token d'accès longue durée (stocké chiffré, jamais réaffiché), saisi à la main ou **scanné** :
+  Home Assistant affiche le token en QR code (Profil → Sécurité → Jetons d'accès longue durée →
+  Générer un QR code). « Scanner le QR code du token » ouvre le scanner des services Google Play
+  (aucune permission caméra pour l'application) ; seul un token valide (JWT) est accepté, puis
+  « Enregistrer » le stocke ;
 - tester la connexion ;
 - mode d'affichage des listes : **Toutes les listes** ou **Uniquement les listes créées par cette
   application** ;
@@ -264,6 +271,9 @@ Prérequis : Android Studio récent (JDK 21 embarqué), SDK Android 37 installé
 
 Le projet s'ouvre directement dans Android Studio (`File → Open` sur la racine).
 
+Version de production signée (clé `courses.jks` sur support USB, tâche VS Code
+`courses: release signée → téléphone`) : voir [docs/release.md](docs/release.md).
+
 ## Tests
 
 ```powershell
@@ -322,6 +332,10 @@ Le projet s'ouvre directement dans Android Studio (`File → Open` sur la racine
 - **Créer ou supprimer une liste dans Home Assistant** nécessite un token d'administrateur (flux
   de configuration *Local To-do*).
 - **Pas d'envoi en arrière-plan application fermée** (voir WorkManager ci-dessus).
+- **Scan du QR code du token** : nécessite les services Google Play **et** leur autorisation
+  Appareil photo (sur GrapheneOS, les services Google Play en bac à sable ne l'ont pas par défaut :
+  Paramètres → Applications → Services Google Play → Autorisations → Appareil photo). Sinon
+  l'application l'indique et le token se saisit à la main.
 - **Synchronisation Home Assistant vérifiée par tests automatisés uniquement** (moteur avec un Home
   Assistant simulé en mémoire, client HTTP contre MockWebServer) : pas encore validée contre une
   instance réelle.

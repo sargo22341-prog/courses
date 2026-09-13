@@ -16,6 +16,9 @@ enum class HaMessage(
     val isError: Boolean,
 ) {
     SAVED(R.string.ha_saved, false),
+    TOKEN_SCANNED(R.string.ha_token_scanned, false),
+    INVALID_TOKEN_QR(R.string.ha_error_invalid_token_qr, true),
+    SCANNER_UNAVAILABLE(R.string.ha_error_scanner_unavailable, true),
     TEST_OK(R.string.ha_test_success, false),
     SYNC_OK(R.string.ha_sync_success, false),
     SYNC_OFFLINE(R.string.ha_sync_offline, true),

@@ -31,6 +31,15 @@ En cas de doute sur un comportement existant : lire le README et le code avant d
   Android/Jetpack déjà présentes suffisent, et justifier l'ajout dans le rapport final.
 - WorkManager n'est pas utilisé (choix documenté dans le README) ; ne l'introduire que si un besoin
   réel l'impose, en mettant le README à jour.
+- **Aucune dépendance aux services Google Play** (GMS, ML Kit, Firebase, Play Integrity…) :
+  l'application doit fonctionner à l'identique sur GrapheneOS et tout Android sans Google.
+  Préférer AndroidX et des bibliothèques open source (ex. CameraX + ZXing pour les QR codes).
+- Permissions d'exécution (caméra, `ACCESS_LOCAL_NETWORK` d'Android 17…) : via
+  `core/permission`, demandées au moment où la fonctionnalité en a besoin, avec explication et
+  accès aux paramètres après un refus définitif.
+- Réseau : ne jamais retirer la confiance aux certificats CA installés par l'utilisateur ni ajouter
+  de `domain-config` qui la supprimerait (Home Assistant auto-hébergé) ; garder
+  `NetworkSecurityConfigTest` vert.
 - Préférer les API modernes aux API dépréciées ; corriger tout avertissement de dépréciation
   introduit.
 

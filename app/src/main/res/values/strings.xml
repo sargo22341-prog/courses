@@ -10,6 +10,14 @@
     <string name="action_rename">Renommer</string>
     <string name="action_back">Retour</string>
     <string name="action_clear">Effacer</string>
+    <string name="action_close">Fermer</string>
+    <string name="open_app_settings">Ouvrir les paramètres de l’application</string>
+
+    <!-- Scanner de QR code -->
+    <string name="qr_scanner_hint">Placez le QR code dans le cadre</string>
+    <string name="qr_camera_permission_title">Autorisation Appareil photo</string>
+    <string name="qr_camera_permission_body">L’appareil photo sert uniquement à lire le QR code. Aucune image n’est enregistrée ni envoyée.</string>
+    <string name="qr_camera_permission_grant">Autoriser l’appareil photo</string>
 
     <!-- Accueil -->
     <string name="welcome_title">Mes Courses</string>
@@ -110,7 +118,10 @@
     <string name="ha_scan_token_hint">Dans Home Assistant : Profil → Sécurité → Jetons d’accès longue durée → Créer un jeton → Générer un QR code.</string>
     <string name="ha_token_scanned">✓ Token scanné. Enregistrez pour le conserver.</string>
     <string name="ha_error_invalid_token_qr">Ce QR code ne contient pas de token Home Assistant.</string>
-    <string name="ha_error_scanner_unavailable">Le scanner de QR code n’a pas pu s’ouvrir. Il nécessite les services Google Play, autorisés à utiliser l’appareil photo.\nVous pouvez aussi saisir le token manuellement.</string>
+    <string name="ha_error_scanner_unavailable">L’appareil photo n’a pas pu démarrer (absent ou utilisé par une autre application).\nVous pouvez saisir le token manuellement.</string>
+    <string name="local_network_title">Accès au réseau local</string>
+    <string name="local_network_body">Android demande votre accord pour que l’application joigne un serveur de votre réseau local (http://homeassistant.local:8123, https://ha.nas.home, 192.168.x.x…). Sans cet accès, la connexion à Home Assistant échoue.</string>
+    <string name="local_network_grant">Autoriser l’accès au réseau local</string>
     <string name="ha_save">Enregistrer</string>
     <string name="ha_saved">✓ Paramètres enregistrés</string>
     <string name="ha_test">Tester la connexion</string>

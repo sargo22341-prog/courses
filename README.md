@@ -37,13 +37,13 @@ synchronisation **facultative** avec Home Assistant.
 | Préférences | DataStore Preferences |
 | Réseau | Retrofit 3 + OkHttp 5 + Kotlin Serialization |
 | Sécurité | Android Keystore (AES-256-GCM) |
-| Scan QR du token | Google Code Scanner (services Google Play, sans permission caméra) |
+| Scan QR du token | CameraX (AndroidX) + ZXing (open source), sans services Google Play |
 | Build | AGP 9.4, Gradle 9.7, KSP |
 
 Aucune autre bibliothèque : pas d'analytics, pas de WorkManager (voir
-[Choix d'architecture](#choix-darchitecture)), pas de bibliothèque d'images ni de police. Le
-scanner de QR code est la seule dépendance aux services Google Play ; il évite d'embarquer
-CameraX, un décodeur et une permission caméra pour une action ponctuelle.
+[Choix d'architecture](#choix-darchitecture)), pas de bibliothèque d'images ni de police.
+**Aucune dépendance aux services Google Play** : l'application fonctionne sur GrapheneOS et
+tout Android sans Google.
 
 ## Architecture
 
@@ -179,9 +179,10 @@ Entièrement **facultatif** : l'application fonctionne sans. Écran **Réglages 
 - adresse (`http://homeassistant.local:8123`, le schéma est ajouté si absent) ;
 - token d'accès longue durée (stocké chiffré, jamais réaffiché), saisi à la main ou **scanné** :
   Home Assistant affiche le token en QR code (Profil → Sécurité → Jetons d'accès longue durée →
-  Générer un QR code). « Scanner le QR code du token » ouvre le scanner des services Google Play
-  (aucune permission caméra pour l'application) ; seul un token valide (JWT) est accepté, puis
-  « Enregistrer » le stocke ;
+  Générer un QR code). « Scanner le QR code du token » ouvre un scanner intégré (CameraX +
+  ZXing, sans services Google) qui demande la permission Appareil photo au premier usage ; les
+  images sont analysées en mémoire, jamais enregistrées ni envoyées. Seul un token valide (JWT)
+  est accepté, puis « Enregistrer » le stocke ;
 - tester la connexion ;
 - mode d'affichage des listes : **Toutes les listes** ou **Uniquement les listes créées par cette
   application** ;
@@ -254,6 +255,17 @@ opération locale n'a été ajoutée pendant la synchronisation. Chaque article 
   transferts d'appareil.
 - Le trafic en clair reste autorisé car Home Assistant est souvent joignable en `http://` sur le
   réseau local ; OpenFoodFacts est toujours appelé en HTTPS.
+- **Certificats installés par l'utilisateur** : `network_security_config.xml` fait confiance aux
+  autorités système **et** utilisateur pour tous les domaines (aucun `domain-config` qui les
+  retirerait). Un Home Assistant en `https://ha.nas.home` signé par une autorité privée
+  fonctionne donc dès que cette autorité est installée dans Android (Paramètres → Sécurité →
+  Chiffrement et identifiants → Installer un certificat → Certificat CA). Le nom du certificat
+  serveur doit correspondre à l'adresse saisie (SAN `ha.nas.home`).
+- **Accès au réseau local** : depuis Android 17, joindre une adresse locale (`*.local`,
+  `ha.nas.home` résolu en 192.168.x.x…) exige la permission d'exécution `ACCESS_LOCAL_NETWORK`,
+  indépendamment du certificat. L'écran Home Assistant affiche une carte pour l'accorder tant
+  qu'elle manque (ou ouvre les paramètres après un refus définitif).
+- **Appareil photo** : permission demandée uniquement à l'ouverture du scanner de QR code.
 - Aucun compte, aucun analytics, aucun historique d'achats envoyé : les statistiques d'usage
   restent dans Room.
 
@@ -298,7 +310,10 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
 | Synchronisation Home Assistant | `HomeAssistantSyncEngineTest`, `HomeAssistantClientTest` (MockWebServer), `ItemDescriptionCodecTest` |
 | Âge du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
-| Parcours UI | `ShoppingScreenTest`, `WelcomeScreenTest` |
+| Parcours UI | `ShoppingScreenTest`, `WelcomeScreenTest`, `HaConnectionCardTest` |
+| QR code du token (décodage ZXing, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
+| Certificats CA utilisateur, trafic local | `NetworkSecurityConfigTest` (le test CA ne s'exécute que si une CA utilisateur est installée) |
+| Connexion réelle au réseau local | `LocalNetworkConnectionTest` : ignoré sans arguments ; `adb shell am instrument -w -e class org.opensources.courses.core.network.LocalNetworkConnectionTest -e haLocalUrl http://<ip>:8123 -e expectReachable true org.opensources.courses.test/androidx.test.runner.AndroidJUnitRunner` |
 
 ## Choix d'architecture
 
@@ -332,10 +347,9 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
 - **Créer ou supprimer une liste dans Home Assistant** nécessite un token d'administrateur (flux
   de configuration *Local To-do*).
 - **Pas d'envoi en arrière-plan application fermée** (voir WorkManager ci-dessus).
-- **Scan du QR code du token** : nécessite les services Google Play **et** leur autorisation
-  Appareil photo (sur GrapheneOS, les services Google Play en bac à sable ne l'ont pas par défaut :
-  Paramètres → Applications → Services Google Play → Autorisations → Appareil photo). Sinon
-  l'application l'indique et le token se saisit à la main.
+- **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement
+  (`NetworkSecurityConfigTest`), mais le test complet n'est effectif que sur un appareil où une
+  autorité de certification utilisateur est installée ; il est ignoré sinon.
 - **Synchronisation Home Assistant vérifiée par tests automatisés uniquement** (moteur avec un Home
   Assistant simulé en mémoire, client HTTP contre MockWebServer) : pas encore validée contre une
   instance réelle.

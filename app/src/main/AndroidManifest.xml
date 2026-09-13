@@ -3,8 +3,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Home Assistant usually lives on the local network. -->
+    <!-- Home Assistant usually lives on the local network. Runtime permission on Android 17:
+         requested from the Home Assistant settings screen. -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- Only used to read the QR code of the Home Assistant token; frames never leave memory. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
 
     <application
         android:name=".CoursesApplication"
@@ -17,11 +23,6 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.Courses">
-        <!-- Asks Google Play services to download the QR scanner module at install time, so the
-             first scan of the Home Assistant token does not wait for a download. -->
-        <meta-data
-            android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="barcode_ui" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

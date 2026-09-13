@@ -90,8 +90,12 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
-    // QR code of the Home Assistant token: Google's scanner UI, no CAMERA permission needed.
-    implementation(libs.play.services.code.scanner)
+    // QR code of the Home Assistant token, without Google Play services (works on GrapheneOS):
+    // CameraX for the preview and frames, ZXing (open source, pure Java) for decoding.
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.compose)
+    implementation(libs.zxing.core)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

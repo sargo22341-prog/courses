@@ -8,7 +8,9 @@
         tools:ignore="InsecureBaseConfiguration">
         <trust-anchors>
             <certificates src="system" />
-            <!-- Self-hosted instances are often signed by a private CA installed by the user. -->
+            <!-- Self-hosted instances (https://ha.nas.home) are often signed by a private CA the user
+                 installed in Android settings. No domain-config on purpose: it would replace these
+                 anchors for its domains. Guarded by NetworkSecurityConfigTest. -->
             <certificates src="user" tools:ignore="AcceptsUserCertificates" />
         </trust-anchors>
     </base-config>

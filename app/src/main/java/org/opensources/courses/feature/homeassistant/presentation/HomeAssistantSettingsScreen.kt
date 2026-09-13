@@ -14,6 +14,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -25,7 +28,7 @@ import org.opensources.courses.core.designsystem.component.RadioRow
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.StatusText
 import org.opensources.courses.core.designsystem.component.SwitchRow
-import org.opensources.courses.core.scanner.rememberQrCodeScanner
+import org.opensources.courses.core.scanner.QrCodeScannerDialog
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 
 @Composable
@@ -34,7 +37,7 @@ fun HomeAssistantRoute(
     viewModel: HomeAssistantSettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val scanQrCode = rememberQrCodeScanner(onScanned = viewModel::onTokenScanned, onUnavailable = viewModel::onScannerUnavailable)
+    var scanningToken by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         topBar = { BackTopBar(stringResource(R.string.ha_title), onBack) },
         containerColor = MaterialTheme.colorScheme.background,
@@ -44,13 +47,14 @@ fun HomeAssistantRoute(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             Text(stringResource(R.string.ha_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalNetworkPermissionCard()
             HaConnectionCard(
                 state = state,
                 url = viewModel.urlInput,
                 token = viewModel.tokenInput,
                 onUrlChange = viewModel::onUrlChange,
                 onTokenChange = viewModel::onTokenChange,
-                onScanToken = scanQrCode,
+                onScanToken = { scanningToken = true },
                 onEnabledChange = viewModel::setEnabled,
                 onSave = viewModel::save,
                 onTest = viewModel::testConnection,
@@ -61,6 +65,19 @@ fun HomeAssistantRoute(
                 SyncCard(state, onAutoSyncChange = viewModel::setAutoSync, onSyncNow = viewModel::syncNow)
             }
         }
+    }
+    if (scanningToken) {
+        QrCodeScannerDialog(
+            onScanned = { scanned ->
+                scanningToken = false
+                viewModel.onTokenScanned(scanned)
+            },
+            onCameraUnavailable = {
+                scanningToken = false
+                viewModel.onScannerUnavailable()
+            },
+            onDismiss = { scanningToken = false },
+        )
     }
     state.pickerList?.let { list ->
         HaListPickerDialog(

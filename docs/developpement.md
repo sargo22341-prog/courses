@@ -36,6 +36,19 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 Zéro erreur, zéro test en échec, aucun nouvel avertissement Kotlin ou Compose, aucun fichier
 source de plus de 600 lignes. Détail des suites : [Tests](tests.md).
 
+## Vérifier les mises à jour des dépendances
+
+```powershell
+.\gradlew.bat dependencyUpdates
+```
+
+Le plugin [Gradle Versions](https://github.com/ben-manes/gradle-versions-plugin) interroge les
+dépôts Maven et liste les bibliothèques, plugins et la version de Gradle pour lesquels une version
+**stable** plus récente existe (alpha, bêta et RC ignorées). Le rapport s'affiche dans la console
+et est écrit dans `build/dependencyUpdates/report.txt`. La commande ne modifie rien : les versions
+se montent à la main dans `gradle/libs.versions.toml`. Elle nécessite le réseau et n'est jamais
+mise en cache par le cache de configuration.
+
 ## Base Room
 
 Toute modification d'entité incrémente la version de `CoursesDatabase`, fournit une migration (ou

@@ -129,6 +129,14 @@ décocher, modifier la quantité et supprimer des articles, et utiliser l'autoco
   et **Système**, peints avec le fond de leur thème ; « Système » est coupé par une barre oblique
   nette (`[ clair / sombre ]`), sans fondu, et chaque partie de son libellé prend la couleur lisible
   sur son côté. Le choix courant est encadré et coché.
+- **Transitions entre écrans** (`NavigationTransitions`) : glissement horizontal de 350 ms au lieu
+  du fondu enchaîné par défaut. Le nouvel écran entre par le bord de fin pendant que l'ancien sort
+  par le bord de début, à la même vitesse, tous deux opaques et bord à bord : rien n'est jamais
+  transparent, donc aucun flash, quel que soit le thème (le fond de la fenêtre suit le thème du
+  système, pas celui choisi dans l'application ; le `NavHost` est en plus peint avec le fond du
+  thème de l'application). Le retour, y compris le geste retour prédictif, joue le mouvement
+  inverse. Le sens suit la direction de lecture et l'échelle d'animation du système s'applique
+  (`NavigationTransitionsTest`).
 - **Barres système** : l'heure, le réseau, la batterie et la barre de navigation suivent le thème
   **choisi dans l'application** (icônes sombres en thème clair, claires en thème sombre), même
   quand il diffère du thème du téléphone (`SystemBarsAppearance`, appelé par `CoursesTheme`).

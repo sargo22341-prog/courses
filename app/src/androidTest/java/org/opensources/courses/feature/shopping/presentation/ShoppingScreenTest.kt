@@ -10,6 +10,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -18,6 +20,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensources.courses.core.designsystem.theme.CoursesTheme
 import org.opensources.courses.core.model.SyncStatus
+import org.opensources.courses.core.sync.SyncSnapshot
+import org.opensources.courses.core.sync.SyncState
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.ADD_ITEM_FIELD_TAG
@@ -95,11 +99,30 @@ class ShoppingScreenTest {
     }
 
     @Test
+    fun pullingDownRefreshesWhenHomeAssistantIsEnabled() {
+        var refreshed = false
+        val synced = state.copy(sync = SyncSnapshot(SyncState.ONLINE, remoteEnabled = true, pendingCount = 0, failure = null))
+        composeRule.setContent {
+            CoursesTheme { ShoppingScreen(synced, query = "", actions = ShoppingActions(onRefresh = { refreshed = true })) }
+        }
+
+        // A real pull: well beyond the refresh threshold, not just the height of one row.
+        composeRule.onNodeWithText("Lait").performTouchInput { swipeDown(startY = top, endY = top + PULL_DISTANCE_PX, durationMillis = 400) }
+        composeRule.waitForIdle()
+
+        assertTrue(refreshed)
+    }
+
+    @Test
     fun emptyListInvitesToType() {
         composeRule.setContent {
             CoursesTheme { ShoppingScreen(ShoppingUiState(isLoading = false, listName = "BBQ"), query = "", actions = ShoppingActions()) }
         }
 
         composeRule.onNodeWithText("Votre liste est vide").assertIsDisplayed()
+    }
+
+    private companion object {
+        const val PULL_DISTANCE_PX = 1_200f
     }
 }

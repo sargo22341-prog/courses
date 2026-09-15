@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.feature.settings.domain.AppPreferencesRepository
 import org.opensources.courses.feature.settings.domain.ThemeMode
 import javax.inject.Inject
@@ -25,9 +26,15 @@ class MainViewModel
     @Inject
     constructor(
         preferences: AppPreferencesRepository,
+        private val syncCoordinator: SyncCoordinator,
     ) : ViewModel() {
         val uiState: StateFlow<MainUiState> =
             preferences.preferences
                 .map { MainUiState.Ready(it.themeMode, it.onboardingCompleted) }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, MainUiState.Loading)
+
+        /** Opening the app shows the latest lists: synchronise now, then follow Home Assistant live. */
+        fun onAppStarted() = syncCoordinator.onAppForeground()
+
+        fun onAppStopped() = syncCoordinator.onAppBackground()
     }

@@ -1,5 +1,7 @@
 package org.opensources.courses.feature.homeassistant.data.sync
 
+import kotlinx.coroutines.flow.Flow
+
 data class SyncListRef(
     val localId: String,
     val name: String,
@@ -24,6 +26,9 @@ data class SyncItemRef(
  */
 interface SyncLocalStore {
     suspend fun synchronizedLists(): List<SyncListRef>
+
+    /** Entity ids of the Home Assistant lists linked to a local list. */
+    fun observeLinkedEntityIds(): Flow<Set<String>>
 
     /** Items of the list, tombstones included. */
     suspend fun items(listLocalId: String): List<SyncItemRef>
@@ -50,6 +55,9 @@ interface SyncLocalStore {
     /** Removes a tombstone whose deletion reached the remote. */
     suspend fun purgeItem(itemLocalId: String)
 
+    /** Cancels a local deletion: the item was modified in Home Assistant meanwhile. */
+    suspend fun restoreDeletedItem(itemLocalId: String)
+
     suspend fun markItemSynced(itemLocalId: String)
 
     suspend fun removeRemotelyDeletedItem(itemLocalId: String)
@@ -69,6 +77,7 @@ interface SyncLocalStore {
         quantity: Double,
         unit: String?,
         checked: Boolean,
+        catalogProductId: String?,
     )
 
     /** Deleted remotely while modified locally: queue its creation again. */

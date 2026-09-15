@@ -111,6 +111,35 @@ class HomeAssistantClientTest {
         }
 
     @Test
+    fun `unavailable lists and completion dates are read`() =
+        runTest {
+            respond("""[{"entity_id":"todo.mon_agenda","state":"unavailable","attributes":{"friendly_name":"Mon agenda"}}]""")
+            respond(
+                """
+                {"service_response":{"todo.courses":{"items":[
+                  {"uid":"u1","summary":"Pain","status":"completed","completed":"2026-09-13T14:10:25.772961+00:00"}
+                ]}}}
+                """.trimIndent(),
+            )
+
+            assertFalse(client.getTodoLists(credentials).single().isAvailable)
+            assertEquals(1789308625772L, client.getItems(credentials, "todo.courses").single().completedAt)
+        }
+
+    @Test
+    fun `check sent alone does not rename the item`() =
+        runTest {
+            respond("[]")
+
+            client.updateItem(credentials, "todo.courses", "u1", summary = null, completed = true, description = null, sendDescription = false)
+
+            val body = server.takeRequest().body?.utf8().orEmpty()
+            assertTrue(body, body.contains("\"status\":\"completed\""))
+            assertFalse(body, body.contains("rename"))
+            assertFalse(body, body.contains("description"))
+        }
+
+    @Test
     fun `list created with a name already used in Home Assistant gets a number`() =
         runTest {
             respond("""[{"entity_id":"todo.courses","attributes":{"friendly_name":"Courses","supported_features":127}}]""")

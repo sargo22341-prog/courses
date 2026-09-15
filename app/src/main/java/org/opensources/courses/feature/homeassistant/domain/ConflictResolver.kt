@@ -14,6 +14,7 @@ data class RemoteItemState(
     val completed: Boolean,
     val quantity: Double,
     val unit: String?,
+    val completedAt: Long? = null,
 )
 
 enum class ItemResolution {
@@ -42,6 +43,11 @@ enum class ItemResolution {
  * remote state is read and applied to every item that has no pending operation left (remote
  * state = latest). The outcome depends only on the two states, never on timing, which keeps it
  * deterministic and testable.
+ *
+ * Nothing written on one side is lost because of the other: only the fields changed locally are
+ * sent (see `HaItemPusher`), a local deletion gives way to a remote modification
+ * ([remoteChangedSince]), and the one date Home Assistant keeps — the completion date — settles
+ * check/uncheck conflicts ([localStatusWins]).
  */
 object ConflictResolver {
     fun resolve(
@@ -56,6 +62,26 @@ object ConflictResolver {
             isEqual(local, remote, compareQuantity) -> ItemResolution.IN_SYNC
             else -> ItemResolution.APPLY_REMOTE
         }
+
+    /**
+     * [lastSynced] is a tombstone with no other pending change, so it still holds the values of the
+     * last synchronisation. If Home Assistant differs, someone edited the item meanwhile: it is kept
+     * rather than deleting that edit.
+     */
+    fun remoteChangedSince(
+        lastSynced: LocalItemState,
+        remote: RemoteItemState,
+        compareQuantity: Boolean,
+    ): Boolean = !isEqual(lastSynced, remote, compareQuantity)
+
+    /**
+     * A local check/uncheck made at [localChangeAt] (epoch millis) is sent unless Home Assistant
+     * completed the item after it. Without a remote date the local change wins.
+     */
+    fun localStatusWins(
+        localChangeAt: Long,
+        remote: RemoteItemState,
+    ): Boolean = remote.completedAt?.let { it <= localChangeAt } ?: true
 
     private fun isEqual(
         local: LocalItemState,

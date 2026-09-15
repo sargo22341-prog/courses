@@ -13,6 +13,12 @@ interface RemoteSyncEngine {
     /** True when changes should be pushed/pulled without an explicit user action. */
     val isAutoSyncEnabled: Flow<Boolean>
 
+    /**
+     * Emits when the remote reports a change, while collected (the app is in the foreground). An
+     * emission only asks for a synchronisation; it never fails.
+     */
+    val remoteChanges: Flow<Unit>
+
     /** True when a list created now must be synchronised from the start (created remotely at the next sync). */
     suspend fun synchronizesNewLists(): Boolean
 
@@ -36,4 +42,7 @@ enum class SyncFailure {
     UNREACHABLE,
     UNAUTHORIZED,
     PROTOCOL,
+
+    /** A linked remote list exists but cannot be used right now; its changes stay queued. */
+    LIST_UNAVAILABLE,
 }

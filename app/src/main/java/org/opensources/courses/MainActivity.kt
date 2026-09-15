@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import org.opensources.courses.core.designsystem.theme.CoursesTheme
@@ -24,6 +25,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            LifecycleStartEffect(viewModel) {
+                viewModel.onAppStarted()
+                onStopOrDispose { viewModel.onAppStopped() }
+            }
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             when (val current = state) {
                 // Preferences are read from disk in a few milliseconds; the window background

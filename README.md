@@ -203,10 +203,27 @@ Entièrement **facultatif** : l'application fonctionne sans. Écran **Réglages 
   (`already_configured`, liste masquée), le numéro suivant est essayé ;
 - synchronisation automatique et « Synchroniser maintenant ».
 
+Suivi des changements faits dans Home Assistant :
+
+- **à l'ouverture** : chaque retour de l'application au premier plan déclenche une synchronisation ;
+- **temps réel** : tant que l'application est au premier plan (synchronisation automatique activée,
+  réseau disponible), une connexion WebSocket (`/api/websocket`, commande `todo/item/subscribe`)
+  suit toutes les listes liées. Chaque changement annoncé déclenche une synchronisation normale
+  (regroupée sur 1,5 s) : il n'y a qu'un seul chemin de fusion. Connexion perdue : nouvel essai
+  après 5 s, puis un délai croissant jusqu'à 5 min. Elle est fermée quand l'application passe en
+  arrière-plan. WebSocket d'OkHttp, sans nouvelle dépendance ;
+- **tirer pour actualiser** sur la liste de courses (quand Home Assistant est activé) ;
+- **articles créés dans Home Assistant** : rattachés au catalogue alimentaire (produit existant de
+  même nom, sinon produit personnalisé créé), donc proposés ensuite dans l'autocomplétion ;
+- **liste indisponible** (intégration arrêtée, état `unavailable`, pour laquelle Home Assistant
+  répond HTTP 500) : grisée et non sélectionnable dans le choix des listes. Déjà liée, elle est
+  ignorée à la synchronisation, ses modifications restent en file et l'indicateur affiche
+  « Liste Home Assistant indisponible ».
+
 API utilisées (REST) : `GET /api/`, `GET /api/states`,
 `POST /api/services/todo/get_items?return_response`, `todo.add_item`, `todo.update_item`,
 `todo.remove_item`, `POST /api/config/config_entries/flow` (création *Local To-do*) et
-`DELETE /api/config/config_entries/entry/{id}`.
+`DELETE /api/config/config_entries/entry/{id}`. WebSocket : `auth`, `todo/item/subscribe`.
 
 Quantités : Home Assistant n'a pas de champ quantité. Pour les listes qui acceptent une
 description (Local To-do), la quantité y est écrite (`2`, `1,5 kg`) ; une quantité de 1 sans unité
@@ -227,7 +244,8 @@ laisse la description vide.
   2. lire les articles distants et associer par nom les articles locaux sans identifiant
      (liaison d'une liste existante sans doublons) ;
   3. envoyer les opérations en attente, **regroupées par article** (l'état courant est envoyé une
-     fois) ;
+     fois). Seuls les champs modifiés localement partent : nom et quantité après une modification,
+     état coché après une coche. Une création envoie tout ;
   4. relire la liste distante et appliquer les changements selon la stratégie de conflit.
 - Une opération n'est retirée de la file **qu'après confirmation**. Échec non fatal : elle reste,
   avec son nombre de tentatives et l'erreur. Serveur injoignable ou token refusé : la
@@ -239,20 +257,30 @@ Documentée dans `ConflictResolver` :
 
 > **Last-write-wins, sauf qu'une modification locale non synchronisée n'est jamais écrasée.**
 
-Home Assistant ne fournit pas de date de modification pour les articles de listes. L'ordre est
-donc donné par la synchronisation : les opérations locales en attente sont envoyées d'abord (la
-modification locale est la plus récente), puis l'état distant est appliqué à tous les articles
-sans opération en attente (l'état distant est le plus récent).
+Home Assistant ne fournit pas de date de modification pour les articles de listes, seulement la
+date à laquelle un article a été coché (`completed`). L'ordre est donc donné par la
+synchronisation : les opérations locales en attente sont envoyées d'abord (la modification locale
+est la plus récente), puis l'état distant est appliqué à tous les articles sans opération en
+attente (l'état distant est le plus récent). Pour qu'aucun changement fait d'un côté ne soit perdu
+à cause de l'autre (par exemple application hors ligne pendant qu'on modifie la liste dans Home
+Assistant) :
 
 | Local | Distant | Résultat |
 | --- | --- | --- |
 | synchronisé | identique | rien |
 | synchronisé | modifié | appliquer le distant |
 | synchronisé | absent | supprimer localement |
-| modification en attente | présent | garder le local (il sera envoyé) |
+| modification en attente | présent | envoyer **seulement les champs modifiés localement** ; les autres prennent la valeur distante (cocher hors ligne n'annule pas un renommage fait dans Home Assistant) |
+| coche / décoche en attente | coché dans Home Assistant **après** la modification locale | garder l'état de Home Assistant |
 | modification en attente | absent | recréer à distance |
-| supprimé en attente | présent / absent | attendre / purger |
-| — | nouvel article | créer localement |
+| supprimé en attente, sans autre modification | modifié dans Home Assistant depuis la dernière synchronisation | **garder l'article** (suppression annulée) |
+| supprimé en attente | inchangé / absent | supprimer à distance / purger |
+| — | nouvel article | créer localement, rattaché au catalogue |
+
+Seul cas où un changement cède : le même champ du même article modifié des deux côtés pendant une
+coupure. La modification locale l'emporte alors, sauf pour l'état coché si Home Assistant l'a
+coché plus tard. La comparaison des dates suppose que les horloges du téléphone et du serveur sont
+à l'heure.
 
 Les méthodes qui appliquent des données distantes revérifient **dans leur transaction** qu'aucune
 opération locale n'a été ajoutée pendant la synchronisation. Chaque article porte `localId`,
@@ -321,6 +349,8 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
 | Conflits | `ConflictResolverTest` |
 | Synchronisation Home Assistant | `HomeAssistantSyncEngineTest`, `HomeAssistantClientTest` (MockWebServer), `ItemDescriptionCodecTest` |
 | Création automatique des listes, noms déjà pris, premier paramétrage | `HaListNameAllocatorTest`, `HomeAssistantClientTest`, `HomeAssistantSyncEngineTest`, `RoomRepositoriesTest`, `HaListPickerDialogTest` |
+| Changements des deux côtés, catalogue, liste indisponible | `HomeAssistantBidirectionalSyncTest`, `ConflictResolverTest`, `HaListPickerDialogTest` |
+| Temps réel, synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
 | Âge du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
 | Parcours UI | `ShoppingScreenTest`, `WelcomeScreenTest`, `HaConnectionCardTest` |
@@ -359,7 +389,11 @@ Version de production signée (clé `courses.jks` sur support USB, tâche VS Cod
   réessayée (risque de doublon distant dans ce cas rare).
 - **Créer ou supprimer une liste dans Home Assistant** nécessite un token d'administrateur (flux
   de configuration *Local To-do*).
-- **Pas d'envoi en arrière-plan application fermée** (voir WorkManager ci-dessus).
+- **Pas d'envoi en arrière-plan application fermée** (voir WorkManager ci-dessus). Le temps réel
+  (WebSocket) ne fonctionne que tant que l'application est au premier plan.
+- **Articles Mealie** : l'intégration Mealie écrit des libellés comme « 1 Salade Salade » ; ils sont
+  repris tels quels (et ajoutés au catalogue comme produits personnalisés), sans interprétation de
+  la quantité.
 - **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement
   (`NetworkSecurityConfigTest`), mais le test complet n'est effectif que sur un appareil où une
   autorité de certification utilisateur est installée ; il est ignoré sinon.

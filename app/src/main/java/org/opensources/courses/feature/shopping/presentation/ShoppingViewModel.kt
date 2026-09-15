@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,7 +50,7 @@ class ShoppingViewModel
         private val addItem: AddItemUseCase,
         private val searchSuggestions: SearchSuggestionsUseCase,
         private val preferences: AppPreferencesRepository,
-        syncCoordinator: SyncCoordinator,
+        private val syncCoordinator: SyncCoordinator,
     ) : ViewModel() {
         private val requestedListId: String? = savedStateHandle.toRoute<ShoppingDestination>().listId
 
@@ -76,8 +77,10 @@ class ShoppingViewModel
                 .mapLatest { text -> if (text.isBlank()) emptyList() else searchSuggestions(text) }
                 .onStart { emit(emptyList()) }
 
+        private val refreshing = MutableStateFlow(false)
+
         val uiState: StateFlow<ShoppingUiState> =
-            combine(listWithItems, preferences.preferences, suggestions, syncCoordinator.snapshot) { (list, all), prefs, found, sync ->
+            combine(listWithItems, preferences.preferences, suggestions, syncCoordinator.snapshot, refreshing) { (list, all), prefs, found, sync, isRefreshing ->
                 ShoppingUiState(
                     isLoading = list == null,
                     listName = list?.name.orEmpty(),
@@ -86,6 +89,7 @@ class ShoppingViewModel
                     hidePurchased = prefs.hidePurchased,
                     suggestions = found,
                     sync = sync,
+                    isRefreshing = isRefreshing,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ShoppingUiState())
 
@@ -126,6 +130,19 @@ class ShoppingViewModel
             val cleanName = name.trim()
             if (cleanName.isEmpty()) return
             viewModelScope.launch { items.updateItem(item.id, cleanName, quantity, unit?.trim()?.takeIf { it.isNotEmpty() }) }
+        }
+
+        /** Pull to refresh: an explicit synchronisation; its result shows in the sync indicator. */
+        fun onRefresh() {
+            if (refreshing.value) return
+            viewModelScope.launch {
+                refreshing.value = true
+                try {
+                    syncCoordinator.syncNow()
+                } finally {
+                    refreshing.value = false
+                }
+            }
         }
 
         fun onToggleHidePurchased() {

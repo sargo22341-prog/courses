@@ -1,7 +1,9 @@
 package org.opensources.courses.core.sync
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,8 +12,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -26,8 +31,9 @@ import javax.inject.Singleton
 /**
  * Decides *when* to synchronise; the [RemoteSyncEngine] decides *how*.
  *
- * Automatic triggers (only when auto-sync is enabled): application start, network regained, a new
- * pending operation, and a periodic retry while the process is alive. Pending operations are
+ * Automatic triggers (only when auto-sync is enabled): application start, return to the
+ * foreground, a change announced live by the remote while in the foreground, network regained, a
+ * new pending operation, and a periodic retry while the process is alive. Pending operations are
  * persisted, so anything not sent before the process dies is sent at the next start.
  * WorkManager is deliberately not used: see README, "Synchronisation".
  */
@@ -45,6 +51,9 @@ class SyncCoordinator
         private val requests = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
         private val mutex = Mutex()
         private val started = AtomicBoolean(false)
+
+        // Changed only from the main thread (activity lifecycle).
+        private var liveUpdates: Job? = null
 
         val snapshot: StateFlow<SyncSnapshot> =
             combine(
@@ -82,6 +91,29 @@ class SyncCoordinator
                 }
             }
             requestSync()
+        }
+
+        /**
+         * The app became visible: catch up with changes made elsewhere meanwhile, then follow the
+         * remote live until [onAppBackground].
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        fun onAppForeground() {
+            requestSync()
+            if (liveUpdates?.isActive == true) return
+            liveUpdates =
+                scope.launch {
+                    combine(engine.isAutoSyncEnabled, connectivity.isOnline) { autoSync, online -> autoSync && online }
+                        .distinctUntilChanged()
+                        .flatMapLatest { active -> if (active) engine.remoteChanges else emptyFlow() }
+                        .collect { requestSync() }
+                }
+        }
+
+        /** The live connection is closed; pending operations still leave through the other triggers. */
+        fun onAppBackground() {
+            liveUpdates?.cancel()
+            liveUpdates = null
         }
 
         /** Asks for an automatic synchronisation; coalesced and ignored when auto-sync is off. */

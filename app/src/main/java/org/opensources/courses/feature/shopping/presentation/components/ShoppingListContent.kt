@@ -68,17 +68,22 @@ fun ShoppingListContent(
     }
 }
 
+/** Scrollable, so that pull to refresh also works on an empty list. */
 @Composable
 private fun EmptyState() {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.shopping_empty_title), style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = stringResource(R.string.shopping_empty_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+    LazyColumn(Modifier.fillMaxSize()) {
+        item(key = "empty") {
+            Box(Modifier.fillParentMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.shopping_empty_title), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(R.string.shopping_empty_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
         }
     }
 }

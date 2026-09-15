@@ -1,0 +1,151 @@
+package org.opensources.courses.feature.homeassistant.data.remote
+
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import org.opensources.courses.feature.homeassistant.domain.HaCredentials
+import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
+import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+
+/**
+ * Live to-do changes through the Home Assistant WebSocket API (`todo/item/subscribe`).
+ *
+ * An event only signals that something changed: the synchronisation engine then reads and merges
+ * the lists as usual, so there is a single merge path. The token travels only in the `auth`
+ * message. A lost connection is reopened after a growing delay (5 s up to 5 min).
+ */
+class HomeAssistantWebSocketClient
+    @Inject
+    constructor(
+        client: OkHttpClient,
+        private val json: Json,
+    ) : HaLiveUpdates {
+        // No read timeout on an idle connection; pings detect a dead one.
+        private val socketClient =
+            client
+                .newBuilder()
+                .readTimeout(0, TimeUnit.MILLISECONDS)
+                .pingInterval(PING_INTERVAL_SECONDS, TimeUnit.SECONDS)
+                .build()
+
+        override fun observeItemChanges(
+            credentials: HaCredentials,
+            entityIds: Set<String>,
+        ): Flow<Unit> =
+            flow {
+                var failures = 0
+                while (true) {
+                    emitAll(
+                        connect(credentials, entityIds)
+                            .onEach { failures = 0 }
+                            .catch { cause -> if (cause !is HomeAssistantException) throw cause },
+                    )
+                    delay(retryDelayMillis(failures++))
+                }
+            }
+
+        private fun connect(
+            credentials: HaCredentials,
+            entityIds: Set<String>,
+        ): Flow<Unit> =
+            callbackFlow {
+                val listener =
+                    object : WebSocketListener() {
+                        override fun onMessage(
+                            webSocket: WebSocket,
+                            text: String,
+                        ) {
+                            when (parse(text)?.get("type")?.jsonPrimitive?.contentOrNull) {
+                                "auth_required" -> webSocket.send(authMessage(credentials.token))
+                                "auth_ok" -> entityIds.forEachIndexed { index, entityId -> webSocket.send(subscribeMessage(index + 1, entityId)) }
+                                "auth_invalid" -> close(HomeAssistantException(HaErrorKind.UNAUTHORIZED))
+                                "event" -> trySend(Unit)
+                            }
+                        }
+
+                        override fun onClosing(
+                            webSocket: WebSocket,
+                            code: Int,
+                            reason: String,
+                        ) {
+                            close(HomeAssistantException(HaErrorKind.UNREACHABLE))
+                        }
+
+                        override fun onFailure(
+                            webSocket: WebSocket,
+                            t: Throwable,
+                            response: Response?,
+                        ) {
+                            close(HomeAssistantException(HaErrorKind.UNREACHABLE, t))
+                        }
+                    }
+                val request =
+                    try {
+                        Request.Builder().url(credentials.baseUrl.trimEnd('/') + WEBSOCKET_PATH).build()
+                    } catch (exception: IllegalArgumentException) {
+                        throw HomeAssistantException(HaErrorKind.INVALID_URL, exception)
+                    }
+                val socket = socketClient.newWebSocket(request, listener)
+                awaitClose { socket.close(NORMAL_CLOSURE, null) }
+            }.buffer(Channel.CONFLATED)
+
+        /** A frame that is not a JSON object cannot announce a to-do change: it is ignored. */
+        private fun parse(text: String): JsonObject? =
+            try {
+                json.parseToJsonElement(text).jsonObject
+            } catch (_: SerializationException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+
+        private fun authMessage(token: String): String =
+            buildJsonObject {
+                put("type", "auth")
+                put("access_token", token)
+            }.toString()
+
+        private fun subscribeMessage(
+            id: Int,
+            entityId: String,
+        ): String =
+            buildJsonObject {
+                put("id", id)
+                put("type", "todo/item/subscribe")
+                put("entity_id", entityId)
+            }.toString()
+
+        private fun retryDelayMillis(failures: Int): Long = (FIRST_RETRY_MILLIS shl failures.coerceAtMost(MAX_BACKOFF_STEPS)).coerceAtMost(MAX_RETRY_MILLIS)
+
+        private companion object {
+            const val WEBSOCKET_PATH = "/api/websocket"
+            const val NORMAL_CLOSURE = 1000
+            const val PING_INTERVAL_SECONDS = 30L
+            const val FIRST_RETRY_MILLIS = 5_000L
+            const val MAX_RETRY_MILLIS = 5 * 60 * 1_000L
+            const val MAX_BACKOFF_STEPS = 6
+        }
+    }

@@ -3,6 +3,7 @@ package org.opensources.courses.testing
 import android.content.Context
 import androidx.room.Room
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import org.opensources.courses.core.database.CoursesDatabase
 import org.opensources.courses.core.database.RoomTransactionRunner
@@ -45,6 +46,8 @@ class FakeRemoteSyncEngine(
     override val isEnabled: Flow<Boolean> = flowOf(newListsSynchronized)
 
     override val isAutoSyncEnabled: Flow<Boolean> = flowOf(false)
+
+    override val remoteChanges: Flow<Unit> = emptyFlow()
 
     override suspend fun synchronizesNewLists(): Boolean = newListsSynchronized
 

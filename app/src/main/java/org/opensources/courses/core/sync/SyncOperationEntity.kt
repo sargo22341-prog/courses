@@ -37,6 +37,8 @@ data class SyncOperation(
     val remoteItemId: String?,
     val remoteEntryId: String?,
     val attemptCount: Int,
+    /** When the local change was made (epoch millis). */
+    val createdAt: Long,
 )
 
 fun SyncOperationEntity.toDomain(): SyncOperation =
@@ -49,4 +51,5 @@ fun SyncOperationEntity.toDomain(): SyncOperation =
         remoteItemId = remoteItemId,
         remoteEntryId = remoteEntryId,
         attemptCount = attemptCount,
+        createdAt = createdAt,
     )

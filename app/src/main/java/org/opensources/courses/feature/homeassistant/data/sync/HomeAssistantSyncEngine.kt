@@ -1,8 +1,12 @@
 package org.opensources.courses.feature.homeassistant.data.sync
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncFailure
@@ -10,9 +14,11 @@ import org.opensources.courses.core.sync.SyncOperation
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
+import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
@@ -29,6 +35,7 @@ import javax.inject.Inject
  *
  * Deletions of lists created by the app are sent first. `UPDATE_LIST` (rename) cannot be sent:
  * the Home Assistant REST API offers no way to rename a to-do entity, so the new name stays local.
+ * A linked list that is unavailable in Home Assistant is skipped: its changes stay queued.
  */
 class HomeAssistantSyncEngine
     @Inject
@@ -37,14 +44,27 @@ class HomeAssistantSyncEngine
         private val gateway: HomeAssistantGateway,
         private val store: SyncLocalStore,
         private val queue: SyncQueue,
+        catalog: CatalogRepository,
+        private val liveUpdates: HaLiveUpdates,
     ) : RemoteSyncEngine {
         private val pusher = HaItemPusher(gateway, store, queue)
-        private val reconciler = HaItemReconciler(store, queue)
+        private val reconciler = HaItemReconciler(store, queue, catalog)
 
         override val isEnabled: Flow<Boolean> = config.config.map { it.enabled && it.isConfigured }.distinctUntilChanged()
 
         override val isAutoSyncEnabled: Flow<Boolean> =
             config.config.map { it.enabled && it.isConfigured && it.autoSync }.distinctUntilChanged()
+
+        /** One live connection following every linked list; it reconnects when the linked lists change. */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        override val remoteChanges: Flow<Unit> =
+            combine(config.config, store.observeLinkedEntityIds()) { current, entityIds ->
+                (current.baseUrl to entityIds).takeIf { current.enabled && current.isConfigured && entityIds.isNotEmpty() }
+            }.distinctUntilChanged()
+                .flatMapLatest { target ->
+                    val credentials = target?.let { config.credentials() }
+                    if (target == null || credentials == null) emptyFlow() else liveUpdates.observeItemChanges(credentials, target.second)
+                }
 
         override suspend fun synchronizesNewLists(): Boolean = config.config.first().let { it.enabled && it.isConfigured && it.autoCreateLists }
 
@@ -52,8 +72,14 @@ class HomeAssistantSyncEngine
             val credentials = config.credentials() ?: return SyncOutcome.Skipped
             return try {
                 var failures = sendListDeletions(credentials)
+                var unavailable = 0
                 val remoteLists = gateway.getTodoLists(credentials).associateBy { it.entityId }
                 for (list in store.synchronizedLists()) {
+                    // Its integration is stopped: nothing can be read, nothing is unlinked or lost.
+                    if (list.remoteId?.let(remoteLists::get)?.isAvailable == false) {
+                        unavailable++
+                        continue
+                    }
                     failures +=
                         try {
                             synchronizeList(credentials, list, remoteLists)
@@ -62,7 +88,11 @@ class HomeAssistantSyncEngine
                             1
                         }
                 }
-                if (failures == 0) SyncOutcome.Success else SyncOutcome.Failure(SyncFailure.PROTOCOL)
+                when {
+                    unavailable > 0 -> SyncOutcome.Failure(SyncFailure.LIST_UNAVAILABLE)
+                    failures > 0 -> SyncOutcome.Failure(SyncFailure.PROTOCOL)
+                    else -> SyncOutcome.Success
+                }
             } catch (exception: HomeAssistantException) {
                 SyncOutcome.Failure(exception.kind.toSyncFailure())
             }

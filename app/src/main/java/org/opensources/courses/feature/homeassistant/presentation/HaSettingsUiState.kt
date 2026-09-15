@@ -32,6 +32,7 @@ enum class HaMessage(
     REJECTED(R.string.ha_error_rejected, true),
     PROTOCOL(R.string.ha_error_protocol, true),
     SYNC_RETRY(R.string.sync_error_protocol, true),
+    LIST_UNAVAILABLE(R.string.sync_error_list_unavailable, true),
     ;
 
     companion object {
@@ -55,6 +56,7 @@ enum class HaMessage(
                         SyncFailure.UNREACHABLE -> UNREACHABLE
                         SyncFailure.UNAUTHORIZED -> UNAUTHORIZED
                         SyncFailure.PROTOCOL -> SYNC_RETRY
+                        SyncFailure.LIST_UNAVAILABLE -> LIST_UNAVAILABLE
                     }
             }
     }
@@ -109,6 +111,9 @@ data class HaSettingsUiState(
             val loaded = (remoteLists as? RemoteListsState.Loaded)?.lists.orEmpty()
             return if (config.listMode == HaListMode.APP_CREATED_ONLY) loaded.filter { it.entityId in trackedEntityIds } else loaded
         }
+
+    fun isRemoteUnavailable(entityId: String): Boolean =
+        (remoteLists as? RemoteListsState.Loaded)?.lists?.firstOrNull { it.entityId == entityId }?.isAvailable == false
 
     fun remoteName(entityId: String): String =
         (remoteLists as? RemoteListsState.Loaded)?.lists?.firstOrNull { it.entityId == entityId }?.name ?: entityId

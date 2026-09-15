@@ -11,7 +11,9 @@ import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
+import org.opensources.courses.testing.FakeCatalogRepository
 import org.opensources.courses.testing.FakeHaConfigRepository
+import org.opensources.courses.testing.FakeHaLiveUpdates
 import org.opensources.courses.testing.FakeHomeAssistantGateway
 import org.opensources.courses.testing.FakeSyncLocalStore
 import org.opensources.courses.testing.FakeSyncOperationDao
@@ -23,7 +25,7 @@ class HomeAssistantSyncEngineTest {
     private val store = FakeSyncLocalStore(queue).apply { lists[LIST] = SyncListRef(LIST, "Courses", ENTITY) }
     private val gateway = FakeHomeAssistantGateway().apply { lists[ENTITY] = HaTodoList(ENTITY, "Courses", supportsDescription = true) }
     private val config = FakeHaConfigRepository()
-    private val engine = HomeAssistantSyncEngine(config, gateway, store, queue)
+    private val engine = HomeAssistantSyncEngine(config, gateway, store, queue, FakeCatalogRepository(), FakeHaLiveUpdates())
 
     private fun localItem(
         id: String,
@@ -85,14 +87,14 @@ class HomeAssistantSyncEngineTest {
     fun `pending local change is pushed instead of being overwritten`() =
         runTest {
             val uid = gateway.addRemote(ENTITY, "Lait entier")
-            localItem("a", "Lait", checked = true, remoteId = uid)
-            enqueue(SyncOperationType.CHECK_ITEM, "a", uid)
+            localItem("a", "Lait", remoteId = uid, quantity = 2.0)
+            enqueue(SyncOperationType.UPDATE_ITEM, "a", uid)
 
             engine.synchronize()
 
             val remote = gateway.remote(ENTITY).single()
             assertEquals("Lait", remote.summary)
-            assertTrue(remote.completed)
+            assertEquals("2", remote.description)
             assertEquals("Lait", store.items.getValue("a").name)
         }
 

@@ -57,6 +57,8 @@ private fun linkLabel(
     state: HaSettingsUiState,
 ): String =
     when {
+        list.remoteId != null && state.isRemoteUnavailable(list.remoteId) ->
+            stringResource(R.string.ha_list_linked_unavailable, state.remoteName(list.remoteId))
         list.remoteId != null -> stringResource(R.string.ha_list_linked, state.remoteName(list.remoteId))
         list.isSynchronized -> stringResource(R.string.ha_list_pending_creation)
         else -> stringResource(R.string.ha_list_not_synced)
@@ -91,9 +93,10 @@ fun HaListPickerDialog(
                                 items(state.pickerOptions, key = { it.entityId }) { option ->
                                     PickerRow(
                                         label = option.name,
-                                        detail = option.entityId,
+                                        detail = if (option.isAvailable) option.entityId else stringResource(R.string.ha_picker_unavailable),
                                         selected = option.entityId == list.remoteId,
                                         onClick = { onLink(option.entityId) },
+                                        enabled = option.isAvailable,
                                     )
                                 }
                             }
@@ -115,18 +118,24 @@ private fun PickerRow(
     detail: String?,
     selected: Boolean,
     onClick: () -> Unit,
+    enabled: Boolean = true,
 ) {
     Column(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .clickable(enabled = enabled, onClick = onClick)
                 .padding(vertical = 10.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color =
+                when {
+                    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+                    selected -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
         )
         detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }

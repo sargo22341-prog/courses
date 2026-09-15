@@ -1,5 +1,8 @@
 package org.opensources.courses.feature.homeassistant.data.sync
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
@@ -26,6 +29,9 @@ class RoomSyncLocalStore
         private val clock: Clock,
     ) : SyncLocalStore {
         override suspend fun synchronizedLists(): List<SyncListRef> = listDao.getSynchronized().map { SyncListRef(it.localId, it.name, it.remoteId) }
+
+        override fun observeLinkedEntityIds(): Flow<Set<String>> =
+            listDao.observeAll().map { lists -> lists.mapNotNull { it.remoteId }.toSet() }.distinctUntilChanged()
 
         override suspend fun items(listLocalId: String): List<SyncItemRef> =
             itemDao.getAllForList(listLocalId).map {
@@ -66,6 +72,13 @@ class RoomSyncLocalStore
 
         override suspend fun purgeItem(itemLocalId: String) = itemDao.delete(itemLocalId)
 
+        override suspend fun restoreDeletedItem(itemLocalId: String) {
+            transactions.inTransaction {
+                val item = itemDao.getById(itemLocalId) ?: return@inTransaction
+                itemDao.update(item.copy(isDeleted = false, syncStatus = SyncStatus.SYNCED, updatedAt = clock.millis()))
+            }
+        }
+
         override suspend fun markItemSynced(itemLocalId: String) =
             withoutPendingChanges(itemLocalId) { item ->
                 if (item.syncStatus != SyncStatus.SYNCED) itemDao.update(item.copy(syncStatus = SyncStatus.SYNCED))
@@ -99,6 +112,7 @@ class RoomSyncLocalStore
             quantity: Double,
             unit: String?,
             checked: Boolean,
+            catalogProductId: String?,
         ) {
             val now = clock.millis()
             itemDao.insert(
@@ -109,7 +123,7 @@ class RoomSyncLocalStore
                     quantity = quantity,
                     unit = unit,
                     isChecked = checked,
-                    catalogProductId = null,
+                    catalogProductId = catalogProductId,
                     createdAt = now,
                     updatedAt = now,
                     remoteId = remoteId,

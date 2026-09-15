@@ -23,6 +23,8 @@ import org.opensources.courses.feature.homeassistant.domain.HomeAssistantExcepti
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 import retrofit2.HttpException
 import java.io.IOException
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
 class HomeAssistantClient
@@ -44,6 +46,7 @@ class HomeAssistantClient
                         entityId = state.entityId,
                         name = state.attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: state.entityId,
                         supportsDescription = features and FEATURE_SET_DESCRIPTION != 0,
+                        isAvailable = state.state != STATE_UNAVAILABLE,
                     )
                 }.sortedBy { it.name.lowercase() }
 
@@ -61,9 +64,17 @@ class HomeAssistantClient
                 }
             val decoded = call { json.decodeFromJsonElement(ServiceResponseDto.serializer(), response) }
             return decoded.serviceResponse[entityId]?.items.orEmpty().map {
-                HaTodoItem(it.uid, it.summary, it.status == TodoItemDto.STATUS_COMPLETED, it.description)
+                HaTodoItem(it.uid, it.summary, it.status == TodoItemDto.STATUS_COMPLETED, it.description, it.completed?.let(::epochMillis))
             }
         }
+
+        /** An unreadable date only loses its tie-break value: the item itself is still synchronised. */
+        private fun epochMillis(isoDate: String): Long? =
+            try {
+                OffsetDateTime.parse(isoDate).toInstant().toEpochMilli()
+            } catch (_: DateTimeParseException) {
+                null
+            }
 
         override suspend fun addItem(
             credentials: HaCredentials,
@@ -86,8 +97,8 @@ class HomeAssistantClient
             credentials: HaCredentials,
             entityId: String,
             uid: String,
-            summary: String,
-            completed: Boolean,
+            summary: String?,
+            completed: Boolean?,
             description: String?,
             sendDescription: Boolean,
         ) {
@@ -97,8 +108,8 @@ class HomeAssistantClient
                 buildJsonObject {
                     put("entity_id", entityId)
                     put("item", uid)
-                    put("rename", summary)
-                    put("status", if (completed) TodoItemDto.STATUS_COMPLETED else TodoItemDto.STATUS_NEEDS_ACTION)
+                    summary?.let { put("rename", it) }
+                    completed?.let { put("status", if (it) TodoItemDto.STATUS_COMPLETED else TodoItemDto.STATUS_NEEDS_ACTION) }
                     if (sendDescription) put("description", description?.let(::JsonPrimitive) ?: JsonNull)
                 },
             )
@@ -221,6 +232,7 @@ class HomeAssistantClient
 
         private companion object {
             const val TODO_DOMAIN = "todo."
+            const val STATE_UNAVAILABLE = "unavailable"
             const val FEATURE_SET_DESCRIPTION = 64
             const val LOCAL_TODO_HANDLER = "local_todo"
             const val FLOW_CREATE_ENTRY = "create_entry"

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -44,5 +45,26 @@ class HaListPickerDialogTest {
 
         assertTrue(created)
         assertTrue(dismissed)
+    }
+
+    @Test
+    fun unavailableHomeAssistantListCannotBeChosen() {
+        var linked: String? = null
+        val state =
+            HaSettingsUiState(
+                lists = listOf(list),
+                remoteLists = RemoteListsState.Loaded(listOf(HaTodoList("todo.mon_agenda", "Mon agenda", supportsDescription = true, isAvailable = false))),
+                pickerListId = list.id,
+            )
+        composeRule.setContent {
+            CoursesTheme {
+                HaListPickerDialog(list, state, onLink = { linked = it }, onCreate = {}, onUnlink = {}, onDismiss = {})
+            }
+        }
+
+        composeRule.onNodeWithText("Indisponible dans Home Assistant").assertIsDisplayed()
+        composeRule.onNodeWithText("Mon agenda").performClick()
+
+        assertNull(linked)
     }
 }

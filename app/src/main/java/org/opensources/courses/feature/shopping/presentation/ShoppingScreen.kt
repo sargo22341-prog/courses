@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ fun ShoppingRoute(
                 onSaveItem = viewModel::onSaveItem,
                 onToggleHidePurchased = viewModel::onToggleHidePurchased,
                 onDeletePurchased = viewModel::onDeletePurchased,
+                onRefresh = viewModel::onRefresh,
                 onOpenLists = onOpenLists,
                 onOpenSettings = onOpenSettings,
             ),
@@ -79,6 +81,7 @@ class ShoppingActions(
     val onSaveItem: (ShoppingItem, String, Double, String?) -> Unit = { _, _, _, _ -> },
     val onToggleHidePurchased: () -> Unit = {},
     val onDeletePurchased: () -> Unit = {},
+    val onRefresh: () -> Unit = {},
     val onOpenLists: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
 )
@@ -144,27 +147,55 @@ fun ShoppingScreen(
                     onAddCustomItem = actions.onAddCustomItem,
                 )
             } else {
-                ShoppingListContent(
-                    state = state,
-                    onToggleItem = actions.onToggleItem,
-                    onDeleteItem = actions.onDeleteItem,
-                    onEditItem = { editedItemId = it.id },
-                )
+                RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
+                    ShoppingListContent(
+                        state = state,
+                        onToggleItem = actions.onToggleItem,
+                        onDeleteItem = actions.onDeleteItem,
+                        onEditItem = { editedItemId = it.id },
+                    )
+                }
             }
         }
     }
+    EditItemDialogHost(state, editedItemId, actions, onClose = { editedItemId = null })
+}
+
+/** Pull to refresh fetches changes made in Home Assistant; without a remote there is nothing to fetch. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RefreshableContent(
+    enabled: Boolean,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    if (enabled) {
+        PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) { content() }
+    } else {
+        content()
+    }
+}
+
+@Composable
+private fun EditItemDialogHost(
+    state: ShoppingUiState,
+    editedItemId: String?,
+    actions: ShoppingActions,
+    onClose: () -> Unit,
+) {
     val editedItem = (state.toBuy + state.purchased).firstOrNull { it.id == editedItemId }
     if (editedItem != null) {
         EditItemDialog(
             item = editedItem,
-            onDismiss = { editedItemId = null },
+            onDismiss = onClose,
             onSave = { name, quantity, unit ->
                 actions.onSaveItem(editedItem, name, quantity, unit)
-                editedItemId = null
+                onClose()
             },
             onDelete = {
                 actions.onDeleteItem(editedItem)
-                editedItemId = null
+                onClose()
             },
         )
     }

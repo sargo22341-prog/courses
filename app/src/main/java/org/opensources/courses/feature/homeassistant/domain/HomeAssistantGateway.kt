@@ -18,13 +18,16 @@ interface HomeAssistantGateway {
         description: String?,
     )
 
-    /** [description] is sent only when [sendDescription] is true (null clears it). */
+    /**
+     * Only the given fields change: a null [summary] or [completed] is left as it is in Home
+     * Assistant. [description] is sent only when [sendDescription] is true (null clears it).
+     */
     suspend fun updateItem(
         credentials: HaCredentials,
         entityId: String,
         uid: String,
-        summary: String,
-        completed: Boolean,
+        summary: String?,
+        completed: Boolean?,
         description: String?,
         sendDescription: Boolean,
     )

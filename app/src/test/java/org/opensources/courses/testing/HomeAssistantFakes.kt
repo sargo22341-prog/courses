@@ -1,6 +1,10 @@
 package org.opensources.courses.testing
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onStart
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.data.sync.SyncItemRef
@@ -12,6 +16,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
+import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
@@ -50,6 +55,17 @@ class FakeHaConfigRepository(
     }
 }
 
+/** Live updates driven by the test: [changes] emissions reach the collectors. */
+class FakeHaLiveUpdates : HaLiveUpdates {
+    val changes = MutableSharedFlow<Unit>()
+    var observedEntityIds: Set<String>? = null
+
+    override fun observeItemChanges(
+        credentials: HaCredentials,
+        entityIds: Set<String>,
+    ): Flow<Unit> = changes.onStart { observedEntityIds = entityIds }
+}
+
 /** A tiny in-memory Home Assistant with the to-do semantics the engine relies on. */
 class FakeHomeAssistantGateway : HomeAssistantGateway {
     val lists = mutableMapOf<String, HaTodoList>()
@@ -64,9 +80,10 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         summary: String,
         completed: Boolean = false,
         description: String? = null,
+        completedAt: Long? = null,
     ): String {
         val uid = "uid${nextUid++}"
-        items.getOrPut(entityId) { mutableListOf() } += HaTodoItem(uid, summary, completed, description)
+        items.getOrPut(entityId) { mutableListOf() } += HaTodoItem(uid, summary, completed, description, completedAt)
         return uid
     }
 
@@ -105,8 +122,8 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         credentials: HaCredentials,
         entityId: String,
         uid: String,
-        summary: String,
-        completed: Boolean,
+        summary: String?,
+        completed: Boolean?,
         description: String?,
         sendDescription: Boolean,
     ) {
@@ -115,7 +132,13 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         val list = items.getValue(entityId)
         val index = list.indexOfFirst { it.uid == uid }
         if (index < 0) throw HomeAssistantException(HaErrorKind.REJECTED)
-        list[index] = list[index].copy(summary = summary, completed = completed, description = if (sendDescription) description else list[index].description)
+        val current = list[index]
+        list[index] =
+            current.copy(
+                summary = summary ?: current.summary,
+                completed = completed ?: current.completed,
+                description = if (sendDescription) description else current.description,
+            )
     }
 
     override suspend fun removeItem(
@@ -153,11 +176,14 @@ class FakeSyncLocalStore(
 ) : SyncLocalStore {
     val lists = linkedMapOf<String, SyncListRef>()
     val items = linkedMapOf<String, SyncItemRef>()
+    val catalogProductIds = mutableMapOf<String, String?>()
     val tracked = mutableSetOf<String>()
     val unlinked = mutableSetOf<String>()
     private var nextId = 1
 
     override suspend fun synchronizedLists(): List<SyncListRef> = lists.values.toList()
+
+    override fun observeLinkedEntityIds(): Flow<Set<String>> = flowOf(lists.values.mapNotNull { it.remoteId }.toSet())
 
     override suspend fun items(listLocalId: String): List<SyncItemRef> = items.values.filter { it.listLocalId == listLocalId }
 
@@ -194,6 +220,10 @@ class FakeSyncLocalStore(
         items.remove(itemLocalId)
     }
 
+    override suspend fun restoreDeletedItem(itemLocalId: String) {
+        items[itemLocalId]?.let { items[itemLocalId] = it.copy(isDeleted = false) }
+    }
+
     override suspend fun markItemSynced(itemLocalId: String) = Unit
 
     override suspend fun removeRemotelyDeletedItem(itemLocalId: String) {
@@ -218,9 +248,11 @@ class FakeSyncLocalStore(
         quantity: Double,
         unit: String?,
         checked: Boolean,
+        catalogProductId: String?,
     ) {
         val id = "pulled${nextId++}"
         items[id] = SyncItemRef(id, listLocalId, name, quantity, unit, checked, remoteId, isDeleted = false)
+        catalogProductIds[id] = catalogProductId
     }
 
     override suspend fun requeueCreation(itemLocalId: String) {

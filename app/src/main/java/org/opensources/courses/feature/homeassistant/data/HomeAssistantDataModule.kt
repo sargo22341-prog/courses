@@ -17,11 +17,13 @@ import okhttp3.OkHttpClient
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.feature.homeassistant.data.remote.HomeAssistantApi
 import org.opensources.courses.feature.homeassistant.data.remote.HomeAssistantClient
+import org.opensources.courses.feature.homeassistant.data.remote.HomeAssistantWebSocketClient
 import org.opensources.courses.feature.homeassistant.data.sync.HomeAssistantSyncEngine
 import org.opensources.courses.feature.homeassistant.data.sync.RoomSyncLocalStore
 import org.opensources.courses.feature.homeassistant.data.sync.SyncLocalStore
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
+import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -41,6 +43,9 @@ abstract class HomeAssistantDataModule {
 
     @Binds
     abstract fun bindGateway(client: HomeAssistantClient): HomeAssistantGateway
+
+    @Binds
+    abstract fun bindLiveUpdates(client: HomeAssistantWebSocketClient): HaLiveUpdates
 
     @Binds
     abstract fun bindListLinkRepository(repository: HaListLinkRepositoryImpl): HaListLinkRepository

@@ -34,6 +34,8 @@ data class TodoItemDto(
     val summary: String = "",
     val status: String = STATUS_NEEDS_ACTION,
     val description: String? = null,
+    /** ISO-8601 completion date, present on completed items. */
+    val completed: String? = null,
 ) {
     companion object {
         const val STATUS_NEEDS_ACTION = "needs_action"

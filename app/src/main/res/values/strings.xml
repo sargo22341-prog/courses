@@ -64,6 +64,8 @@
     <string name="sync_error_unreachable">Impossible de contacter Home Assistant.\nVotre liste locale reste disponible.</string>
     <string name="sync_error_unauthorized">Home Assistant a refusé le token d’accès.\nVérifiez-le dans les réglages.</string>
     <string name="sync_error_protocol">Synchronisation impossible.\nLes modifications seront réessayées automatiquement.</string>
+    <string name="sync_error_list_unavailable">Une liste liée est indisponible dans Home Assistant.\nChoisissez une autre liste ou réactivez son intégration. Votre liste locale reste disponible.</string>
+    <string name="sync_list_unavailable">Liste Home Assistant indisponible</string>
 
     <!-- Listes -->
     <string name="lists_title">Mes listes</string>
@@ -146,6 +148,8 @@
     <string name="ha_list_not_synced">Non synchronisée</string>
     <string name="ha_list_pending_creation">Création dans Home Assistant en attente</string>
     <string name="ha_list_linked">Liée à %1$s</string>
+    <string name="ha_list_linked_unavailable">Liée à %1$s — indisponible dans Home Assistant</string>
+    <string name="ha_picker_unavailable">Indisponible dans Home Assistant</string>
     <string name="ha_list_choose">Choisir</string>
     <string name="ha_picker_title">Synchroniser « %1$s »</string>
     <string name="ha_picker_create">Créer « %1$s » dans Home Assistant</string>

@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
+import org.opensources.courses.core.sync.SyncFailure
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
 
@@ -34,7 +35,9 @@ fun SyncIndicator(snapshot: SyncSnapshot) {
         when (snapshot.state) {
             SyncState.OFFLINE -> OfflineColor to stringResource(R.string.sync_offline)
             SyncState.SYNCING -> MaterialTheme.colorScheme.primary to stringResource(R.string.sync_syncing)
-            SyncState.SYNC_ERROR -> MaterialTheme.colorScheme.error to stringResource(R.string.sync_error)
+            SyncState.SYNC_ERROR ->
+                MaterialTheme.colorScheme.error to
+                    stringResource(if (snapshot.failure == SyncFailure.LIST_UNAVAILABLE) R.string.sync_list_unavailable else R.string.sync_error)
             SyncState.ONLINE -> MaterialTheme.colorScheme.tertiary to stringResource(R.string.sync_synced)
         }
     val pending =

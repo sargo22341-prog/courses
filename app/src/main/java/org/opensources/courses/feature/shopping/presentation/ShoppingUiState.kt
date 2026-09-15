@@ -13,6 +13,8 @@ data class ShoppingUiState(
     val hidePurchased: Boolean = false,
     val suggestions: List<ProductSuggestion> = emptyList(),
     val sync: SyncSnapshot = SyncSnapshot.Initial,
+    /** A pull to refresh is running. */
+    val isRefreshing: Boolean = false,
 ) {
     /** "+ Ajouter …" is offered unless a suggestion is exactly what was typed. */
     fun offersCustomItem(query: String): Boolean {

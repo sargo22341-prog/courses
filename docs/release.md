@@ -20,7 +20,9 @@ Le workflow `.github/workflows/ci.yml` :
 - **Actions → CI → Run workflow** sur `main` permet de choisir `minor` ou `major` au lieu de
   `patch`.
 
-Le commit de version, poussé avec le jeton du workflow, ne relance pas la CI. Si `main` a avancé
+Le workflow ne s'exécute que sur GitHub : un serveur Gitea ou Forgejo qui héberge une copie du
+dépôt lit aussi `.github/workflows`, mais ses jobs y sont ignorés (`github.server_url`). Le commit
+de version, poussé avec le jeton du workflow, ne relance pas la CI. Si `main` a avancé
 pendant le build, le push est refusé et rien n'est publié : le push suivant produit la version.
 Après une release, **récupérer `main`** (`git pull`) avant de travailler ou de lancer le script
 local, sinon le `versionCode` local est en retard.

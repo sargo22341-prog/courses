@@ -21,6 +21,8 @@ permissions:
 jobs:
   verify:
     name: Compilation et tests
+    # Gitea/Forgejo Actions lisent aussi .github/workflows : le dépôt miroir local n'exécute rien.
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -47,7 +49,7 @@ jobs:
   release:
     name: Montée de version et APK signé
     needs: verify
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.server_url == 'https://github.com' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: write

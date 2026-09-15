@@ -1,8 +1,10 @@
 # AGENTS.md
 
 Règles obligatoires pour toute session de travail sur **courses**. Ce fichier fait autorité ;
-`README.md` décrit le fonctionnement détaillé (architecture, synchronisation, catalogue, conflits).
-En cas de doute sur un comportement existant : lire le README et le code avant de modifier.
+`README.md` présente l'application, `docs/` décrit le fonctionnement détaillé (index
+`docs/README.md` : architecture, synchronisation, catalogue, conflits…) et `docs/adr/` les
+décisions d'architecture. En cas de doute sur un comportement existant : lire `docs/` et le code
+avant de modifier.
 
 ## 1. Produit — ce qui ne se négocie pas
 
@@ -31,8 +33,8 @@ En cas de doute sur un comportement existant : lire le README et le code avant d
   dans un `build.gradle.kts`.
 - **Pas de nouvelle dépendance sans nécessité démontrée** : vérifier d'abord si les API
   Android/Jetpack déjà présentes suffisent, et justifier l'ajout dans le rapport final.
-- WorkManager n'est pas utilisé (choix documenté dans le README) ; ne l'introduire que si un besoin
-  réel l'impose, en mettant le README à jour.
+- WorkManager n'est pas utilisé (`docs/adr/0004-pas-de-workmanager.md`) ; ne l'introduire que si
+  un besoin réel l'impose, avec une nouvelle ADR et la documentation mise à jour.
 - **Aucune dépendance aux services Google Play** (GMS, ML Kit, Firebase, Play Integrity…) :
   l'application doit fonctionner à l'identique sur GrapheneOS et tout Android sans Google.
   Préférer AndroidX et des bibliothèques open source (ex. CameraX + ZXing pour les QR codes).
@@ -54,7 +56,8 @@ org.opensources.courses
 ├── CoursesApplication, AppInitializer, MainActivity, MainViewModel
 ├── navigation/                      routes typées + NavHost
 ├── core/
-│   ├── common/  database/  designsystem/  model/  network/  security/  sync/
+│   ├── common/  database/  designsystem/  model/  network/  permission/  scanner/
+│   ├── security/  sync/
 └── feature/<fonctionnalité>/
     ├── data/          Room, DataStore, Retrofit, implémentations des dépôts, modules Hilt
     ├── domain/        modèles, interfaces de dépôts, cas d'usage, règles pures
@@ -62,7 +65,7 @@ org.opensources.courses
 ```
 
 Fonctionnalités existantes : `shopping`, `lists`, `catalog`, `homeassistant`, `settings`,
-`onboarding`. Une nouvelle fonctionnalité = un nouveau package `feature/<nom>` avec seulement les
+`language`, `onboarding`. Une nouvelle fonctionnalité = un nouveau package `feature/<nom>` avec seulement les
 couches dont elle a besoin.
 
 Règles de dépendance :
@@ -90,8 +93,8 @@ UI → ViewModel → Repository → Room → Flow → UI
 - Toute modification d'une liste synchronisée écrit l'entité **et** sa `SyncOperationEntity`
   dans la **même transaction** Room. Une opération n'est supprimée qu'après confirmation distante.
 - Stratégie de conflit : *last-write-wins, sauf qu'une modification locale non synchronisée n'est
-  jamais écrasée* (`ConflictResolver`). Ne pas la modifier sans mettre à jour le code, les tests
-  et le README.
+  jamais écrasée* (`ConflictResolver`). Ne pas la modifier sans mettre à jour le code, les tests,
+  `docs/conflits.md` et l'ADR 0005.
 - Les écritures issues du distant revérifient dans leur transaction l'absence d'opération locale
   en attente.
 - Toute modification d'entité Room : incrémenter la version de `CoursesDatabase`, fournir une
@@ -119,7 +122,7 @@ UI → ViewModel → Repository → Room → Flow → UI
 - Supprimer code mort, imports inutilisés, `TODO` non traités, logs de debug et fichiers
   temporaires avant de terminer.
 - Pas de mock silencieux ni de fonctionnalité factice : ce qui n'est pas terminé est documenté
-  dans le README (« Limites connues ») et signalé dans le rapport.
+  dans `docs/limites-connues.md` et signalé dans le rapport.
 - Pas de `!!` dans le code de production, pas de `GlobalScope`, pas de `runBlocking` hors tests,
   pas d'exception avalée sans raison écrite en commentaire ; toujours relancer
   `CancellationException`.
@@ -158,7 +161,9 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 - Zéro erreur de compilation, zéro test en échec, aucun nouvel avertissement Kotlin/Compose.
 - Vérifier la limite de 600 lignes sur les fichiers modifiés.
 - Si Room ou le schéma change : migration écrite et testée.
-- Si un comportement documenté change : mettre à jour `README.md`.
+- Si un comportement documenté change : mettre à jour la page de `docs/` concernée (et
+  `README.md` si la présentation de l'application change). Un choix structurant nouveau ou
+  remplacé : une ADR dans `docs/adr/`.
 - Ne jamais annoncer comme vérifié ce qui ne l'a pas été (ex. synchronisation avec une vraie
   instance Home Assistant).
 

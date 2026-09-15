@@ -63,6 +63,9 @@ interface CatalogDao {
     @Query("DELETE FROM catalog_aliases WHERE productId IN (SELECT id FROM catalog_products WHERE source = :source)")
     suspend fun deleteAliasesForSource(source: String)
 
+    @Query("UPDATE catalog_products SET catalogVersion = NULL WHERE source = :source")
+    suspend fun markSourceOutdated(source: String)
+
     @Query("DELETE FROM catalog_products WHERE source = :source AND (catalogVersion IS NULL OR catalogVersion != :version)")
     suspend fun deleteOutdated(
         source: String,

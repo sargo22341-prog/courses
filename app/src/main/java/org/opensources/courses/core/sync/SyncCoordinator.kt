@@ -35,7 +35,7 @@ import javax.inject.Singleton
  * foreground, a change announced live by the remote while in the foreground, network regained, a
  * new pending operation, and a periodic retry while the process is alive. Pending operations are
  * persisted, so anything not sent before the process dies is sent at the next start.
- * WorkManager is deliberately not used: see README, "Synchronisation".
+ * WorkManager is deliberately not used: see docs/adr/0004-pas-de-workmanager.md.
  */
 @Singleton
 class SyncCoordinator

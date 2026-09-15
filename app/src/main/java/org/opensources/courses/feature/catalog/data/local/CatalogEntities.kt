@@ -13,8 +13,8 @@ import org.opensources.courses.feature.catalog.domain.GroceryCategory
 /**
  * @property normalizedName [org.opensources.courses.feature.catalog.domain.TextNormalizer] form,
  * the only column searched.
- * @property catalogVersion version of the import that last wrote the row; rows of an older version
- * are removed at the end of an import.
+ * @property catalogVersion version of the import that last wrote the row; rows of the source that an
+ * import did not write are removed at its end.
  * @property groceryCategory shop section (database version 2); null for custom products and for
  * products the source cannot place.
  */

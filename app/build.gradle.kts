@@ -63,7 +63,7 @@ android {
 }
 
 room {
-    // Exported schemas are the reference for future migrations (see README, "Base Room").
+    // Exported schemas are the reference for future migrations (see docs/adr/0020-migrations-room-sans-perte.md).
     schemaDirectory("$projectDir/schemas")
 }
 

@@ -110,7 +110,11 @@ class CatalogRepositoryImpl
         /**
          * Atomically replaces every product of [source] with [products]. Products are upserted
          * (ids are stable, so usage statistics and list items keep pointing at them, whatever the
-         * language) and rows left from an older version are deleted afterwards.
+         * language) and every row the import did not write is deleted afterwards.
+         *
+         * Rows are first marked outdated because the version alone cannot tell imports apart: the
+         * OpenFoodFacts file, hence its ETag, is the same in every language. Re-importing it in
+         * another language would otherwise keep the products that have no name in the new language.
          */
         private suspend fun replaceSource(
             source: CatalogSource,
@@ -119,6 +123,7 @@ class CatalogRepositoryImpl
         ) {
             transactions.inTransaction {
                 dao.deleteAliasesForSource(source.name)
+                dao.markSourceOutdated(source.name)
                 dao.upsertProducts(
                     products.map {
                         CatalogProductEntity(

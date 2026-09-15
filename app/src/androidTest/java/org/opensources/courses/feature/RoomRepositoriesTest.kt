@@ -132,6 +132,28 @@ class RoomRepositoriesTest {
         }
 
     @Test
+    fun reimportWithTheSameVersionDropsProductsMissingFromTheNewLanguage() =
+        runTest {
+            // Same ETag in every language: the English import leaves a product with no French name.
+            repositories.catalog.replaceRemoteCatalog(
+                "W/\"etag\"",
+                listOf(
+                    CatalogImportProduct("en:milks", "Milks", null, null, 3),
+                    CatalogImportProduct("en:tomato-and-vermicelli-soups", "Tomato and vermicelli soups", null, null, 3),
+                ),
+            )
+            repositories.catalog.recordUsage("en:milks")
+
+            repositories.catalog.replaceRemoteCatalog("W/\"etag\"", listOf(CatalogImportProduct("en:milks", "Laits", null, null, 3)))
+
+            assertTrue(repositories.catalog.findCandidates("tomato", 10).isEmpty())
+            val milk = repositories.catalog.findCandidates("lait", 10).single()
+            assertEquals("Laits", milk.product.name)
+            assertEquals(1, milk.useCount)
+            assertEquals(1, repositories.catalog.observeProductCount().first())
+        }
+
+    @Test
     fun customProductsAreCreatedOnce() =
         runTest {
             val first = repositories.catalog.getOrCreateCustomProduct("Sauce piquante")

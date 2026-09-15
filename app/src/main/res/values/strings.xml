@@ -118,7 +118,7 @@
     <string name="settings_group_by_category_hint">Les articles à acheter sont regroupés par rayon grâce au catalogue alimentaire, y compris ceux ajoutés dans Home Assistant. Un article non reconnu va dans « Autres ».</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Non connecté — facultatif</string>
-    <string name="settings_home_assistant_on">Activé — %1$s</string>
+    <string name="settings_home_assistant_sync_disabled">Synchronisation désactivée</string>
 
     <!-- Catalogue -->
     <string name="catalog_title">Catalogue alimentaire</string>

@@ -1,4 +1,4 @@
-package org.opensources.courses.feature.shopping.presentation.components
+package org.opensources.courses.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,7 @@ import org.opensources.courses.core.sync.SyncState
 private val OfflineColor = Color(0xFFE0973A)
 
 /**
- * Discreet status line under the list title. Without Home Assistant only "offline" is shown:
+ * Discreet status line, under the list title and in the settings. Without Home Assistant only "offline" is shown:
  * "synchronised" would be meaningless for a purely local list.
  */
 @Composable

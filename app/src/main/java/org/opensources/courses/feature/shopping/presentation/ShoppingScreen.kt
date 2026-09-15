@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.opensources.courses.R
+import org.opensources.courses.core.designsystem.component.SyncIndicator
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.AddItemField
@@ -42,7 +43,6 @@ import org.opensources.courses.feature.shopping.presentation.components.EditItem
 import org.opensources.courses.feature.shopping.presentation.components.PurchasedFooter
 import org.opensources.courses.feature.shopping.presentation.components.ShoppingListContent
 import org.opensources.courses.feature.shopping.presentation.components.SuggestionsPanel
-import org.opensources.courses.feature.shopping.presentation.components.SyncIndicator
 
 @Composable
 fun ShoppingRoute(

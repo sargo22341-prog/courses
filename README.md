@@ -125,9 +125,10 @@ décocher, modifier la quantité et supprimer des articles, et utiliser l'autoco
 - **Articles achetés** : l'en-tête « Achetés » porte à droite un bouton corbeille qui supprime tous
   les articles cochés, **après confirmation** (la même boîte de dialogue que « Supprimer les
   articles achetés » dans le menu du bas de l'écran). Annuler ne supprime rien.
-- **Thème** (Réglages) : trois boutons sur une ligne, **Clair**, **Sombre** et **Système**, peints
-  avec le fond de leur thème ; « Système » passe du fond clair au fond sombre en son milieu. Le choix
-  courant est encadré et coché.
+- **Thème** (Réglages) : trois boutons compacts (48 dp de haut) sur une ligne, **Clair**, **Sombre**
+  et **Système**, peints avec le fond de leur thème ; « Système » est coupé par une barre oblique
+  nette (`[ clair / sombre ]`), sans fondu, et chaque partie de son libellé prend la couleur lisible
+  sur son côté. Le choix courant est encadré et coché.
 - **Barres système** : l'heure, le réseau, la batterie et la barre de navigation suivent le thème
   **choisi dans l'application** (icônes sombres en thème clair, claires en thème sombre), même
   quand il diffère du thème du téléphone (`SystemBarsAppearance`, appelé par `CoursesTheme`).
@@ -227,7 +228,14 @@ défaut**. Activé, les articles à acheter sont regroupés sous un en-tête par
 
 ## Home Assistant
 
-Entièrement **facultatif** : l'application fonctionne sans. Écran **Réglages → Home Assistant** :
+Entièrement **facultatif** : l'application fonctionne sans. Dans **Réglages**, l'entrée
+« Home Assistant » affiche « Non connecté — facultatif » tant qu'aucune adresse et aucun token ne
+sont enregistrés. Dès qu'ils le sont, elle affiche « Connecté », l'adresse et l'état de la
+synchronisation (« Synchronisé », « Synchronisation… », « Hors connexion », « Synchronisation
+impossible », modifications en attente), ou « Synchronisation désactivée » si l'interrupteur est
+coupé : désactiver la synchronisation ne déconnecte pas Home Assistant.
+
+Écran **Réglages → Home Assistant** :
 
 - activer / désactiver la synchronisation ;
 - **connexion repliée** : dès qu'une adresse et un token sont enregistrés, la carte « Connexion »

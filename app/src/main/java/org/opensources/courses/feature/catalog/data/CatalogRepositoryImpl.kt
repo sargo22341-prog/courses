@@ -11,6 +11,7 @@ import org.opensources.courses.feature.catalog.data.local.ProductCandidateRow
 import org.opensources.courses.feature.catalog.data.local.toDomain
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
+import org.opensources.courses.feature.catalog.domain.CatalogProductRef
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
@@ -61,20 +62,35 @@ class CatalogRepositoryImpl
         override suspend fun replaceRemoteCatalog(
             version: String,
             products: List<CatalogImportProduct>,
-        ) {
-            replaceSource(dao, transactions, CatalogSource.OPEN_FOOD_FACTS, version, products)
-        }
+        ) = replaceSource(CatalogSource.OPEN_FOOD_FACTS, version, products)
+
+        override suspend fun replaceSeedCatalog(
+            version: String,
+            products: List<CatalogImportProduct>,
+        ) = replaceSource(CatalogSource.SEED, version, products)
 
         override fun observeProductCount(): Flow<Int> = dao.observeCount()
+
+        override suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef> =
+            if (normalizedNames.isEmpty()) emptyList() else dao.findRefsByNormalizedNames(normalizedNames.toList()).map { it.toDomain() }
+
+        override suspend fun findByIds(ids: Set<String>): List<CatalogProductRef> =
+            if (ids.isEmpty()) emptyList() else dao.findRefsByIds(ids.toList()).map { it.toDomain() }
 
         override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> {
             if (normalizedNames.isEmpty()) return flowOf(emptyMap())
             return dao.observeCategories(normalizedNames.toList()).map { rows ->
                 rows
-                    .sortedBy { SOURCE_PRIORITY.indexOf(it.source) }
+                    // The curated seed places products more reliably than the generic taxonomy.
+                    .sortedBy { it.source.ordinal }
                     .distinctBy { it.normalizedName }
                     .associate { it.normalizedName to it.groceryCategory }
             }
+        }
+
+        override fun observeCategoriesByIds(ids: Set<String>): Flow<Map<String, GroceryCategory>> {
+            if (ids.isEmpty()) return flowOf(emptyMap())
+            return dao.observeCategoriesByIds(ids.toList()).map { rows -> rows.associate { it.id to it.groceryCategory } }
         }
 
         private suspend fun List<ProductCandidateRow>.toCandidates(): List<ProductCandidate> {
@@ -91,49 +107,44 @@ class CatalogRepositoryImpl
             }
         }
 
-        companion object {
-            private const val CUSTOM_PREFIX = "custom:"
-
-            /** The curated seed places products more reliably than the generic taxonomy. */
-            private val SOURCE_PRIORITY = listOf(CatalogSource.SEED, CatalogSource.OPEN_FOOD_FACTS, CatalogSource.CUSTOM)
-
-            /**
-             * Atomically replaces every product of [source] with [products]. Products are upserted
-             * (ids are stable, so usage statistics keep pointing at them) and rows left from an
-             * older version are deleted afterwards.
-             */
-            suspend fun replaceSource(
-                dao: CatalogDao,
-                transactions: TransactionRunner,
-                source: CatalogSource,
-                version: String,
-                products: List<CatalogImportProduct>,
-            ) {
-                transactions.inTransaction {
-                    dao.deleteAliasesForSource(source.name)
-                    dao.upsertProducts(
-                        products.map {
-                            CatalogProductEntity(
-                                id = it.id,
-                                name = it.name,
-                                normalizedName = TextNormalizer.normalize(it.name),
-                                category = it.category,
-                                brand = null,
-                                parentId = it.parentId,
-                                source = source,
-                                baseScore = it.baseScore,
-                                catalogVersion = version,
-                                groceryCategory = it.groceryCategory,
-                            )
-                        },
-                    )
-                    dao.deleteOutdated(source.name, version)
-                    dao.insertAliases(
-                        products.flatMap { product ->
-                            product.aliases.map { CatalogAliasEntity(productId = product.id, alias = it, normalizedAlias = TextNormalizer.normalize(it)) }
-                        },
-                    )
-                }
+        /**
+         * Atomically replaces every product of [source] with [products]. Products are upserted
+         * (ids are stable, so usage statistics and list items keep pointing at them, whatever the
+         * language) and rows left from an older version are deleted afterwards.
+         */
+        private suspend fun replaceSource(
+            source: CatalogSource,
+            version: String,
+            products: List<CatalogImportProduct>,
+        ) {
+            transactions.inTransaction {
+                dao.deleteAliasesForSource(source.name)
+                dao.upsertProducts(
+                    products.map {
+                        CatalogProductEntity(
+                            id = it.id,
+                            name = it.name,
+                            normalizedName = TextNormalizer.normalize(it.name),
+                            category = it.category,
+                            brand = null,
+                            parentId = it.parentId,
+                            source = source,
+                            baseScore = it.baseScore,
+                            catalogVersion = version,
+                            groceryCategory = it.groceryCategory,
+                        )
+                    },
+                )
+                dao.deleteOutdated(source.name, version)
+                dao.insertAliases(
+                    products.flatMap { product ->
+                        product.aliases.map { CatalogAliasEntity(productId = product.id, alias = it, normalizedAlias = TextNormalizer.normalize(it)) }
+                    },
+                )
             }
+        }
+
+        private companion object {
+            const val CUSTOM_PREFIX = "custom:"
         }
     }

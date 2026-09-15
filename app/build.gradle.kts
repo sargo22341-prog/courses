@@ -44,7 +44,10 @@ android {
     }
 
     androidResources {
-        localeFilters += listOf("fr")
+        // Interface languages (English in the unqualified `values`, see res/resources.properties).
+        // The generated locale config lists them in the app's page of the Android settings.
+        localeFilters += listOf("en", "fr", "de", "es", "it", "pt")
+        generateLocaleConfig = true
     }
 
     packaging {

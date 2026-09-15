@@ -13,7 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.feature.settings.domain.ThemeMode
 import org.opensources.courses.feature.settings.presentation.components.ThemeModeSelector
 
@@ -25,7 +25,7 @@ class ThemeModeSelectorTest {
     @Test
     fun threeThemeChoicesOnOneRow() {
         var chosen: ThemeMode? = null
-        composeRule.setContent { CoursesTheme { ThemeModeSelector(selected = ThemeMode.SYSTEM, onSelect = { chosen = it }) } }
+        composeRule.setContent { FrenchCoursesTheme { ThemeModeSelector(selected = ThemeMode.SYSTEM, onSelect = { chosen = it }) } }
 
         composeRule.onNodeWithText("Système").assertIsSelected()
         composeRule.onNodeWithText("Clair").assertIsNotSelected()

@@ -20,7 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
@@ -51,7 +51,7 @@ class ShoppingScreenTest {
 
     @Test
     fun showsItemsToBuyAndPurchasedSeparately() {
-        composeRule.setContent { CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions()) } }
+        composeRule.setContent { FrenchCoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions()) } }
 
         composeRule.onNodeWithText("Courses").assertIsDisplayed()
         composeRule.onNodeWithText("Lait").assertIsDisplayed()
@@ -64,7 +64,7 @@ class ShoppingScreenTest {
     fun tappingAnItemTogglesIt() {
         var toggled: ShoppingItem? = null
         composeRule.setContent {
-            CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onToggleItem = { toggled = it })) }
+            FrenchCoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onToggleItem = { toggled = it })) }
         }
 
         composeRule.onNodeWithText("Lait").performClick()
@@ -76,7 +76,7 @@ class ShoppingScreenTest {
     fun deletingPurchasedItemsFromTheirHeaderAsksForConfirmation() {
         var deleted = false
         composeRule.setContent {
-            CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
+            FrenchCoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
         }
 
         composeRule.onNodeWithContentDescription("Supprimer les articles achetés").performClick()
@@ -93,7 +93,7 @@ class ShoppingScreenTest {
     fun cancellingTheConfirmationKeepsPurchasedItems() {
         var deleted = false
         composeRule.setContent {
-            CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
+            FrenchCoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
         }
 
         composeRule.onNodeWithContentDescription("Supprimer les articles achetés").performClick()
@@ -113,7 +113,7 @@ class ShoppingScreenTest {
                         ItemSection(GroceryCategory.OTHER, listOf(item("Sauce maison"))),
                     ),
             )
-        composeRule.setContent { CoursesTheme { ShoppingScreen(grouped, query = "", actions = ShoppingActions()) } }
+        composeRule.setContent { FrenchCoursesTheme { ShoppingScreen(grouped, query = "", actions = ShoppingActions()) } }
 
         composeRule.onNodeWithText("Produits laitiers et œufs").assertIsDisplayed()
         composeRule.onNodeWithText("Lait").assertIsDisplayed()
@@ -128,7 +128,7 @@ class ShoppingScreenTest {
         val suggestions = listOf(ProductSuggestion("seed:lait", "Lait", "Produits laitiers"), ProductSuggestion("seed:lait-entier", "Lait entier", null))
         composeRule.setContent {
             var query by remember { mutableStateOf("") }
-            CoursesTheme {
+            FrenchCoursesTheme {
                 ShoppingScreen(
                     state = state.copy(suggestions = suggestions),
                     query = query,
@@ -156,7 +156,7 @@ class ShoppingScreenTest {
         var refreshed = false
         val synced = state.copy(sync = SyncSnapshot(SyncState.ONLINE, remoteEnabled = true, pendingCount = 0, failure = null))
         composeRule.setContent {
-            CoursesTheme { ShoppingScreen(synced, query = "", actions = ShoppingActions(onRefresh = { refreshed = true })) }
+            FrenchCoursesTheme { ShoppingScreen(synced, query = "", actions = ShoppingActions(onRefresh = { refreshed = true })) }
         }
 
         // A real pull: well beyond the refresh threshold, not just the height of one row.
@@ -169,7 +169,7 @@ class ShoppingScreenTest {
     @Test
     fun emptyListInvitesToType() {
         composeRule.setContent {
-            CoursesTheme { ShoppingScreen(ShoppingUiState(isLoading = false, listName = "BBQ"), query = "", actions = ShoppingActions()) }
+            FrenchCoursesTheme { ShoppingScreen(ShoppingUiState(isLoading = false, listName = "BBQ"), query = "", actions = ShoppingActions()) }
         }
 
         composeRule.onNodeWithText("Votre liste est vide").assertIsDisplayed()

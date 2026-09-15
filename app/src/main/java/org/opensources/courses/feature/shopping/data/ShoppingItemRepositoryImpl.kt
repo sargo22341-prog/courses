@@ -33,6 +33,8 @@ class ShoppingItemRepositoryImpl
 
         override suspend fun getItems(listId: String): List<ShoppingItem> = itemDao.getActiveForList(listId).map { it.toDomain() }
 
+        override suspend fun getAllItems(): List<ShoppingItem> = itemDao.getAllActive().map { it.toDomain() }
+
         override suspend fun addItem(item: NewShoppingItem): ShoppingItem =
             transactions.inTransaction {
                 val synchronized = isSynchronized(item.listId)
@@ -60,7 +62,14 @@ class ShoppingItemRepositoryImpl
             name: String,
             quantity: Double,
             unit: String?,
-        ) = mutate(itemId, SyncOperationType.UPDATE_ITEM) { it.copy(name = name, quantity = quantity, unit = unit) }
+        ) = mutate(itemId, SyncOperationType.UPDATE_ITEM) { it.renamed(name).copy(quantity = quantity, unit = unit) }
+
+        // Home Assistant has no such field: nothing is queued and the item does not count as modified.
+        override suspend fun setCatalogProduct(
+            itemId: String,
+            expectedName: String,
+            catalogProductId: String,
+        ): Boolean = itemDao.updateCatalogProduct(itemId, expectedName, catalogProductId) > 0
 
         override suspend fun setChecked(
             itemId: String,

@@ -1,5 +1,6 @@
 package org.opensources.courses.feature.catalog.domain
 
+/** Declared from the most to the least reliable source to file a product under a shop section. */
 enum class CatalogSource {
     /** Curated list bundled with the app: available offline from the very first launch. */
     SEED,
@@ -36,6 +37,13 @@ data class ProductSuggestion(
     val productId: String,
     val name: String,
     val category: String?,
+)
+
+/** A stored product, as much as linking a list item to it needs. */
+data class CatalogProductRef(
+    val id: String,
+    val normalizedName: String,
+    val source: CatalogSource,
 )
 
 /**

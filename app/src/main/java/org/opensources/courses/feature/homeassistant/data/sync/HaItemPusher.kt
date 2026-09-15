@@ -11,6 +11,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 import org.opensources.courses.feature.homeassistant.domain.ItemDescriptionCodec
+import org.opensources.courses.feature.language.domain.AppLanguageRepository
 
 /**
  * Sends the pending item operations of one list.
@@ -26,6 +27,7 @@ class HaItemPusher(
     private val gateway: HomeAssistantGateway,
     private val store: SyncLocalStore,
     private val queue: SyncQueue,
+    private val languages: AppLanguageRepository,
 ) {
     /** Returns the number of items whose operations could not be sent. */
     suspend fun push(
@@ -171,7 +173,7 @@ class HaItemPusher(
     private fun description(
         item: SyncItemRef,
         remoteList: HaTodoList,
-    ): String? = if (remoteList.supportsDescription) ItemDescriptionCodec.encode(item.quantity, item.unit) else null
+    ): String? = if (remoteList.supportsDescription) ItemDescriptionCodec.encode(item.quantity, item.unit, languages.language.value.locale) else null
 
     private companion object {
         const val UID_NOT_FOUND = "UID_NOT_FOUND"

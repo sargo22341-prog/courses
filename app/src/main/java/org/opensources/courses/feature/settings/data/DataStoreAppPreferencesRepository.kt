@@ -39,6 +39,7 @@ class DataStoreAppPreferencesRepository
                     onboardingCompleted = preferences[ONBOARDING_COMPLETED] ?: false,
                     hidePurchased = preferences[HIDE_PURCHASED] ?: false,
                     groupByCategory = preferences[GROUP_BY_CATEGORY] ?: false,
+                    languageConfirmed = preferences[LANGUAGE_CONFIRMED] ?: false,
                 )
             }
 
@@ -58,11 +59,16 @@ class DataStoreAppPreferencesRepository
             dataStore.edit { it[GROUP_BY_CATEGORY] = enabled }
         }
 
+        override suspend fun setLanguageConfirmed() {
+            dataStore.edit { it[LANGUAGE_CONFIRMED] = true }
+        }
+
         private companion object {
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
             val HIDE_PURCHASED = booleanPreferencesKey("hide_purchased")
             val GROUP_BY_CATEGORY = booleanPreferencesKey("group_by_category")
+            val LANGUAGE_CONFIRMED = booleanPreferencesKey("language_confirmed")
         }
     }
 

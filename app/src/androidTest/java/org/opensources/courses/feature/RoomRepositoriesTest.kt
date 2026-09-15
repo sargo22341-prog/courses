@@ -11,12 +11,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.database.RoomTransactionRunner
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
-import org.opensources.courses.feature.catalog.data.CatalogRepositoryImpl
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
-import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.shopping.domain.NewShoppingItem
 import org.opensources.courses.testing.TestRepositories
@@ -155,11 +152,8 @@ class RoomRepositoriesTest {
                     CatalogImportProduct("en:food-additives", "Additifs", null, null, 3),
                 ),
             )
-            CatalogRepositoryImpl.replaceSource(
-                repositories.database.catalogDao(),
-                RoomTransactionRunner(repositories.database),
-                CatalogSource.SEED,
-                "seed-2",
+            repositories.catalog.replaceSeedCatalog(
+                "seed-3-fr",
                 listOf(CatalogImportProduct("seed:lait", "Lait", "Produits laitiers", null, 8, groceryCategory = GroceryCategory.DAIRY_EGGS)),
             )
             // Typed by hand before any match existed: a custom product has no section of its own.

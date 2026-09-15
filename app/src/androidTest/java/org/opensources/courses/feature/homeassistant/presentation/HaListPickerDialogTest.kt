@@ -10,7 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.lists.domain.ShoppingList
@@ -33,7 +33,7 @@ class HaListPickerDialogTest {
                 setupListIds = listOf(list.id),
             )
         composeRule.setContent {
-            CoursesTheme {
+            FrenchCoursesTheme {
                 HaListPickerDialog(list, state, onLink = {}, onCreate = { created = true }, onUnlink = {}, onDismiss = { dismissed = true })
             }
         }
@@ -57,7 +57,7 @@ class HaListPickerDialogTest {
                 pickerListId = list.id,
             )
         composeRule.setContent {
-            CoursesTheme {
+            FrenchCoursesTheme {
                 HaListPickerDialog(list, state, onLink = { linked = it }, onCreate = {}, onUnlink = {}, onDismiss = {})
             }
         }

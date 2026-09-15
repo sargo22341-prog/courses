@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Allgemeine Aktionen -->
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_create">Erstellen</string>
+    <string name="action_rename">Umbenennen</string>
+    <string name="action_back">Zurück</string>
+    <string name="action_clear">Leeren</string>
+    <string name="action_close">Schließen</string>
+    <string name="open_app_settings">App-Einstellungen öffnen</string>
+
+    <!-- QR-Code-Scanner -->
+    <string name="qr_scanner_hint">QR-Code in den Rahmen halten</string>
+    <string name="qr_camera_permission_title">Kameraberechtigung</string>
+    <string name="qr_camera_permission_body">Die Kamera dient nur zum Lesen des QR-Codes. Es wird kein Bild gespeichert oder gesendet.</string>
+    <string name="qr_camera_permission_grant">Kamera erlauben</string>
+
+    <!-- Willkommen -->
+    <string name="welcome_title">Meine Einkäufe</string>
+    <string name="welcome_subtitle">Eine einfache Liste,\nauch ohne Internet.</string>
+    <string name="welcome_language">Sprache</string>
+    <string name="welcome_start">Los geht’s</string>
+    <string name="welcome_connect_ha">Home Assistant verbinden</string>
+    <string name="welcome_ha_hint">Optional: jederzeit in den Einstellungen möglich.</string>
+
+    <!-- Einkaufsliste -->
+    <string name="shopping_add_placeholder">Artikel hinzufügen…</string>
+    <string name="shopping_add_custom">„%1$s“ hinzufügen</string>
+    <string name="shopping_open_lists">Meine Listen</string>
+    <string name="shopping_open_settings">Einstellungen</string>
+    <string name="shopping_empty_title">Deine Liste ist leer</string>
+    <string name="shopping_empty_body">Gib oben den Namen eines Produkts ein, um es hinzuzufügen.</string>
+    <string name="shopping_all_purchased">Alles gekauft ✓</string>
+    <string name="shopping_section_purchased">Gekauft</string>
+    <plurals name="shopping_purchased_count">
+        <item quantity="one">%d Artikel gekauft</item>
+        <item quantity="other">%d Artikel gekauft</item>
+    </plurals>
+    <string name="shopping_hide_purchased">Gekaufte Artikel ausblenden</string>
+    <string name="shopping_show_purchased">Gekaufte Artikel anzeigen</string>
+    <string name="shopping_delete_purchased">Gekaufte Artikel löschen</string>
+    <string name="shopping_delete_purchased_title">Gekaufte Artikel löschen?</string>
+    <string name="shopping_delete_purchased_body">Sie werden aus der Liste entfernt.</string>
+    <string name="shopping_more_actions">Weitere Aktionen</string>
+    <string name="shopping_edit_title">Artikel bearbeiten</string>
+    <string name="shopping_edit_name">Name</string>
+    <string name="shopping_edit_quantity">Menge</string>
+    <string name="shopping_edit_unit">Einheit (optional)</string>
+    <string name="shopping_edit_item">%1$s bearbeiten</string>
+    <string name="shopping_no_suggestion">Kein Produkt gefunden</string>
+
+    <!-- Kategorien (Abteilungen) -->
+    <string name="category_fruits_vegetables">Obst und Gemüse</string>
+    <string name="category_bakery">Backwaren</string>
+    <string name="category_dairy_eggs">Milchprodukte und Eier</string>
+    <string name="category_meat_fish">Fleisch und Fisch</string>
+    <string name="category_deli">Feinkost und Fertiggerichte</string>
+    <string name="category_savory_grocery">Herzhafte Lebensmittel</string>
+    <string name="category_sweet_grocery">Süßwaren und Frühstück</string>
+    <string name="category_frozen">Tiefkühlkost</string>
+    <string name="category_drinks">Getränke</string>
+    <string name="category_hygiene_household">Drogerie und Haushalt</string>
+    <string name="category_baby_pets">Baby und Haustier</string>
+    <string name="category_other">Sonstiges</string>
+
+    <!-- Synchronisierungsstatus -->
+    <string name="sync_synced">Synchronisiert</string>
+    <string name="sync_offline">Offline</string>
+    <string name="sync_syncing">Synchronisierung…</string>
+    <string name="sync_error">Synchronisierung fehlgeschlagen</string>
+    <plurals name="sync_pending">
+        <item quantity="one">%d Änderung ausstehend</item>
+        <item quantity="other">%d Änderungen ausstehend</item>
+    </plurals>
+    <string name="sync_error_unreachable">Home Assistant ist nicht erreichbar.\nDeine lokale Liste bleibt verfügbar.</string>
+    <string name="sync_error_unauthorized">Home Assistant hat das Zugriffstoken abgelehnt.\nPrüfe es in den Einstellungen.</string>
+    <string name="sync_error_protocol">Synchronisierung fehlgeschlagen.\nÄnderungen werden automatisch erneut versucht.</string>
+    <string name="sync_error_list_unavailable">Eine verknüpfte Liste ist in Home Assistant nicht verfügbar.\nWähle eine andere Liste oder aktiviere ihre Integration wieder. Deine lokale Liste bleibt verfügbar.</string>
+    <string name="sync_list_unavailable">Home-Assistant-Liste nicht verfügbar</string>
+
+    <!-- Listen -->
+    <string name="lists_title">Meine Listen</string>
+    <string name="lists_new">Neue Liste</string>
+    <string name="lists_default_badge">Standard</string>
+    <string name="lists_synced_badge">Home Assistant</string>
+    <string name="lists_set_default">Als Standard festlegen</string>
+    <string name="lists_name_label">Name der Liste</string>
+    <string name="lists_rename_title">Liste umbenennen</string>
+    <string name="lists_delete_title">„%1$s“ löschen?</string>
+    <string name="lists_delete_body">Die Artikel dieser Liste werden von diesem Telefon gelöscht.</string>
+    <string name="lists_delete_last">Die letzte Liste kann nicht gelöscht werden.</string>
+    <string name="lists_actions">Aktionen für %1$s</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_theme">Design</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_system">System</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_language_hint">Vorschläge und der Lebensmittelkatalog folgen dieser Sprache. Deine Listen und ihre Artikel bleiben unverändert.</string>
+    <string name="settings_shopping_list">Einkaufsliste</string>
+    <string name="settings_group_by_category">Artikel nach Kategorie sortieren</string>
+    <string name="settings_group_by_category_hint">Zu kaufende Artikel werden mithilfe des Lebensmittelkatalogs nach Abteilung gruppiert, auch die in Home Assistant hinzugefügten. Ein unbekannter Artikel landet unter „Sonstiges“.</string>
+    <string name="settings_home_assistant">Home Assistant</string>
+    <string name="settings_home_assistant_off">Nicht verbunden — optional</string>
+    <string name="settings_home_assistant_sync_disabled">Synchronisierung deaktiviert</string>
+
+    <!-- Katalog -->
+    <string name="catalog_title">Lebensmittelkatalog</string>
+    <string name="catalog_last_sync">Letzte Synchronisierung:\n%1$s</string>
+    <string name="catalog_never_synced">Noch nie synchronisiert.\nDer Basiskatalog bleibt offline verfügbar.</string>
+    <plurals name="catalog_products">
+        <item quantity="one">%d Produkt offline verfügbar</item>
+        <item quantity="other">%d Produkte offline verfügbar</item>
+    </plurals>
+    <string name="catalog_language_pending">Der Katalog wird in der gewählten Sprache heruntergeladen, sobald eine Internetverbindung besteht. Der Basiskatalog ist bereits übersetzt.</string>
+    <string name="catalog_sync_now">↻ Jetzt synchronisieren</string>
+    <string name="catalog_syncing">Synchronisierung…</string>
+    <string name="catalog_updated">✓ Katalog aktualisiert</string>
+    <string name="catalog_up_to_date">✓ Katalog bereits aktuell</string>
+    <string name="catalog_offline">Keine Internetverbindung.\nDer aktuelle Katalog bleibt verfügbar.</string>
+    <string name="catalog_failed">Der Katalog konnte nicht aktualisiert werden.\nDer aktuelle Katalog bleibt verfügbar.</string>
+    <string name="catalog_attribution">Quelle: Open Food Facts (Lizenz ODbL). Wöchentliche automatische Aktualisierung.</string>
+
+    <!-- Home Assistant -->
+    <string name="ha_title">Home Assistant</string>
+    <string name="ha_intro">Optional. Die App funktioniert auch ohne Home Assistant einwandfrei.</string>
+    <string name="ha_enabled">Synchronisierung aktivieren</string>
+    <string name="ha_enable_requires_config">Speichere zuerst die Adresse und das Token.</string>
+    <string name="ha_connection">Verbindung</string>
+    <string name="ha_connected">Verbunden</string>
+    <string name="ha_connection_expand">Verbindungseinstellungen anzeigen</string>
+    <string name="ha_connection_collapse">Verbindungseinstellungen ausblenden</string>
+    <string name="ha_url">Adresse von Home Assistant</string>
+    <string name="ha_token">Langlebiges Zugriffstoken</string>
+    <string name="ha_token_saved">Token gespeichert — leer lassen, um es zu behalten</string>
+    <string name="ha_scan_token">QR-Code des Tokens scannen</string>
+    <string name="ha_scan_token_hint">In Home Assistant: Profil → Sicherheit → Langlebige Zugriffstoken → Token erstellen → QR-Code erzeugen.</string>
+    <string name="ha_token_scanned">✓ Token gescannt. Speichern, um es zu behalten.</string>
+    <string name="ha_error_invalid_token_qr">Dieser QR-Code enthält kein Home-Assistant-Token.</string>
+    <string name="ha_error_scanner_unavailable">Die Kamera konnte nicht starten (fehlt oder wird von einer anderen App genutzt).\nDu kannst das Token auch eintippen.</string>
+    <string name="local_network_title">Zugriff auf das lokale Netzwerk</string>
+    <string name="local_network_body">Android bittet um deine Zustimmung, damit die App einen Server in deinem lokalen Netzwerk erreicht (http://homeassistant.local:8123, https://ha.nas.home, 192.168.x.x…). Ohne diesen Zugriff schlägt die Verbindung zu Home Assistant fehl.</string>
+    <string name="local_network_grant">Zugriff auf das lokale Netzwerk erlauben</string>
+    <string name="ha_save">Speichern</string>
+    <string name="ha_saved">✓ Einstellungen gespeichert</string>
+    <string name="ha_test">Verbindung testen</string>
+    <string name="ha_testing">Test läuft…</string>
+    <string name="ha_test_success">✓ Verbindung erfolgreich</string>
+    <string name="ha_error_invalid_url">Ungültige Adresse.</string>
+    <string name="ha_error_missing_token">Gib ein Zugriffstoken ein.</string>
+    <string name="ha_error_unreachable">Home Assistant ist nicht erreichbar.\nDeine lokale Liste bleibt verfügbar.</string>
+    <string name="ha_error_unauthorized">Token von Home Assistant abgelehnt.</string>
+    <string name="ha_error_not_found">Element in Home Assistant nicht gefunden.</string>
+    <string name="ha_error_rejected">Home Assistant hat die Anfrage abgelehnt.</string>
+    <string name="ha_error_protocol">Unerwartete Antwort von Home Assistant.</string>
+    <string name="ha_list_mode">Home-Assistant-Listen</string>
+    <string name="ha_mode_all">Alle Listen</string>
+    <string name="ha_mode_all_hint">Alle bearbeitbaren Listen von Home Assistant erscheinen in der App, auch später erstellte. Gibt es den Namen hier schon, wird eine Nummer angehängt („Einkaufsliste 2“).</string>
+    <string name="ha_mode_app">Nur von dieser App erstellte Listen</string>
+    <string name="ha_mode_app_hint">Nur in der App erstellte Listen werden synchronisiert. Eine vorhandene Liste kann unten mit „Auswählen“ verknüpft werden.</string>
+    <string name="ha_mode_app_confirm_title">Importierte Listen entfernen?</string>
+    <plurals name="ha_mode_app_confirm_body">
+        <item quantity="one">%d aus Home Assistant importierte Liste wird von diesem Telefon gelöscht. Sie bleibt in Home Assistant.</item>
+        <item quantity="other">%d aus Home Assistant importierte Listen werden von diesem Telefon gelöscht. Sie bleiben in Home Assistant.</item>
+    </plurals>
+    <string name="ha_mode_app_confirm">Entfernen</string>
+    <string name="ha_lists_section">Synchronisierte Listen</string>
+    <string name="ha_auto_create_lists">Neue Listen automatisch erstellen</string>
+    <string name="ha_auto_create_on">Jede in der App erstellte Liste wird auch in Home Assistant erstellt. Gibt es den Namen dort schon, wird eine Nummer angehängt („Einkaufsliste 2“).</string>
+    <string name="ha_auto_create_off">Neue Listen bleiben auf diesem Telefon: verknüpfe sie mit „Auswählen“.</string>
+    <string name="ha_setup_intro">Diese Liste gibt es bereits auf diesem Telefon. Erstelle sie in Home Assistant, verknüpfe sie mit einer vorhandenen Liste oder behalte sie nur hier.</string>
+    <string name="ha_setup_later">Später</string>
+    <string name="ha_list_not_synced">Nicht synchronisiert</string>
+    <string name="ha_list_pending_creation">Erstellung in Home Assistant ausstehend</string>
+    <string name="ha_list_linked">Verknüpft mit %1$s</string>
+    <string name="ha_list_linked_unavailable">Verknüpft mit %1$s — in Home Assistant nicht verfügbar</string>
+    <string name="ha_picker_unavailable">In Home Assistant nicht verfügbar</string>
+    <string name="ha_list_choose">Auswählen</string>
+    <string name="ha_picker_title">„%1$s“ synchronisieren</string>
+    <string name="ha_picker_create">„%1$s“ in Home Assistant erstellen</string>
+    <string name="ha_picker_none">Nicht synchronisieren</string>
+    <string name="ha_picker_loading">Listen werden geladen…</string>
+    <string name="ha_picker_empty">Keine Liste in Home Assistant gefunden.</string>
+    <string name="ha_auto_sync">Automatische Synchronisierung</string>
+    <string name="ha_sync_section">Synchronisierung</string>
+    <string name="ha_sync_now">Jetzt synchronisieren</string>
+    <string name="ha_sync_success">✓ Synchronisiert</string>
+    <string name="ha_sync_offline">Offline. Änderungen werden später gesendet.</string>
+    <string name="ha_sync_skipped">Aktiviere und konfiguriere zuerst Home Assistant.</string>
+    <string name="ha_rename_note">Das Umbenennen einer Liste ändert ihren Namen in Home Assistant nicht.</string>
+</resources>

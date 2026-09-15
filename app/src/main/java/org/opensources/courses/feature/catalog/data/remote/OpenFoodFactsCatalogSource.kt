@@ -12,10 +12,12 @@ import org.opensources.courses.core.common.IoDispatcher
 import org.opensources.courses.feature.catalog.domain.CatalogDownloadException
 import org.opensources.courses.feature.catalog.domain.CatalogRemoteSource
 import org.opensources.courses.feature.catalog.domain.RemoteCatalogResult
+import org.opensources.courses.feature.language.domain.AppLanguage
 import java.io.IOException
 import java.net.HttpURLConnection
 import javax.inject.Inject
 
+/** The same taxonomy file names categories in every language: only [AppLanguage]'s names are imported. */
 class OpenFoodFactsCatalogSource
     @Inject
     constructor(
@@ -23,13 +25,15 @@ class OpenFoodFactsCatalogSource
         private val json: Json,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : CatalogRemoteSource {
-        private val mapper = TaxonomyCatalogMapper()
         private val serializer = MapSerializer(String.serializer(), TaxonomyEntryDto.serializer())
 
         override val formatVersion: Int = TaxonomyCatalogMapper.FORMAT_VERSION
 
         @OptIn(ExperimentalSerializationApi::class)
-        override suspend fun fetch(currentVersion: String?): RemoteCatalogResult =
+        override suspend fun fetch(
+            currentVersion: String?,
+            language: AppLanguage,
+        ): RemoteCatalogResult =
             withContext(ioDispatcher) {
                 try {
                     val response = api.downloadCategories(currentVersion)
@@ -43,7 +47,7 @@ class OpenFoodFactsCatalogSource
                     }
                     val entries = body.use { json.decodeFromStream(serializer, it.byteStream()) }
                     val version = response.headers()["ETag"] ?: response.headers()["Last-Modified"] ?: UNKNOWN_VERSION
-                    RemoteCatalogResult.Updated(version, mapper.map(entries))
+                    RemoteCatalogResult.Updated(version, TaxonomyCatalogMapper(language).map(entries))
                 } catch (exception: IOException) {
                     throw CatalogDownloadException("Network error", exception)
                 } catch (exception: SerializationException) {

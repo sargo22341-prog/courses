@@ -4,9 +4,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.opensources.courses.core.network.ConnectivityObserver
+import org.opensources.courses.feature.language.domain.AppLanguage
+import org.opensources.courses.feature.language.domain.AppLanguageRepository
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,55 +42,83 @@ sealed interface CatalogSyncStatus {
 }
 
 /**
- * No backend: the app itself checks the age of its local catalog when it opens and refreshes it
- * from OpenFoodFacts when it is older than a week and a network is available. A catalog imported in
- * an older format is refreshed at once. The user can also force a refresh from the settings.
+ * No backend: the app itself keeps its local catalog in the app language. The bundled catalog is
+ * imported at once, offline, when it changes or when the language changes. The OpenFoodFacts catalog
+ * is refreshed when it is older than a week and a network is available; one imported in an older
+ * format or in another language is refreshed at once. The user can also force a refresh.
  */
 @Singleton
 class CatalogSyncManager
     @Inject
     constructor(
         private val remote: CatalogRemoteSource,
+        private val seed: SeedCatalogSource,
         private val repository: CatalogRepository,
         private val stateStore: CatalogSyncStateStore,
+        private val languages: AppLanguageRepository,
         private val connectivity: ConnectivityObserver,
         private val clock: Clock,
     ) {
         private val policy = CatalogFreshnessPolicy()
         private val mutex = Mutex()
+        private val seedMutex = Mutex()
         private val mutableStatus = MutableStateFlow<CatalogSyncStatus>(CatalogSyncStatus.Idle)
         val status: StateFlow<CatalogSyncStatus> = mutableStatus.asStateFlow()
 
+        private val mutableRevision = MutableStateFlow(0)
+
+        /** Increases after every import that replaced products, bundled or downloaded. */
+        val revision: StateFlow<Int> = mutableRevision.asStateFlow()
+
+        /** Imports the bundled catalog when its version or the app language changed; returns whether it did. */
+        suspend fun importSeedIfNeeded(): Boolean =
+            seedMutex.withLock {
+                val language = languages.language.value
+                val bundled = seed.load(language)
+                val imported = stateStore.seedImport()
+                if (imported.version >= bundled.version && imported.language == language) return@withLock false
+                repository.replaceSeedCatalog("seed-${bundled.version}-${language.tag}", bundled.products)
+                stateStore.markSeedImported(bundled.version, language)
+                mutableRevision.update { it + 1 }
+                true
+            }
+
         suspend fun syncIfStale(): CatalogSyncResult {
             val info = stateStore.current()
-            // Its ETag has not changed, but its import lacks data this version extracts (shop sections).
-            val outdatedFormat = info.formatVersion < remote.formatVersion
-            if (!outdatedFormat && !policy.isStale(info.lastSyncAt, clock.instant())) return CatalogSyncResult.NotNeeded
+            val language = languages.language.value
+            // Its ETag has not changed, but its import lacks data this version extracts (shop sections)
+            // or names products in another language.
+            val importAgain = info.formatVersion < remote.formatVersion || info.language != language
+            if (!importAgain && !policy.isStale(info.lastSyncAt, clock.instant())) return CatalogSyncResult.NotNeeded
             if (!connectivity.isOnline.value) return CatalogSyncResult.Offline
-            return synchronize(currentVersion = if (outdatedFormat) null else info.version)
+            return synchronize(currentVersion = if (importAgain) null else info.version, language)
         }
 
-        /** Ignores the cache validators and downloads the catalog again. */
+        /** Ignores the cache validators and downloads the catalog again, in the app language. */
         suspend fun forceSync(): CatalogSyncResult {
             if (!connectivity.isOnline.value) {
                 return CatalogSyncResult.Offline.also { mutableStatus.value = CatalogSyncStatus.Finished(it) }
             }
-            return synchronize(currentVersion = null)
+            return synchronize(currentVersion = null, languages.language.value)
         }
 
-        private suspend fun synchronize(currentVersion: String?): CatalogSyncResult =
+        private suspend fun synchronize(
+            currentVersion: String?,
+            language: AppLanguage,
+        ): CatalogSyncResult =
             mutex.withLock {
                 mutableStatus.value = CatalogSyncStatus.Running
                 val result =
                     try {
-                        when (val fetched = remote.fetch(currentVersion)) {
+                        when (val fetched = remote.fetch(currentVersion, language)) {
                             RemoteCatalogResult.NotModified -> {
-                                stateStore.markSynced(clock.instant(), currentVersion, formatVersion = null)
+                                stateStore.markSynced(clock.instant(), currentVersion, formatVersion = null, language)
                                 CatalogSyncResult.UpToDate
                             }
                             is RemoteCatalogResult.Updated -> {
                                 repository.replaceRemoteCatalog(fetched.version, fetched.products)
-                                stateStore.markSynced(clock.instant(), fetched.version, remote.formatVersion)
+                                stateStore.markSynced(clock.instant(), fetched.version, remote.formatVersion, language)
+                                mutableRevision.update { it + 1 }
                                 CatalogSyncResult.Updated(fetched.products.size)
                             }
                         }

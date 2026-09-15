@@ -5,17 +5,16 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 object QuantityFormatter {
-    private val symbols = DecimalFormatSymbols(Locale.FRANCE)
-
-    /** `2`, `1,5 kg`, `12` — decimals only when needed. */
+    /** `2`, `12`, `1,5 kg` in French, `1.5 kg` in English — decimals only when needed. */
     fun format(
         quantity: Double,
         unit: String?,
+        locale: Locale,
     ): String {
-        val number = DecimalFormat("#.##", symbols).format(quantity)
+        val number = DecimalFormat("#.##", DecimalFormatSymbols.getInstance(locale)).format(quantity)
         return if (unit.isNullOrBlank()) number else "$number ${unit.trim()}"
     }
 
-    /** Parses `1,5` or `1.5`; null when the text is not a strictly positive number. */
+    /** Parses `1,5` or `1.5` whatever the language; null when the text is not a strictly positive number. */
     fun parse(text: String): Double? = text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it.isFinite() }
 }

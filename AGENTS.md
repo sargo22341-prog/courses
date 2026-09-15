@@ -14,7 +14,9 @@ En cas de doute sur un comportement existant : lire le README et le code avant d
 - Home Assistant est **facultatif** ; l'application doit fonctionner parfaitement sans.
 - Le réseau sert uniquement à : synchroniser Home Assistant, mettre à jour le catalogue
   OpenFoodFacts, ou une action explicitement réseau demandée par l'utilisateur.
-- Interface en français, Material 3, thème clair chaud/calme, thème sombre sobre, mode système.
+- Interface en français, anglais, allemand, espagnol, italien et portugais (langue de l'appareil
+  par défaut, choix au premier lancement et dans les réglages), Material 3, thème clair
+  chaud/calme, thème sombre sobre, mode système.
 - Ne jamais afficher de stacktrace : toujours une phrase claire qui rappelle que les données
   locales restent disponibles.
 

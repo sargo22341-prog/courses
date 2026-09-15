@@ -2,13 +2,16 @@ package org.opensources.courses
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.opensources.courses.core.common.ApplicationScope
 import org.opensources.courses.core.network.ConnectivityObserver
 import org.opensources.courses.core.sync.SyncCoordinator
-import org.opensources.courses.feature.catalog.data.seed.SeedCatalogLoader
 import org.opensources.courses.feature.catalog.domain.CatalogSyncManager
+import org.opensources.courses.feature.language.domain.AppLanguageRepository
+import org.opensources.courses.feature.onboarding.domain.KeepFrenchForExistingInstallUseCase
+import org.opensources.courses.feature.shopping.domain.LinkItemsToCatalogUseCase
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,18 +23,27 @@ import javax.inject.Singleton
 class AppInitializer
     @Inject
     constructor(
-        private val seedCatalogLoader: SeedCatalogLoader,
+        private val keepFrenchForExistingInstall: KeepFrenchForExistingInstallUseCase,
+        private val languages: AppLanguageRepository,
         private val catalogSyncManager: CatalogSyncManager,
+        private val linkItemsToCatalog: LinkItemsToCatalogUseCase,
         private val syncCoordinator: SyncCoordinator,
         private val connectivity: ConnectivityObserver,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
         fun start() {
             scope.launch {
-                ignoringFailures { seedCatalogLoader.loadIfNeeded() }
-                // Weekly catalog check, as soon as a network is available while the app is running.
-                connectivity.isOnline.first { it }
-                ignoringFailures { catalogSyncManager.syncIfStale() }
+                // Before the catalog is prepared, so that an existing install does not switch language first.
+                ignoringFailures { keepFrenchForExistingInstall() }
+                // Items already in the lists are matched again with the products of every import.
+                launch { catalogSyncManager.revision.collectLatest { ignoringFailures { linkItemsToCatalog() } } }
+                // In the app language, again whenever it changes: the bundled catalog at once, offline, then
+                // the weekly OpenFoodFacts check as soon as a network is available while the app is running.
+                languages.language.collectLatest {
+                    ignoringFailures { catalogSyncManager.importSeedIfNeeded() }
+                    connectivity.isOnline.first { it }
+                    ignoringFailures { catalogSyncManager.syncIfStale() }
+                }
             }
             syncCoordinator.start()
         }

@@ -1,5 +1,7 @@
 package org.opensources.courses.feature.catalog.domain
 
+import org.opensources.courses.feature.language.domain.AppLanguage
+
 interface CatalogRemoteSource {
     /**
      * Version of what [fetch] extracts from the downloaded file. It increases when the import
@@ -9,12 +11,15 @@ interface CatalogRemoteSource {
     val formatVersion: Int
 
     /**
-     * Downloads the catalog. When [currentVersion] is given and unchanged remotely, returns
-     * [RemoteCatalogResult.NotModified] without downloading it again.
+     * Downloads the catalog with product names in [language]. When [currentVersion] is given and
+     * unchanged remotely, returns [RemoteCatalogResult.NotModified] without downloading it again.
      *
      * @throws CatalogDownloadException on network or format errors.
      */
-    suspend fun fetch(currentVersion: String?): RemoteCatalogResult
+    suspend fun fetch(
+        currentVersion: String?,
+        language: AppLanguage,
+    ): RemoteCatalogResult
 }
 
 sealed interface RemoteCatalogResult {

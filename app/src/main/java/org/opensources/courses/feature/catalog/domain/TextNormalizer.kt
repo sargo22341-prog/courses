@@ -4,8 +4,9 @@ import java.text.Normalizer
 import java.util.Locale
 
 /**
- * Canonical form used for every search comparison: lower case, no accents, ligatures expanded,
- * punctuation turned into single spaces. `Œufs d'Élevage` → `oeufs d elevage`.
+ * Canonical form used for every search comparison, in every language: lower case, no accents,
+ * ligatures and ß expanded, punctuation turned into single spaces.
+ * `Œufs d'Élevage` → `oeufs d elevage`, `Weißbrot` → `weissbrot`.
  */
 object TextNormalizer {
     private val DIACRITICS = Regex("\\p{Mn}+")
@@ -14,9 +15,10 @@ object TextNormalizer {
     fun normalize(text: String): String {
         val lower =
             text
-                .lowercase(Locale.FRENCH)
+                .lowercase(Locale.ROOT)
                 .replace("œ", "oe")
                 .replace("æ", "ae")
+                .replace("ß", "ss")
         val withoutAccents = Normalizer.normalize(lower, Normalizer.Form.NFD).replace(DIACRITICS, "")
         return withoutAccents.replace(NON_ALPHANUMERIC, " ").trim()
     }

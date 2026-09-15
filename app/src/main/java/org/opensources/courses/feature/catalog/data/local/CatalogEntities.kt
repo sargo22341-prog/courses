@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
+import org.opensources.courses.feature.catalog.domain.CatalogProductRef
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 
@@ -72,6 +73,19 @@ data class ProductCategoryRow(
     val groceryCategory: GroceryCategory,
     val source: CatalogSource,
 )
+
+data class ProductIdCategoryRow(
+    val id: String,
+    val groceryCategory: GroceryCategory,
+)
+
+data class ProductRefRow(
+    val id: String,
+    val normalizedName: String,
+    val source: CatalogSource,
+) {
+    fun toDomain() = CatalogProductRef(id, normalizedName, source)
+}
 
 fun CatalogProductEntity.toDomain(): CatalogProduct =
     CatalogProduct(

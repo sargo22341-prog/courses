@@ -30,6 +30,7 @@ import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.catalog.domain.SearchSuggestionsUseCase
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
+import org.opensources.courses.feature.language.domain.AppLanguageRepository
 import org.opensources.courses.feature.lists.domain.ShoppingList
 import org.opensources.courses.feature.lists.domain.ShoppingListDefaults
 import org.opensources.courses.feature.lists.domain.ShoppingListRepository
@@ -54,6 +55,7 @@ class ShoppingViewModel
         private val searchSuggestions: SearchSuggestionsUseCase,
         private val groupItemsByCategory: GroupItemsByCategoryUseCase,
         private val preferences: AppPreferencesRepository,
+        private val languages: AppLanguageRepository,
         private val syncCoordinator: SyncCoordinator,
     ) : ViewModel() {
         private val requestedListId: String? = savedStateHandle.toRoute<ShoppingDestination>().listId
@@ -111,7 +113,7 @@ class ShoppingViewModel
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ShoppingUiState())
 
         init {
-            viewModelScope.launch { lists.ensureDefaultList(ShoppingListDefaults.DEFAULT_LIST_NAME) }
+            viewModelScope.launch { lists.ensureDefaultList(ShoppingListDefaults.defaultListName(languages.language.value)) }
         }
 
         fun onQueryChange(text: String) {

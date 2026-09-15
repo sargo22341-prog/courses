@@ -18,8 +18,19 @@ interface ShoppingItemDao {
     @Query("SELECT * FROM shopping_items WHERE listLocalId = :listId ORDER BY createdAt ASC")
     suspend fun getAllForList(listId: String): List<ShoppingItemEntity>
 
+    @Query("SELECT * FROM shopping_items WHERE isDeleted = 0")
+    suspend fun getAllActive(): List<ShoppingItemEntity>
+
     @Query("SELECT * FROM shopping_items WHERE localId = :id")
     suspend fun getById(id: String): ShoppingItemEntity?
+
+    /** Changes the catalog link alone, only if the item still has [expectedName]; returns the rows changed. */
+    @Query("UPDATE shopping_items SET catalogProductId = :catalogProductId WHERE localId = :id AND name = :expectedName")
+    suspend fun updateCatalogProduct(
+        id: String,
+        expectedName: String,
+        catalogProductId: String,
+    ): Int
 
     @Insert
     suspend fun insert(item: ShoppingItemEntity)

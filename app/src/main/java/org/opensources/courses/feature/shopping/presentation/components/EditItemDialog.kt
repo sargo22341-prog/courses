@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,7 +33,8 @@ fun EditItemDialog(
     onDelete: () -> Unit,
 ) {
     var name by rememberSaveable(item.id) { mutableStateOf(item.name) }
-    var quantity by rememberSaveable(item.id) { mutableStateOf(QuantityFormatter.format(item.quantity, null)) }
+    val locale = LocalConfiguration.current.locales[0]
+    var quantity by rememberSaveable(item.id) { mutableStateOf(QuantityFormatter.format(item.quantity, null, locale)) }
     var unit by rememberSaveable(item.id) { mutableStateOf(item.unit.orEmpty()) }
     val parsedQuantity = QuantityFormatter.parse(quantity)
     val valid = name.isNotBlank() && parsedQuantity != null

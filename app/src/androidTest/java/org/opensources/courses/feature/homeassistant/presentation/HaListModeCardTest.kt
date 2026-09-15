@@ -10,7 +10,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 
 @RunWith(AndroidJUnit4::class)
@@ -23,7 +23,7 @@ class HaListModeCardTest {
     private fun show(
         mode: HaListMode,
         importedListCount: Int,
-    ) = composeRule.setContent { CoursesTheme { HaListModeCard(mode, importedListCount, onModeChange = { chosen = it }) } }
+    ) = composeRule.setContent { FrenchCoursesTheme { HaListModeCard(mode, importedListCount, onModeChange = { chosen = it }) } }
 
     @Test
     fun leavingAllListsAsksBeforeRemovingTheImportedLists() {

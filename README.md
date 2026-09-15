@@ -8,7 +8,8 @@ synchronisation **facultative** avec Home Assistant.
 
 - `applicationId` : `org.opensources.courses`
 - Android 17 (API 37) minimum, aucune rétrocompatibilité.
-- Interface en français.
+- Interface en français, anglais, allemand, espagnol, italien et portugais ; catalogue alimentaire
+  dans la langue choisie (voir [Langues](#langues)).
 
 ## Sommaire
 
@@ -17,16 +18,17 @@ synchronisation **facultative** avec Home Assistant.
 3. [Structure des packages](#structure-des-packages)
 4. [Fonctionnement hors ligne](#fonctionnement-hors-ligne)
 5. [Interface](#interface)
-6. [Catalogue OpenFoodFacts et autocomplétion](#catalogue-openfoodfacts-et-autocomplétion)
-7. [Catégories](#catégories)
-8. [Home Assistant](#home-assistant)
-9. [Synchronisation et file d'opérations](#synchronisation-et-file-dopérations)
-10. [Stratégie de conflit](#stratégie-de-conflit)
-11. [Sécurité et confidentialité](#sécurité-et-confidentialité)
-12. [Lancer le projet](#lancer-le-projet)
-13. [Tests](#tests)
-14. [Choix d'architecture](#choix-darchitecture)
-15. [Limites connues](#limites-connues)
+6. [Langues](#langues)
+7. [Catalogue OpenFoodFacts et autocomplétion](#catalogue-openfoodfacts-et-autocomplétion)
+8. [Catégories](#catégories)
+9. [Home Assistant](#home-assistant)
+10. [Synchronisation et file d'opérations](#synchronisation-et-file-dopérations)
+11. [Stratégie de conflit](#stratégie-de-conflit)
+12. [Sécurité et confidentialité](#sécurité-et-confidentialité)
+13. [Lancer le projet](#lancer-le-projet)
+14. [Tests](#tests)
+15. [Choix d'architecture](#choix-darchitecture)
+16. [Limites connues](#limites-connues)
 
 ## Technologies
 
@@ -95,8 +97,9 @@ org.opensources.courses
     ├── lists/         listes : créer, renommer, supprimer, liste par défaut
     ├── catalog/       catalogue local, autocomplétion, catégories, import OpenFoodFacts
     ├── homeassistant/ configuration, client REST, liaison des listes, moteur de sync
-    ├── settings/      préférences (thème, masquage des achetés, rangement par catégorie)
-    └── onboarding/    premier lancement
+    ├── settings/      préférences (thème, langue, masquage des achetés, rangement par catégorie)
+    ├── language/      langue de l'application (langue par application d'Android), sélecteur
+    └── onboarding/    premier lancement (choix de la langue)
 ```
 
 Chaque fonctionnalité contient `data/`, `domain/` et `presentation/` quand elle en a besoin.
@@ -108,11 +111,13 @@ Room est la **seule source de vérité** pour l'interface. Sans aucun réseau, o
 l'application, consulter, créer, renommer et supprimer des listes, ajouter, rechercher, cocher,
 décocher, modifier la quantité et supprimer des articles, et utiliser l'autocomplétion.
 
-- Au premier lancement, l'écran d'accueil propose **Commencer** (et, facultativement,
-  **Connecter Home Assistant**). La liste « Courses » est créée et ouverte immédiatement.
-- Un **catalogue de base** (266 produits et variantes courants en français, rangés par catégorie,
-  `assets/catalog/seed_fr.json`)
-  est importé dans Room au premier démarrage : l'autocomplétion fonctionne avant tout
+- Au premier lancement, l'écran d'accueil propose le choix de la langue, **Commencer** (et,
+  facultativement, **Connecter Home Assistant**). La liste par défaut est créée, nommée dans la
+  langue affichée (« Courses », « Groceries », « Einkaufsliste », « Compra », « Spesa »,
+  « Compras »), et ouverte immédiatement.
+- Un **catalogue de base** (266 produits et variantes courants, rangés par catégorie, traduits dans
+  les six langues, `assets/catalog/seed.json`) est importé dans Room au premier démarrage, et de
+  nouveau, hors ligne, à chaque changement de langue : l'autocomplétion fonctionne avant tout
   téléchargement.
 - L'état réseau (`ConnectivityObserver`) est affiché discrètement sous le titre de la liste :
   `Hors connexion`, et, si Home Assistant est activé, `Synchronisé`, `Synchronisation…` ou
@@ -141,6 +146,41 @@ décocher, modifier la quantité et supprimer des articles, et utiliser l'autoco
   **choisi dans l'application** (icônes sombres en thème clair, claires en thème sombre), même
   quand il diffère du thème du téléphone (`SystemBarsAppearance`, appelé par `CoursesTheme`).
 
+## Langues
+
+Langues de l'interface : **allemand, anglais, espagnol, français, italien, portugais**. Les textes
+anglais sont les ressources par défaut (`values/`, `res/resources.properties`) ; chaque texte existe
+dans `values-de`, `values-es`, `values-fr`, `values-it` et `values-pt` (`StringResourcesTest`).
+
+- **Choix** : écran d'accueil et **Réglages → Langue**, par des puces portant chacune le nom de la
+  langue dans cette langue (« Deutsch », « English »…, `LanguageSelector`). Au premier lancement, la
+  langue de l'appareil est présélectionnée si elle est proposée (`pt-BR` → portugais), sinon
+  l'anglais (`AppLanguage.resolve`). Toucher une langue traduit l'écran aussitôt.
+- **Stockage** : la langue par application d'Android (`LocaleManager`,
+  `LocaleManagerAppLanguageRepository`), sans préférence dupliquée. Android la conserve, recrée les
+  écrans dans la nouvelle langue et la propose aussi dans la page de l'application de ses paramètres
+  (`generateLocaleConfig`) ; un changement fait là est relu au retour dans l'application. Tant
+  qu'aucune autre langue n'est choisie, l'application suit la langue de l'appareil.
+- **Installations existantes** : une application configurée avant l'arrivée des langues reste en
+  français (la langue de son catalogue), même sur un téléphone dans une autre langue ; une seule
+  fois (`KeepFrenchForExistingInstallUseCase`, `language_confirmed` dans DataStore).
+- **Changement de langue** (hors ligne comme en ligne) :
+  1. l'interface est traduite immédiatement ;
+  2. le catalogue de base est réimporté dans la nouvelle langue, hors ligne ;
+  3. le catalogue OpenFoodFacts est retéléchargé en entier dans la nouvelle langue dès qu'un réseau
+     est disponible (le fichier est le même pour toutes les langues : l'`ETag` n'est pas envoyé).
+     En attendant, la partie OpenFoodFacts reste dans l'ancienne langue et Réglages → Catalogue
+     alimentaire l'indique ;
+  4. après chaque import, **les articles de toutes les listes sont rattachés au catalogue**
+     (`LinkItemsToCatalogUseCase`, voir [Catégories](#catégories)).
+- **Rien n'est supprimé ni renommé dans les listes** : les articles gardent le nom saisi (« Lait »
+  reste « Lait » en anglais), seuls leur produit associé et donc leur rayon sont mis à jour. Les
+  identifiants des produits ne dépendent pas de la langue (`en:milks` pour OpenFoodFacts, `seed:lait`
+  construit sur le nom français pour le catalogue de base) : habitudes d'usage et liens des articles
+  sont conservés, les produits personnalisés aussi.
+- **Formats** : dates et séparateur décimal des quantités suivent la langue (`1,5 kg`, `1.5 kg`),
+  y compris dans la description envoyée à Home Assistant ; les deux séparateurs sont relus.
+
 ## Catalogue OpenFoodFacts et autocomplétion
 
 ### Source et import
@@ -152,10 +192,11 @@ décocher, modifier la quantité et supprimer des articles, et utiliser l'autoco
 - Pourquoi les catégories plutôt que les produits : la base produits complète pèse plusieurs Go et
   contient surtout des références de marque. Les catégories (`Laits demi-écrémés`,
   `Tomates cerise`…) correspondent à ce qu'on écrit sur une liste de courses.
-- Langues : en septembre 2026, le fichier compte ~14 700 entrées nommées dans 181 codes de langue
-  (168 langues réelles, dont le français pour ~10 700 entrées) ; seuls les noms français sont
-  importés.
-- Nettoyage (`TaxonomyCatalogMapper`) : nom français obligatoire ;
+- Langues : en septembre 2026, le fichier compte ~14 700 entrées nommées dans 181 codes de langue.
+  Seuls les noms dans la langue de l'application sont importés. Entrées nommées / produits gardés
+  après nettoyage (estimation) : français ~10 700 / ~6 500, anglais ~9 200 / ~7 600, allemand
+  ~3 600 / ~3 200, espagnol ~3 600 / ~2 600, italien ~3 700 / ~2 300, portugais ~1 300 / ~900.
+- Nettoyage (`TaxonomyCatalogMapper`) : nom obligatoire dans la langue de l'application ;
   exclusion des appellations protégées (AOP/IGP) et des entrées liées à une origine ; au plus
   4 mots et 40 caractères ; aucun chiffre ; dédoublonnage sur le nom normalisé en gardant l'entrée
   la plus générique. Il reste quelques milliers de produits : la base reste petite.
@@ -182,13 +223,16 @@ existant reste intact.
 
 **Version de format** : quand l'import extrait de nouvelles données (`TaxonomyCatalogMapper.FORMAT_VERSION`,
 1 = rayons), un catalogue importé par une version précédente de l'application est retéléchargé
-une fois en entier au prochain démarrage avec réseau, même s'il a moins de 7 jours.
+une fois en entier au prochain démarrage avec réseau, même s'il a moins de 7 jours. De même, un
+catalogue importé dans une autre langue que celle de l'application (`catalog_language` dans DataStore)
+est retéléchargé en entier dès qu'un réseau est disponible.
 
 ### Recherche et classement
 
 `SearchSuggestionsUseCase` (100 % local) :
 
-1. Normalisation (`TextNormalizer`) : minuscules, sans accents, `œ → oe`, ponctuation → espaces.
+1. Normalisation (`TextNormalizer`) : minuscules, sans accents, `œ → oe`, `ß → ss`, ponctuation →
+   espaces, identique dans toutes les langues.
 2. Présélection SQL : nom ou alias contenant la saisie.
 3. Classement (`SuggestionRanker`), par paliers de 1 000 points que les bonus ne peuvent pas
    franchir : **exact > préfixe > début de mot > partiel > approximatif**. À palier égal :
@@ -225,13 +269,28 @@ défaut**. Activé, les articles à acheter sont regroupés sous un en-tête par
 - **Import** : chaque produit OpenFoodFacts reçoit le rayon du premier identifiant connu sur sa
   chaîne de parents, du plus précis au plus général (`OpenFoodFactsGroceryCategories`) : `en:breads`
   l'emporte sur la racine `en:plant-based-foods-and-beverages`. Le catalogue de base déclare le rayon
-  de chaque section (`seed_fr.json`, version 2). Stockage : colonne `catalog_products.groceryCategory`.
+  de chaque section (`seed.json`, version 3). Stockage : colonne `catalog_products.groceryCategory`.
 - **Rangement par nom** (`GroupItemsByCategoryUseCase`) : un article prend le rayon du produit du
-  catalogue qui porte **son nom**, au singulier ou au pluriel (`CategoryNameKeys` : `Tomate` trouve
-  `Tomates`, `gâteau` trouve `Gâteaux`). Le rangement suit donc les renommages et s'applique de la
-  même façon aux articles tapés à la main et aux **articles créés dans Home Assistant**, dès
-  qu'OpenFoodFacts ou le catalogue de base connaît ce nom. Si les deux le connaissent, le catalogue
-  de base l'emporte. Sinon : « Autres ».
+  catalogue qui porte **son nom** dans la langue de l'application, au singulier ou au pluriel
+  (`CategoryNameKeys` et les terminaisons régulières de chaque langue, `WordForms` : `Tomate` trouve
+  `Tomates`, `pomodoro` trouve `Pomodori`, `limón` trouve `Limones`). Le rangement suit donc les
+  renommages et s'applique de la même façon aux articles tapés à la main et aux **articles créés
+  dans Home Assistant**, dès qu'OpenFoodFacts ou le catalogue de base connaît ce nom. Si les deux le
+  connaissent, le catalogue de base l'emporte.
+- **Sinon, rangement par produit associé** : l'article prend le rayon du produit auquel il est
+  rattaché (`shopping_items.catalogProductId`). C'est ce qui garde à sa place un article écrit dans
+  l'ancienne langue (« Lait » une fois l'application en anglais, rattaché à `seed:lait`, désormais
+  nommé « Milk »). Sinon : « Autres ».
+- **Rattachement des articles** (`LinkItemsToCatalogUseCase`, `ItemCatalogLinkResolver`), au
+  démarrage puis après chaque import (catalogue de base ou OpenFoodFacts, donc après tout changement
+  de langue), pour les articles de toutes les listes : un produit du catalogue portant le nom de
+  l'article ; à défaut, le produit déjà associé s'il existe encore dans le catalogue ; à défaut, un
+  produit personnalisé de même nom (créé si besoin, comme à la saisie). Le produit donne à l'article
+  son rayon et sa catégorie OpenFoodFacts (identifiant de taxonomie `en:…` et catégorie parente).
+  L'écriture ne touche que le lien, seulement si l'article n'a pas été renommé entre-temps : ce
+  n'est pas une modification synchronisée, rien n'est envoyé à Home Assistant. Renommer un article
+  (dans l'application ou dans Home Assistant) retire son lien, sauf si seules la casse, les accents
+  ou la ponctuation changent ; il est retrouvé au rattachement suivant.
 - Le rangement se met à jour tout seul après un import du catalogue (requête Room observée).
 
 ## Home Assistant
@@ -470,8 +529,10 @@ rester dans un package `data.remote`.
 | Temps réel, synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
 | Âge et format du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
 | Catégories (import, singulier/pluriel, rangement, priorité du catalogue de base) | `TaxonomyCatalogMapperTest`, `SeedCatalogMapperTest`, `CategoryNameKeysTest`, `GroupItemsByCategoryUseCaseTest`, `RoomRepositoriesTest`, `ShoppingScreenTest` |
+| Langues (résolution de la langue de l'appareil, traductions complètes, catalogue de base dans les six langues, retéléchargement dans la nouvelle langue, installations existantes, nom de la liste par défaut, formats) | `AppLanguageTest`, `StringResourcesTest`, `SeedCatalogMapperTest`, `TaxonomyCatalogMapperTest`, `CatalogSyncManagerTest`, `KeepFrenchForExistingInstallUseCaseTest`, `CompleteOnboardingUseCaseTest`, `CategoryNameKeysTest`, `TextNormalizerTest`, `QuantityFormatterTest`, `ItemDescriptionCodecTest`, `WelcomeScreenTest` |
+| Rattachement des articles au catalogue après un import ou un changement de langue | `ItemCatalogLinkResolverTest`, `LinkItemsToCatalogUseCaseTest`, `GroupItemsByCategoryUseCaseTest`, `ItemCatalogLinkRoomTest` (Room réel) |
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
-| Parcours UI | `ShoppingScreenTest` (dont suppression des achetés avec confirmation), `WelcomeScreenTest`, `HaConnectionCardTest` (connexion repliée), `ThemeModeSelectorTest` |
+| Parcours UI (affichés en français quelle que soit la langue du téléphone, `FrenchCoursesTheme`) | `ShoppingScreenTest` (dont suppression des achetés avec confirmation), `WelcomeScreenTest` (choix de la langue), `HaConnectionCardTest` (connexion repliée), `ThemeModeSelectorTest` |
 | Icônes des barres système selon le thème choisi | `SystemBarsAppearanceTest` |
 | QR code du token (décodage ZXing, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
 | Certificats CA utilisateur, trafic local | `NetworkSecurityConfigTest` (le test CA ne s'exécute que si une CA utilisateur est installée) |
@@ -494,7 +555,18 @@ rester dans un package `data.remote`.
   réel de l'article qui part, jamais un état intermédiaire périmé.
 - **Catégorie calculée par nom plutôt que stockée sur l'article** : aucune colonne à maintenir sur
   `shopping_items`, aucun conflit de synchronisation possible, et un article renommé ou venu de
-  Home Assistant est rangé correctement sans traitement particulier.
+  Home Assistant est rangé correctement sans traitement particulier. Le produit associé
+  (`catalogProductId`, colonne existante) ne sert qu'en second recours, pour les noms que le
+  catalogue de la langue courante ne connaît pas.
+- **Langue par application d'Android plutôt qu'une préférence DataStore** : aucune dépendance
+  (AppCompat n'est pas nécessaire en API 37), une seule source de vérité, et le choix reste cohérent
+  avec les paramètres Android. Aucun changement de schéma Room : la langue des imports est
+  mémorisée dans le DataStore du catalogue.
+- **Catalogue retéléchargé plutôt que stocké dans toutes les langues** : la base reste petite et les
+  requêtes inchangées ; le catalogue de base, lui, est traduit et embarqué pour que le changement de
+  langue fonctionne hors ligne.
+- **Articles jamais traduits** : leur nom est une donnée saisie, partagée avec Home Assistant et
+  peut-être avec d'autres personnes ; le traduire enverrait des renommages que personne n'a demandés.
 - **Pictogrammes en emoji** : aucune bibliothèque d'icônes supplémentaire (le jeu d'icônes Material
   « extended » pèse plusieurs Mo), rendus en couleur par la police système.
 - **Room avec schéma exporté** : version 3, par `AutoMigration` (2 : `catalog_products.groceryCategory` ;
@@ -527,6 +599,19 @@ rester dans un package `data.remote`.
   « Hygiène et maison » et « Bébé et animaux » ne sont alimentés que par le catalogue de base.
   Tant que le catalogue OpenFoodFacts n'a pas été retéléchargé après la mise à jour, seuls les
   produits du catalogue de base sont rangés.
+- **Langues** :
+  - la taxonomie OpenFoodFacts est bien moins fournie hors du français et de l'anglais (environ
+    900 produits en portugais contre 6 500 en français) : autocomplétion et rangement y reposent
+    davantage sur le catalogue de base ;
+  - singulier et pluriel ne sont reconnus que par les terminaisons régulières (`WordForms`) : les
+    pluriels irréguliers (« Mann/Männer ») ne sont pas retrouvés ;
+  - un seul portugais (plutôt européen, quelques alias brésiliens : « suco », « abacaxi ») et un
+    seul espagnol (d'Espagne, alias « jugo ») ;
+  - après un changement de langue hors ligne, la partie OpenFoodFacts reste dans l'ancienne langue
+    jusqu'au retour du réseau (Réglages → Catalogue alimentaire l'indique) ;
+  - les traductions ont été écrites sans relecture par des locuteurs natifs ;
+  - le changement de langue depuis les paramètres Android est relu au retour au premier plan de
+    l'application ; il n'a pas été vérifié sur toutes les versions de GrapheneOS.
 - **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement
   (`NetworkSecurityConfigTest`), mais le test complet n'est effectif que sur un appareil où une
   autorité de certification utilisateur est installée ; il est ignoré sinon.

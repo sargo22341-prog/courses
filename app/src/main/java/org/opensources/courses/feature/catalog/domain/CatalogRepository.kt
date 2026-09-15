@@ -26,7 +26,19 @@ interface CatalogRepository {
         products: List<CatalogImportProduct>,
     )
 
+    /** Replaces the bundled part of the catalog; usage statistics are preserved. */
+    suspend fun replaceSeedCatalog(
+        version: String,
+        products: List<CatalogImportProduct>,
+    )
+
     fun observeProductCount(): Flow<Int>
+
+    /** Every product, of any source, named exactly like one of [normalizedNames]. */
+    suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef>
+
+    /** The products of [ids] that still exist. */
+    suspend fun findByIds(ids: Set<String>): List<CatalogProductRef>
 
     /**
      * Shop section of the catalog products named exactly like one of [normalizedNames], keyed by
@@ -34,4 +46,7 @@ interface CatalogRepository {
      * OpenFoodFacts when both know a name. Updated when the catalog changes.
      */
     fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>>
+
+    /** Shop section of the products of [ids] that have one, keyed by id. Updated when the catalog changes. */
+    fun observeCategoriesByIds(ids: Set<String>): Flow<Map<String, GroceryCategory>>
 }

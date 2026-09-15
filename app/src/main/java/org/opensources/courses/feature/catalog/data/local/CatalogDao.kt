@@ -90,4 +90,13 @@ interface CatalogDao {
         """,
     )
     fun observeCategories(normalizedNames: List<String>): Flow<List<ProductCategoryRow>>
+
+    @Query("SELECT id, normalizedName, source FROM catalog_products WHERE normalizedName IN (:normalizedNames)")
+    suspend fun findRefsByNormalizedNames(normalizedNames: List<String>): List<ProductRefRow>
+
+    @Query("SELECT id, normalizedName, source FROM catalog_products WHERE id IN (:ids)")
+    suspend fun findRefsByIds(ids: List<String>): List<ProductRefRow>
+
+    @Query("SELECT id, groceryCategory FROM catalog_products WHERE groceryCategory IS NOT NULL AND id IN (:ids)")
+    fun observeCategoriesByIds(ids: List<String>): Flow<List<ProductIdCategoryRow>>
 }

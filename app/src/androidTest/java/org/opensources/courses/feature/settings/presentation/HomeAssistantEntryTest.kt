@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
 import org.opensources.courses.feature.settings.presentation.components.HomeAssistantEntry
@@ -22,7 +22,7 @@ class HomeAssistantEntryTest {
     private fun show(
         status: HomeAssistantStatus,
         onOpen: () -> Unit = {},
-    ) = composeRule.setContent { CoursesTheme { HomeAssistantEntry(status, onOpen) } }
+    ) = composeRule.setContent { FrenchCoursesTheme { HomeAssistantEntry(status, onOpen) } }
 
     @Test
     fun connectedWithSynchronisationOffIsNotShownAsDisconnected() {

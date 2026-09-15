@@ -14,9 +14,11 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import org.opensources.courses.feature.catalog.data.remote.OpenFoodFactsApi
 import org.opensources.courses.feature.catalog.data.remote.OpenFoodFactsCatalogSource
+import org.opensources.courses.feature.catalog.data.seed.AssetSeedCatalogSource
 import org.opensources.courses.feature.catalog.domain.CatalogRemoteSource
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSyncStateStore
+import org.opensources.courses.feature.catalog.domain.SeedCatalogSource
 import retrofit2.Retrofit
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -33,6 +35,9 @@ abstract class CatalogDataModule {
 
     @Binds
     abstract fun bindCatalogRemoteSource(source: OpenFoodFactsCatalogSource): CatalogRemoteSource
+
+    @Binds
+    abstract fun bindSeedCatalogSource(source: AssetSeedCatalogSource): SeedCatalogSource
 
     @Binds
     abstract fun bindCatalogSyncStateStore(store: DataStoreCatalogSyncStateStore): CatalogSyncStateStore

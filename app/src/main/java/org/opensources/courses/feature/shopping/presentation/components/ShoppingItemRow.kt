@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -85,7 +86,7 @@ fun ShoppingItemRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = QuantityFormatter.format(item.quantity, item.unit),
+                    text = QuantityFormatter.format(item.quantity, item.unit, LocalConfiguration.current.locales[0]),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

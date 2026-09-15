@@ -11,6 +11,7 @@ import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
+import org.opensources.courses.testing.FakeAppLanguageRepository
 import org.opensources.courses.testing.FakeCatalogRepository
 import org.opensources.courses.testing.FakeHaConfigRepository
 import org.opensources.courses.testing.FakeHaLiveUpdates
@@ -25,7 +26,7 @@ class HomeAssistantSyncEngineTest {
     private val store = FakeSyncLocalStore(queue).apply { lists[LIST] = SyncListRef(LIST, "Courses", ENTITY) }
     private val gateway = FakeHomeAssistantGateway().apply { lists[ENTITY] = HaTodoList(ENTITY, "Courses", supportsDescription = true) }
     private val config = FakeHaConfigRepository()
-    private val engine = HomeAssistantSyncEngine(config, gateway, store, queue, FakeCatalogRepository(), FakeHaLiveUpdates())
+    private val engine = HomeAssistantSyncEngine(config, gateway, store, queue, FakeCatalogRepository(), FakeHaLiveUpdates(), FakeAppLanguageRepository())
 
     private fun localItem(
         id: String,

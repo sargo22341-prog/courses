@@ -2,9 +2,10 @@ package org.opensources.courses.feature.catalog.data.remote
 
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
+import org.opensources.courses.feature.language.domain.AppLanguage
 
 /**
- * Cleans the OpenFoodFacts categories taxonomy into shopping-list products.
+ * Cleans the OpenFoodFacts categories taxonomy into shopping-list products named in [language].
  *
  * The raw file holds ~15 000 categories in many languages. Kept entries must:
  * - have a name in [language];
@@ -13,15 +14,18 @@ import org.opensources.courses.feature.catalog.domain.TextNormalizer
  * - be short (≤ 4 words, ≤ 40 characters) and contain no digit (`Laits 2ème âge`).
  * Names are de-duplicated on their normalized form, keeping the most generic entry.
  * The base score favours generic categories (close to a root) over specific ones, and the shop
- * section comes from [OpenFoodFactsGroceryCategories].
+ * section comes from [OpenFoodFactsGroceryCategories]. Ids are the taxonomy ids (`en:milks`), the
+ * same in every language.
  */
 class TaxonomyCatalogMapper(
-    private val language: String = "fr",
+    language: AppLanguage,
 ) {
+    private val tag = language.tag
+
     fun map(entries: Map<String, TaxonomyEntryDto>): List<CatalogImportProduct> {
         val byName = LinkedHashMap<String, CatalogImportProduct>()
         for ((id, entry) in entries) {
-            val name = entry.name[language]?.trim() ?: continue
+            val name = entry.name[tag]?.trim() ?: continue
             if (!isUseful(entry, name)) continue
             val ancestors = ancestorsOf(id, entries)
             val product =
@@ -29,7 +33,7 @@ class TaxonomyCatalogMapper(
                     id = id,
                     name = name.replaceFirstChar { it.uppercaseChar() },
                     category = categoryName(ancestors, entries),
-                    parentId = entry.parents.firstOrNull { entries[it]?.name?.containsKey(language) == true },
+                    parentId = entry.parents.firstOrNull { entries[it]?.name?.containsKey(tag) == true },
                     baseScore = (MAX_BASE_SCORE - ancestors.size).coerceAtLeast(0),
                     groceryCategory = OpenFoodFactsGroceryCategories.categoryOf(listOf(id) + ancestors),
                 )
@@ -70,7 +74,7 @@ class TaxonomyCatalogMapper(
         entries: Map<String, TaxonomyEntryDto>,
     ): String? {
         val shelf = if (ancestors.size >= 2) ancestors[ancestors.size - 2] else ancestors.lastOrNull()
-        return shelf?.let { entries[it]?.name?.get(language) }
+        return shelf?.let { entries[it]?.name?.get(tag) }
     }
 
     companion object {

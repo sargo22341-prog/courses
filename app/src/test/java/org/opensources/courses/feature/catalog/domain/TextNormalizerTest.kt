@@ -20,6 +20,14 @@ class TextNormalizerTest {
     }
 
     @Test
+    fun `handles the letters of every supported language`() {
+        assertEquals("weissbrot kase", TextNormalizer.normalize("Weißbrot Käse"))
+        assertEquals("pina limoes macas", TextNormalizer.normalize("Piña limões maçãs"))
+        assertEquals("caffe d orzo", TextNormalizer.normalize("Caffè d’orzo"))
+        assertEquals("istanbul", TextNormalizer.normalize("ISTANBUL"))
+    }
+
+    @Test
     fun `splits words`() {
         assertEquals(listOf("pommes", "de", "terre"), TextNormalizer.words("pommes de terre"))
     }

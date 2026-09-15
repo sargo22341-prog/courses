@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.opensources.courses.core.model.SyncStatus
+import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 
@@ -41,6 +42,13 @@ data class ShoppingItemEntity(
     val syncStatus: SyncStatus = SyncStatus.LOCAL_ONLY,
     val isDeleted: Boolean = false,
 )
+
+/**
+ * The item under [name]. Another name may stand for another product, so the catalog link is dropped
+ * unless only case, accents or punctuation changed; the link is found again from the new name.
+ */
+fun ShoppingItemEntity.renamed(name: String): ShoppingItemEntity =
+    copy(name = name, catalogProductId = catalogProductId.takeIf { TextNormalizer.normalize(name) == TextNormalizer.normalize(this.name) })
 
 fun ShoppingItemEntity.toDomain(): ShoppingItem =
     ShoppingItem(

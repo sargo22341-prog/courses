@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.opensources.courses.R
+import org.opensources.courses.feature.language.domain.AppLanguage
+import org.opensources.courses.feature.language.presentation.components.LanguageSelector
 
 @Composable
 fun WelcomeRoute(
@@ -38,9 +42,11 @@ fun WelcomeRoute(
     onConnectHomeAssistant: () -> Unit,
     viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
-    val completing by viewModel.completing.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     WelcomeScreen(
-        enabled = !completing,
+        language = state.language,
+        enabled = !state.completing,
+        onLanguageSelected = viewModel::selectLanguage,
         onStart = { viewModel.complete(onStart) },
         onConnectHomeAssistant = { viewModel.complete(onConnectHomeAssistant) },
     )
@@ -48,7 +54,9 @@ fun WelcomeRoute(
 
 @Composable
 fun WelcomeScreen(
+    language: AppLanguage,
     enabled: Boolean,
+    onLanguageSelected: (AppLanguage) -> Unit,
     onStart: () -> Unit,
     onConnectHomeAssistant: () -> Unit,
 ) {
@@ -58,7 +66,12 @@ fun WelcomeScreen(
         modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 32.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        // Scrollable: the language choice must not push the buttons off small or zoomed screens.
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()).padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Image(
                 painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
@@ -77,7 +90,15 @@ fun WelcomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(32.dp))
+            Text(stringResource(R.string.welcome_language), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            LanguageSelector(
+                selected = language,
+                onSelect = onLanguageSelected,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            )
+            Spacer(Modifier.height(32.dp))
             Button(onClick = onStart, enabled = enabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
                 Text(stringResource(R.string.welcome_start), style = MaterialTheme.typography.titleMedium)
             }

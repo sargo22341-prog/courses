@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.testing.FrenchCoursesTheme
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
 
 @RunWith(AndroidJUnit4::class)
@@ -22,7 +22,7 @@ class HaConnectionCardTest {
         onScanToken: () -> Unit = {},
     ) {
         composeRule.setContent {
-            CoursesTheme {
+            FrenchCoursesTheme {
                 HaConnectionCard(
                     state = state,
                     url = "",

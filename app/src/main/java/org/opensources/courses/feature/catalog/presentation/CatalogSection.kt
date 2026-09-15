@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import org.opensources.courses.R
@@ -15,9 +16,8 @@ import org.opensources.courses.feature.catalog.domain.CatalogSyncStatus
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
-
-private val DateFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH)
 
 @Composable
 fun CatalogSection(
@@ -26,12 +26,13 @@ fun CatalogSection(
 ) {
     SettingsCard(stringResource(R.string.catalog_title)) {
         val lastSync = state.lastSyncAt
+        val locale = LocalConfiguration.current.locales[0]
         Text(
             text =
                 if (lastSync == null) {
                     stringResource(R.string.catalog_never_synced)
                 } else {
-                    stringResource(R.string.catalog_last_sync, remember(lastSync) { formatDate(lastSync) })
+                    stringResource(R.string.catalog_last_sync, remember(lastSync, locale) { formatDate(lastSync, locale) })
                 },
             style = MaterialTheme.typography.bodyLarge,
         )
@@ -40,6 +41,9 @@ fun CatalogSection(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (state.languagePending) {
+            StatusText(stringResource(R.string.catalog_language_pending), isError = false)
+        }
         val running = state.status == CatalogSyncStatus.Running
         FilledTonalButton(onClick = onSyncNow, enabled = !running) {
             Text(stringResource(if (running) R.string.catalog_syncing else R.string.catalog_sync_now))
@@ -63,4 +67,7 @@ private fun ResultText(result: CatalogSyncResult) {
     }
 }
 
-private fun formatDate(instant: Instant): String = DateFormatter.format(instant.atZone(ZoneId.systemDefault()))
+private fun formatDate(
+    instant: Instant,
+    locale: Locale,
+): String = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(ZoneId.systemDefault()))

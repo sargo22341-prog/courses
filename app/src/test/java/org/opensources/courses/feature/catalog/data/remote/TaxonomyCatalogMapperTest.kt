@@ -7,9 +7,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
+import org.opensources.courses.feature.language.domain.AppLanguage
 
 class TaxonomyCatalogMapperTest {
-    private val mapper = TaxonomyCatalogMapper()
+    private val mapper = TaxonomyCatalogMapper(AppLanguage.FRENCH)
 
     private val entries =
         mapOf(
@@ -52,6 +53,15 @@ class TaxonomyCatalogMapperTest {
         val semiSkimmed = products.getValue("en:semi-skimmed-milks")
         assertEquals("en:milks", semiSkimmed.parentId)
         assertTrue(milks.baseScore > semiSkimmed.baseScore)
+    }
+
+    @Test
+    fun `names and categories are taken in the requested language, ids stay the taxonomy ids`() {
+        val english = TaxonomyCatalogMapper(AppLanguage.ENGLISH).map(entries).associateBy { it.id }
+
+        assertEquals(setOf("en:milks", "en:english-only"), english.keys)
+        assertEquals("Milks", english.getValue("en:milks").name)
+        assertEquals(GroceryCategory.DAIRY_EGGS, english.getValue("en:milks").groceryCategory)
     }
 
     @Test

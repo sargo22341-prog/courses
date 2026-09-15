@@ -1,0 +1,527 @@
+{
+  "version": 3,
+  "categories": [
+    {
+      "category": "DAIRY_EGGS",
+      "name": { "fr": "Produits laitiers", "en": "Dairy", "de": "Milchprodukte", "es": "Lácteos", "it": "Latticini", "pt": "Laticínios" },
+      "products": [
+        {
+          "name": { "fr": "Lait", "en": "Milk", "de": "Milch", "es": "Leche", "it": "Latte", "pt": "Leite" },
+          "variants": [
+            { "fr": "Lait demi-écrémé", "en": "Semi-skimmed milk", "de": "Halbfettmilch", "es": "Leche semidesnatada", "it": "Latte parzialmente scremato", "pt": "Leite meio-gordo" },
+            { "fr": "Lait entier", "en": "Whole milk", "de": "Vollmilch", "es": "Leche entera", "it": "Latte intero", "pt": "Leite gordo" },
+            { "fr": "Lait écrémé", "en": "Skimmed milk", "de": "Magermilch", "es": "Leche desnatada", "it": "Latte scremato", "pt": "Leite magro" },
+            { "fr": "Lait d'amande", "en": "Almond milk", "de": "Mandelmilch", "es": "Leche de almendras", "it": "Latte di mandorla", "pt": "Leite de amêndoa" },
+            { "fr": "Lait d'avoine", "en": "Oat milk", "de": "Hafermilch", "es": "Leche de avena", "it": "Latte d'avena", "pt": "Leite de aveia" },
+            { "fr": "Lait de soja", "en": "Soy milk", "de": "Sojamilch", "es": "Leche de soja", "it": "Latte di soia", "pt": "Leite de soja" },
+            { "fr": "Lait de coco", "en": "Coconut milk", "de": "Kokosmilch", "es": "Leche de coco", "it": "Latte di cocco", "pt": "Leite de coco" },
+            { "fr": "Lait sans lactose", "en": "Lactose-free milk", "de": "Laktosefreie Milch", "es": "Leche sin lactosa", "it": "Latte senza lattosio", "pt": "Leite sem lactose" }
+          ]
+        },
+        {
+          "name": { "fr": "Beurre", "en": "Butter", "de": "Butter", "es": "Mantequilla", "it": "Burro", "pt": "Manteiga" },
+          "variants": [
+            { "fr": "Beurre doux", "en": "Unsalted butter", "de": "Süßrahmbutter", "es": "Mantequilla sin sal", "it": "Burro non salato", "pt": "Manteiga sem sal" },
+            { "fr": "Beurre demi-sel", "en": "Lightly salted butter", "de": "Leicht gesalzene Butter", "es": "Mantequilla con poca sal", "it": "Burro leggermente salato", "pt": "Manteiga com pouco sal" },
+            { "fr": "Beurre salé", "en": "Salted butter", "de": "Gesalzene Butter", "es": "Mantequilla salada", "it": "Burro salato", "pt": "Manteiga com sal" }
+          ]
+        },
+        {
+          "name": { "fr": "Crème fraîche", "en": "Crème fraîche", "de": "Crème fraîche", "es": "Crème fraîche", "it": "Crème fraîche", "pt": "Crème fraîche" },
+          "aliases": { "fr": ["crème"], "en": ["cream"], "de": ["sahne"], "es": ["nata"], "it": ["panna"], "pt": ["natas"] },
+          "variants": [
+            { "fr": "Crème fraîche épaisse", "en": "Double cream", "de": "Schmand", "es": "Nata espesa", "it": "Panna densa", "pt": "Natas espessas" },
+            { "fr": "Crème liquide", "en": "Single cream", "de": "Schlagsahne", "es": "Nata líquida", "it": "Panna da cucina", "pt": "Natas líquidas" },
+            { "fr": "Crème fraîche légère", "en": "Light crème fraîche", "de": "Crème fraîche light", "es": "Crème fraîche ligera", "it": "Crème fraîche leggera", "pt": "Crème fraîche magra" }
+          ]
+        },
+        {
+          "name": { "fr": "Yaourts", "en": "Yogurts", "de": "Joghurt", "es": "Yogures", "it": "Yogurt", "pt": "Iogurtes" },
+          "aliases": { "fr": ["yogourt", "yaourt"], "en": ["yoghurt", "yogurt"], "de": ["jogurt"], "es": ["yogur"], "it": ["yoghurt"], "pt": ["iogurte"] },
+          "variants": [
+            { "fr": "Yaourts nature", "en": "Plain yogurt", "de": "Naturjoghurt", "es": "Yogures naturales", "it": "Yogurt bianco", "pt": "Iogurtes naturais" },
+            { "fr": "Yaourts aux fruits", "en": "Fruit yogurt", "de": "Fruchtjoghurt", "es": "Yogures de frutas", "it": "Yogurt alla frutta", "pt": "Iogurtes de fruta" },
+            { "fr": "Yaourts grecs", "en": "Greek yogurt", "de": "Griechischer Joghurt", "es": "Yogures griegos", "it": "Yogurt greco", "pt": "Iogurtes gregos" }
+          ]
+        },
+        {
+          "name": { "fr": "Fromage", "en": "Cheese", "de": "Käse", "es": "Queso", "it": "Formaggio", "pt": "Queijo" },
+          "variants": [
+            { "fr": "Fromage râpé", "en": "Grated cheese", "de": "Reibekäse", "es": "Queso rallado", "it": "Formaggio grattugiato", "pt": "Queijo ralado" },
+            { "fr": "Emmental", "en": "Emmental", "de": "Emmentaler", "es": "Emmental", "it": "Emmental", "pt": "Emmental" },
+            { "fr": "Comté", "en": "Comté", "de": "Comté", "es": "Comté", "it": "Comté", "pt": "Comté" },
+            { "fr": "Camembert", "en": "Camembert", "de": "Camembert", "es": "Camembert", "it": "Camembert", "pt": "Camembert" },
+            { "fr": "Mozzarella", "en": "Mozzarella", "de": "Mozzarella", "es": "Mozzarella", "it": "Mozzarella", "pt": "Mozzarella" },
+            { "fr": "Chèvre", "en": "Goat's cheese", "de": "Ziegenkäse", "es": "Queso de cabra", "it": "Formaggio di capra", "pt": "Queijo de cabra" },
+            { "fr": "Parmesan", "en": "Parmesan", "de": "Parmesan", "es": "Parmesano", "it": "Parmigiano", "pt": "Parmesão" },
+            { "fr": "Roquefort", "en": "Roquefort", "de": "Roquefort", "es": "Roquefort", "it": "Roquefort", "pt": "Roquefort" },
+            { "fr": "Raclette", "en": "Raclette cheese", "de": "Raclettekäse", "es": "Queso raclette", "it": "Raclette", "pt": "Queijo raclette" },
+            { "fr": "Feta", "en": "Feta", "de": "Feta", "es": "Feta", "it": "Feta", "pt": "Feta" }
+          ]
+        },
+        { "name": { "fr": "Fromage blanc", "en": "Fromage frais", "de": "Quark", "es": "Queso fresco batido", "it": "Quark", "pt": "Queijo fresco batido" } },
+        { "name": { "fr": "Petits suisses", "en": "Petits-suisses", "de": "Kinderquark", "es": "Petit suisse", "it": "Petit suisse", "pt": "Petit suisse" } },
+        { "name": { "fr": "Crèmes dessert", "en": "Dessert creams", "de": "Pudding", "es": "Natillas", "it": "Budini", "pt": "Sobremesas lácteas" } },
+        {
+          "name": { "fr": "Œufs", "en": "Eggs", "de": "Eier", "es": "Huevos", "it": "Uova", "pt": "Ovos" },
+          "aliases": { "fr": ["oeuf", "oeufs"], "en": ["egg"], "de": ["ei"], "es": ["huevo"], "it": ["uovo"], "pt": ["ovo"] },
+          "variants": [
+            { "fr": "Œufs bio", "en": "Organic eggs", "de": "Bio-Eier", "es": "Huevos ecológicos", "it": "Uova biologiche", "pt": "Ovos biológicos" },
+            { "fr": "Œufs plein air", "en": "Free-range eggs", "de": "Freilandeier", "es": "Huevos camperos", "it": "Uova da allevamento all'aperto", "pt": "Ovos de ar livre" }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "BAKERY",
+      "name": { "fr": "Boulangerie", "en": "Bakery", "de": "Backwaren", "es": "Panadería", "it": "Panetteria", "pt": "Padaria" },
+      "products": [
+        {
+          "name": { "fr": "Pain", "en": "Bread", "de": "Brot", "es": "Pan", "it": "Pane", "pt": "Pão" },
+          "variants": [
+            { "fr": "Pain complet", "en": "Wholemeal bread", "de": "Vollkornbrot", "es": "Pan integral", "it": "Pane integrale", "pt": "Pão integral" },
+            { "fr": "Pain de mie", "en": "Sandwich bread", "de": "Toastbrot", "es": "Pan de molde", "it": "Pancarré", "pt": "Pão de forma" },
+            { "fr": "Pain aux céréales", "en": "Multigrain bread", "de": "Mehrkornbrot", "es": "Pan de cereales", "it": "Pane ai cereali", "pt": "Pão de cereais" },
+            { "fr": "Pain de campagne", "en": "Country bread", "de": "Bauernbrot", "es": "Pan rústico", "it": "Pane casereccio", "pt": "Pão rústico" },
+            { "fr": "Pain burger", "en": "Burger buns", "de": "Burgerbrötchen", "es": "Pan de hamburguesa", "it": "Panini per hamburger", "pt": "Pão de hambúrguer" }
+          ]
+        },
+        {
+          "name": { "fr": "Baguette", "en": "Baguette", "de": "Baguette", "es": "Baguette", "it": "Baguette", "pt": "Baguete" },
+          "aliases": { "fr": ["pain baguette"], "en": ["french stick"], "de": ["stangenbrot"], "es": ["barra de pan"], "it": ["filone"], "pt": ["cacete"] },
+          "variants": [
+            { "fr": "Baguette tradition", "en": "Traditional baguette", "de": "Baguette Tradition", "es": "Baguette tradicional", "it": "Baguette tradizionale", "pt": "Baguete tradicional" }
+          ]
+        },
+        { "name": { "fr": "Croissants", "en": "Croissants", "de": "Croissants", "es": "Cruasanes", "it": "Cornetti", "pt": "Croissants" }, "aliases": { "es": ["croissants"], "it": ["croissant"] } },
+        { "name": { "fr": "Pains au chocolat", "en": "Pains au chocolat", "de": "Schokoladencroissants", "es": "Napolitanas de chocolate", "it": "Saccottini al cioccolato", "pt": "Pães de chocolate" }, "aliases": { "fr": ["chocolatines"], "en": ["chocolate croissants"] } },
+        { "name": { "fr": "Brioche", "en": "Brioche", "de": "Brioche", "es": "Brioche", "it": "Brioche", "pt": "Brioche" } },
+        { "name": { "fr": "Biscottes", "en": "Rusks", "de": "Zwieback", "es": "Biscotes", "it": "Fette biscottate", "pt": "Tostas" } },
+        { "name": { "fr": "Tortillas", "en": "Tortillas", "de": "Tortillas", "es": "Tortillas de trigo", "it": "Tortillas", "pt": "Tortilhas" }, "aliases": { "fr": ["wraps"], "en": ["wraps"], "de": ["wraps"], "es": ["wraps"], "it": ["piadine"], "pt": ["wraps"] } }
+      ]
+    },
+    {
+      "category": "FRUITS_VEGETABLES",
+      "name": { "fr": "Fruits", "en": "Fruit", "de": "Obst", "es": "Fruta", "it": "Frutta", "pt": "Fruta" },
+      "products": [
+        {
+          "name": { "fr": "Pommes", "en": "Apples", "de": "Äpfel", "es": "Manzanas", "it": "Mele", "pt": "Maçãs" },
+          "aliases": { "fr": ["pomme"], "en": ["apple"], "de": ["apfel"], "es": ["manzana"], "it": ["mela"], "pt": ["maçã"] },
+          "variants": [
+            { "fr": "Pommes Golden", "en": "Golden Delicious apples", "de": "Golden-Delicious-Äpfel", "es": "Manzanas Golden", "it": "Mele Golden", "pt": "Maçãs Golden" },
+            { "fr": "Pommes Gala", "en": "Gala apples", "de": "Gala-Äpfel", "es": "Manzanas Gala", "it": "Mele Gala", "pt": "Maçãs Gala" },
+            { "fr": "Pommes Granny", "en": "Granny Smith apples", "de": "Granny-Smith-Äpfel", "es": "Manzanas Granny Smith", "it": "Mele Granny Smith", "pt": "Maçãs Granny Smith" }
+          ]
+        },
+        { "name": { "fr": "Poires", "en": "Pears", "de": "Birnen", "es": "Peras", "it": "Pere", "pt": "Peras" } },
+        { "name": { "fr": "Bananes", "en": "Bananas", "de": "Bananen", "es": "Plátanos", "it": "Banane", "pt": "Bananas" }, "aliases": { "fr": ["banane"], "en": ["banana"], "de": ["banane"], "es": ["plátano", "bananas"], "it": ["banana"], "pt": ["banana"] } },
+        {
+          "name": { "fr": "Oranges", "en": "Oranges", "de": "Orangen", "es": "Naranjas", "it": "Arance", "pt": "Laranjas" },
+          "variants": [
+            { "fr": "Oranges à jus", "en": "Juicing oranges", "de": "Saftorangen", "es": "Naranjas de zumo", "it": "Arance da spremuta", "pt": "Laranjas para sumo" }
+          ]
+        },
+        {
+          "name": { "fr": "Citrons", "en": "Lemons", "de": "Zitronen", "es": "Limones", "it": "Limoni", "pt": "Limões" },
+          "aliases": { "fr": ["citron"], "en": ["lemon"], "de": ["zitrone"], "es": ["limón"], "it": ["limone"], "pt": ["limão"] },
+          "variants": [
+            { "fr": "Citrons verts", "en": "Limes", "de": "Limetten", "es": "Limas", "it": "Lime", "pt": "Limas" }
+          ]
+        },
+        { "name": { "fr": "Clémentines", "en": "Clementines", "de": "Clementinen", "es": "Clementinas", "it": "Clementine", "pt": "Clementinas" }, "aliases": { "fr": ["mandarines"], "en": ["mandarins"], "de": ["mandarinen"], "es": ["mandarinas"], "it": ["mandarini"], "pt": ["tangerinas"] } },
+        { "name": { "fr": "Fraises", "en": "Strawberries", "de": "Erdbeeren", "es": "Fresas", "it": "Fragole", "pt": "Morangos" } },
+        { "name": { "fr": "Framboises", "en": "Raspberries", "de": "Himbeeren", "es": "Frambuesas", "it": "Lamponi", "pt": "Framboesas" } },
+        { "name": { "fr": "Myrtilles", "en": "Blueberries", "de": "Heidelbeeren", "es": "Arándanos", "it": "Mirtilli", "pt": "Mirtilos" }, "aliases": { "de": ["blaubeeren"] } },
+        { "name": { "fr": "Raisin", "en": "Grapes", "de": "Weintrauben", "es": "Uvas", "it": "Uva", "pt": "Uvas" } },
+        { "name": { "fr": "Kiwis", "en": "Kiwis", "de": "Kiwis", "es": "Kiwis", "it": "Kiwi", "pt": "Kiwis" } },
+        { "name": { "fr": "Ananas", "en": "Pineapple", "de": "Ananas", "es": "Piña", "it": "Ananas", "pt": "Ananás" }, "aliases": { "pt": ["abacaxi"] } },
+        { "name": { "fr": "Mangue", "en": "Mango", "de": "Mango", "es": "Mango", "it": "Mango", "pt": "Manga" } },
+        { "name": { "fr": "Melon", "en": "Melon", "de": "Melone", "es": "Melón", "it": "Melone", "pt": "Melão" } },
+        { "name": { "fr": "Pastèque", "en": "Watermelon", "de": "Wassermelone", "es": "Sandía", "it": "Anguria", "pt": "Melancia" }, "aliases": { "it": ["cocomero"] } },
+        {
+          "name": { "fr": "Pêches", "en": "Peaches", "de": "Pfirsiche", "es": "Melocotones", "it": "Pesche", "pt": "Pêssegos" },
+          "variants": [
+            { "fr": "Nectarines", "en": "Nectarines", "de": "Nektarinen", "es": "Nectarinas", "it": "Pesche noci", "pt": "Nectarinas" }
+          ]
+        },
+        { "name": { "fr": "Abricots", "en": "Apricots", "de": "Aprikosen", "es": "Albaricoques", "it": "Albicocche", "pt": "Alperces" }, "aliases": { "pt": ["damascos"] } },
+        { "name": { "fr": "Cerises", "en": "Cherries", "de": "Kirschen", "es": "Cerezas", "it": "Ciliegie", "pt": "Cerejas" } },
+        { "name": { "fr": "Avocats", "en": "Avocados", "de": "Avocados", "es": "Aguacates", "it": "Avocado", "pt": "Abacates" }, "aliases": { "fr": ["avocat"], "en": ["avocado"], "de": ["avocado"], "es": ["aguacate"], "pt": ["abacate"] } }
+      ]
+    },
+    {
+      "category": "FRUITS_VEGETABLES",
+      "name": { "fr": "Légumes", "en": "Vegetables", "de": "Gemüse", "es": "Verduras", "it": "Verdura", "pt": "Legumes" },
+      "products": [
+        {
+          "name": { "fr": "Tomates", "en": "Tomatoes", "de": "Tomaten", "es": "Tomates", "it": "Pomodori", "pt": "Tomates" },
+          "aliases": { "fr": ["tomate"], "en": ["tomato"], "de": ["tomate"], "es": ["tomate"], "it": ["pomodoro"], "pt": ["tomate"] },
+          "variants": [
+            { "fr": "Tomates cerises", "en": "Cherry tomatoes", "de": "Kirschtomaten", "es": "Tomates cherry", "it": "Pomodorini", "pt": "Tomates cherry" },
+            { "fr": "Tomates concassées", "en": "Chopped tomatoes", "de": "Gehackte Tomaten", "es": "Tomate troceado", "it": "Polpa di pomodoro", "pt": "Tomate picado" },
+            { "fr": "Tomates pelées", "en": "Peeled tomatoes", "de": "Geschälte Tomaten", "es": "Tomates pelados", "it": "Pelati", "pt": "Tomate pelado" },
+            { "fr": "Tomates grappe", "en": "Vine tomatoes", "de": "Strauchtomaten", "es": "Tomates en rama", "it": "Pomodori a grappolo", "pt": "Tomates em cacho" }
+          ]
+        },
+        {
+          "name": { "fr": "Pommes de terre", "en": "Potatoes", "de": "Kartoffeln", "es": "Patatas", "it": "Patate", "pt": "Batatas" },
+          "aliases": { "fr": ["patates"], "en": ["potato"], "de": ["erdäpfel"], "es": ["papas"], "it": ["patata"], "pt": ["batata"] },
+          "variants": [
+            { "fr": "Pommes de terre nouvelles", "en": "New potatoes", "de": "Frühkartoffeln", "es": "Patatas nuevas", "it": "Patate novelle", "pt": "Batatas novas" }
+          ]
+        },
+        { "name": { "fr": "Carottes", "en": "Carrots", "de": "Karotten", "es": "Zanahorias", "it": "Carote", "pt": "Cenouras" }, "aliases": { "fr": ["carotte"], "en": ["carrot"], "de": ["möhren"], "es": ["zanahoria"], "it": ["carota"], "pt": ["cenoura"] } },
+        {
+          "name": { "fr": "Oignons", "en": "Onions", "de": "Zwiebeln", "es": "Cebollas", "it": "Cipolle", "pt": "Cebolas" },
+          "aliases": { "fr": ["oignon"], "en": ["onion"], "de": ["zwiebel"], "es": ["cebolla"], "it": ["cipolla"], "pt": ["cebola"] },
+          "variants": [
+            { "fr": "Oignons rouges", "en": "Red onions", "de": "Rote Zwiebeln", "es": "Cebollas moradas", "it": "Cipolle rosse", "pt": "Cebolas roxas" },
+            { "fr": "Oignons nouveaux", "en": "Spring onions", "de": "Frühlingszwiebeln", "es": "Cebolletas", "it": "Cipollotti", "pt": "Cebolas novas" }
+          ]
+        },
+        { "name": { "fr": "Ail", "en": "Garlic", "de": "Knoblauch", "es": "Ajo", "it": "Aglio", "pt": "Alho" } },
+        { "name": { "fr": "Échalotes", "en": "Shallots", "de": "Schalotten", "es": "Chalotas", "it": "Scalogni", "pt": "Chalotas" } },
+        {
+          "name": { "fr": "Salade", "en": "Salad", "de": "Salat", "es": "Ensalada", "it": "Insalata", "pt": "Salada" },
+          "variants": [
+            { "fr": "Laitue", "en": "Lettuce", "de": "Kopfsalat", "es": "Lechuga", "it": "Lattuga", "pt": "Alface" },
+            { "fr": "Mâche", "en": "Lamb's lettuce", "de": "Feldsalat", "es": "Canónigos", "it": "Valeriana", "pt": "Alface-de-cordeiro" },
+            { "fr": "Roquette", "en": "Rocket", "de": "Rucola", "es": "Rúcula", "it": "Rucola", "pt": "Rúcula" },
+            { "fr": "Batavia", "en": "Batavia lettuce", "de": "Batavia-Salat", "es": "Lechuga batavia", "it": "Lattuga batavia", "pt": "Alface batávia" },
+            { "fr": "Iceberg", "en": "Iceberg lettuce", "de": "Eisbergsalat", "es": "Lechuga iceberg", "it": "Lattuga iceberg", "pt": "Alface iceberg" }
+          ]
+        },
+        { "name": { "fr": "Concombre", "en": "Cucumber", "de": "Gurke", "es": "Pepino", "it": "Cetriolo", "pt": "Pepino" } },
+        { "name": { "fr": "Courgettes", "en": "Courgettes", "de": "Zucchini", "es": "Calabacines", "it": "Zucchine", "pt": "Curgetes" }, "aliases": { "fr": ["courgette"], "en": ["zucchini"], "es": ["calabacín"], "it": ["zucchina"], "pt": ["abobrinha"] } },
+        { "name": { "fr": "Aubergines", "en": "Aubergines", "de": "Auberginen", "es": "Berenjenas", "it": "Melanzane", "pt": "Beringelas" }, "aliases": { "en": ["eggplant"] } },
+        {
+          "name": { "fr": "Poivrons", "en": "Bell peppers", "de": "Paprika", "es": "Pimientos", "it": "Peperoni", "pt": "Pimentos" },
+          "aliases": { "pt": ["pimentões"] },
+          "variants": [
+            { "fr": "Poivrons rouges", "en": "Red bell peppers", "de": "Rote Paprika", "es": "Pimientos rojos", "it": "Peperoni rossi", "pt": "Pimentos vermelhos" },
+            { "fr": "Poivrons verts", "en": "Green bell peppers", "de": "Grüne Paprika", "es": "Pimientos verdes", "it": "Peperoni verdi", "pt": "Pimentos verdes" },
+            { "fr": "Poivrons jaunes", "en": "Yellow bell peppers", "de": "Gelbe Paprika", "es": "Pimientos amarillos", "it": "Peperoni gialli", "pt": "Pimentos amarelos" }
+          ]
+        },
+        { "name": { "fr": "Brocolis", "en": "Broccoli", "de": "Brokkoli", "es": "Brócoli", "it": "Broccoli", "pt": "Brócolos" }, "aliases": { "pt": ["brócolis"] } },
+        { "name": { "fr": "Chou-fleur", "en": "Cauliflower", "de": "Blumenkohl", "es": "Coliflor", "it": "Cavolfiore", "pt": "Couve-flor" } },
+        { "name": { "fr": "Haricots verts", "en": "Green beans", "de": "Grüne Bohnen", "es": "Judías verdes", "it": "Fagiolini", "pt": "Feijão-verde" } },
+        { "name": { "fr": "Petits pois", "en": "Peas", "de": "Erbsen", "es": "Guisantes", "it": "Piselli", "pt": "Ervilhas" } },
+        { "name": { "fr": "Épinards", "en": "Spinach", "de": "Spinat", "es": "Espinacas", "it": "Spinaci", "pt": "Espinafres" } },
+        {
+          "name": { "fr": "Champignons", "en": "Mushrooms", "de": "Pilze", "es": "Champiñones", "it": "Funghi", "pt": "Cogumelos" },
+          "aliases": { "de": ["champignons"], "es": ["setas"] },
+          "variants": [
+            { "fr": "Champignons de Paris", "en": "Button mushrooms", "de": "Weiße Champignons", "es": "Champiñones blancos", "it": "Champignon", "pt": "Cogumelos Paris" }
+          ]
+        },
+        { "name": { "fr": "Poireaux", "en": "Leeks", "de": "Lauch", "es": "Puerros", "it": "Porri", "pt": "Alho-francês" }, "aliases": { "de": ["porree"], "pt": ["alho-poró"] } },
+        { "name": { "fr": "Céleri", "en": "Celery", "de": "Sellerie", "es": "Apio", "it": "Sedano", "pt": "Aipo" } },
+        { "name": { "fr": "Radis", "en": "Radishes", "de": "Radieschen", "es": "Rábanos", "it": "Ravanelli", "pt": "Rabanetes" } },
+        { "name": { "fr": "Maïs", "en": "Sweetcorn", "de": "Mais", "es": "Maíz", "it": "Mais", "pt": "Milho" }, "aliases": { "en": ["corn"] } },
+        { "name": { "fr": "Potiron", "en": "Pumpkin", "de": "Kürbis", "es": "Calabaza", "it": "Zucca", "pt": "Abóbora" }, "aliases": { "fr": ["citrouille", "courge"], "en": ["squash"] } },
+        {
+          "name": { "fr": "Herbes fraîches", "en": "Fresh herbs", "de": "Frische Kräuter", "es": "Hierbas frescas", "it": "Erbe aromatiche fresche", "pt": "Ervas aromáticas frescas" },
+          "variants": [
+            { "fr": "Persil", "en": "Parsley", "de": "Petersilie", "es": "Perejil", "it": "Prezzemolo", "pt": "Salsa" },
+            { "fr": "Coriandre", "en": "Coriander", "de": "Koriander", "es": "Cilantro", "it": "Coriandolo", "pt": "Coentros" },
+            { "fr": "Basilic", "en": "Basil", "de": "Basilikum", "es": "Albahaca", "it": "Basilico", "pt": "Manjericão" },
+            { "fr": "Ciboulette", "en": "Chives", "de": "Schnittlauch", "es": "Cebollino", "it": "Erba cipollina", "pt": "Cebolinho" },
+            { "fr": "Menthe", "en": "Mint", "de": "Minze", "es": "Menta", "it": "Menta", "pt": "Hortelã" }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "MEAT_FISH",
+      "name": { "fr": "Viandes et poissons", "en": "Meat and fish", "de": "Fleisch und Fisch", "es": "Carne y pescado", "it": "Carne e pesce", "pt": "Carne e peixe" },
+      "products": [
+        {
+          "name": { "fr": "Poulet", "en": "Chicken", "de": "Hähnchen", "es": "Pollo", "it": "Pollo", "pt": "Frango" },
+          "aliases": { "de": ["huhn"] },
+          "variants": [
+            { "fr": "Blancs de poulet", "en": "Chicken breasts", "de": "Hähnchenbrust", "es": "Pechugas de pollo", "it": "Petti di pollo", "pt": "Peitos de frango" },
+            { "fr": "Cuisses de poulet", "en": "Chicken thighs", "de": "Hähnchenschenkel", "es": "Muslos de pollo", "it": "Cosce di pollo", "pt": "Coxas de frango" },
+            { "fr": "Poulet entier", "en": "Whole chicken", "de": "Ganzes Hähnchen", "es": "Pollo entero", "it": "Pollo intero", "pt": "Frango inteiro" }
+          ]
+        },
+        {
+          "name": { "fr": "Bœuf", "en": "Beef", "de": "Rindfleisch", "es": "Ternera", "it": "Manzo", "pt": "Carne de vaca" },
+          "aliases": { "fr": ["boeuf"], "es": ["carne de vacuno"] },
+          "variants": [
+            { "fr": "Steaks hachés", "en": "Beef burgers", "de": "Hamburger-Patties", "es": "Hamburguesas", "it": "Hamburger", "pt": "Hambúrgueres" },
+            { "fr": "Viande hachée", "en": "Minced meat", "de": "Hackfleisch", "es": "Carne picada", "it": "Carne macinata", "pt": "Carne picada" },
+            { "fr": "Rôti de bœuf", "en": "Roast beef", "de": "Rinderbraten", "es": "Asado de ternera", "it": "Arrosto di manzo", "pt": "Rosbife" },
+            { "fr": "Entrecôte", "en": "Rib-eye steak", "de": "Entrecôte", "es": "Entrecot", "it": "Entrecôte", "pt": "Entrecôte" }
+          ]
+        },
+        {
+          "name": { "fr": "Porc", "en": "Pork", "de": "Schweinefleisch", "es": "Cerdo", "it": "Maiale", "pt": "Carne de porco" },
+          "variants": [
+            { "fr": "Côtes de porc", "en": "Pork chops", "de": "Schweinekoteletts", "es": "Chuletas de cerdo", "it": "Braciole di maiale", "pt": "Costeletas de porco" },
+            { "fr": "Filet mignon", "en": "Pork tenderloin", "de": "Schweinefilet", "es": "Solomillo de cerdo", "it": "Filetto di maiale", "pt": "Lombinho de porco" },
+            { "fr": "Rôti de porc", "en": "Roast pork", "de": "Schweinebraten", "es": "Asado de cerdo", "it": "Arrosto di maiale", "pt": "Assado de porco" }
+          ]
+        },
+        {
+          "name": { "fr": "Jambon", "en": "Ham", "de": "Schinken", "es": "Jamón", "it": "Prosciutto", "pt": "Presunto" },
+          "variants": [
+            { "fr": "Jambon blanc", "en": "Cooked ham", "de": "Kochschinken", "es": "Jamón cocido", "it": "Prosciutto cotto", "pt": "Fiambre" },
+            { "fr": "Jambon cru", "en": "Cured ham", "de": "Rohschinken", "es": "Jamón serrano", "it": "Prosciutto crudo", "pt": "Presunto cru" }
+          ]
+        },
+        { "name": { "fr": "Lardons", "en": "Bacon lardons", "de": "Speckwürfel", "es": "Taquitos de beicon", "it": "Pancetta a cubetti", "pt": "Bacon em cubos" }, "aliases": { "en": ["bacon"], "es": ["bacon"], "it": ["pancetta"], "pt": ["bacon"] } },
+        {
+          "name": { "fr": "Saucisses", "en": "Sausages", "de": "Würstchen", "es": "Salchichas", "it": "Salsicce", "pt": "Salsichas" },
+          "variants": [
+            { "fr": "Merguez", "en": "Merguez", "de": "Merguez", "es": "Merguez", "it": "Merguez", "pt": "Merguez" },
+            { "fr": "Chipolatas", "en": "Chipolatas", "de": "Bratwürstchen", "es": "Chipolatas", "it": "Chipolata", "pt": "Chipolatas" },
+            { "fr": "Saucisses de Strasbourg", "en": "Frankfurters", "de": "Wiener Würstchen", "es": "Salchichas de Frankfurt", "it": "Würstel", "pt": "Salsichas Frankfurt" }
+          ]
+        },
+        { "name": { "fr": "Saucisson", "en": "Salami", "de": "Salami", "es": "Salchichón", "it": "Salame", "pt": "Salame" } },
+        {
+          "name": { "fr": "Dinde", "en": "Turkey", "de": "Pute", "es": "Pavo", "it": "Tacchino", "pt": "Peru" },
+          "variants": [
+            { "fr": "Escalopes de dinde", "en": "Turkey escalopes", "de": "Putenschnitzel", "es": "Filetes de pavo", "it": "Fettine di tacchino", "pt": "Bifes de peru" }
+          ]
+        },
+        {
+          "name": { "fr": "Agneau", "en": "Lamb", "de": "Lamm", "es": "Cordero", "it": "Agnello", "pt": "Borrego" },
+          "aliases": { "pt": ["cordeiro"] },
+          "variants": [
+            { "fr": "Gigot d'agneau", "en": "Leg of lamb", "de": "Lammkeule", "es": "Pierna de cordero", "it": "Cosciotto d'agnello", "pt": "Perna de borrego" }
+          ]
+        },
+        {
+          "name": { "fr": "Saumon", "en": "Salmon", "de": "Lachs", "es": "Salmón", "it": "Salmone", "pt": "Salmão" },
+          "variants": [
+            { "fr": "Saumon fumé", "en": "Smoked salmon", "de": "Räucherlachs", "es": "Salmón ahumado", "it": "Salmone affumicato", "pt": "Salmão fumado" },
+            { "fr": "Pavés de saumon", "en": "Salmon fillets", "de": "Lachsfilets", "es": "Lomos de salmón", "it": "Tranci di salmone", "pt": "Lombos de salmão" }
+          ]
+        },
+        {
+          "name": { "fr": "Thon", "en": "Tuna", "de": "Thunfisch", "es": "Atún", "it": "Tonno", "pt": "Atum" },
+          "variants": [
+            { "fr": "Thon en boîte", "en": "Canned tuna", "de": "Thunfisch in Dosen", "es": "Atún en lata", "it": "Tonno in scatola", "pt": "Atum em lata" }
+          ]
+        },
+        { "name": { "fr": "Cabillaud", "en": "Cod", "de": "Kabeljau", "es": "Bacalao", "it": "Merluzzo", "pt": "Bacalhau" } },
+        { "name": { "fr": "Crevettes", "en": "Prawns", "de": "Garnelen", "es": "Gambas", "it": "Gamberi", "pt": "Camarão" }, "aliases": { "en": ["shrimp"], "es": ["langostinos"], "pt": ["gambas"] } },
+        { "name": { "fr": "Sardines", "en": "Sardines", "de": "Sardinen", "es": "Sardinas", "it": "Sardine", "pt": "Sardinhas" } }
+      ]
+    },
+    {
+      "category": "SAVORY_GROCERY",
+      "name": { "fr": "Épicerie salée", "en": "Savoury groceries", "de": "Herzhafte Lebensmittel", "es": "Alimentación salada", "it": "Alimentari salati", "pt": "Mercearia salgada" },
+      "products": [
+        {
+          "name": { "fr": "Pâtes", "en": "Pasta", "de": "Nudeln", "es": "Pasta", "it": "Pasta", "pt": "Massa" },
+          "aliases": { "fr": ["pasta"], "de": ["pasta"], "es": ["macarrones"], "pt": ["massas"] },
+          "variants": [
+            { "fr": "Spaghetti", "en": "Spaghetti", "de": "Spaghetti", "es": "Espaguetis", "it": "Spaghetti", "pt": "Esparguete" },
+            { "fr": "Penne", "en": "Penne", "de": "Penne", "es": "Penne", "it": "Penne", "pt": "Penne" },
+            { "fr": "Coquillettes", "en": "Elbow pasta", "de": "Hörnchennudeln", "es": "Coditos", "it": "Chifferi", "pt": "Cotovelos" },
+            { "fr": "Tagliatelles", "en": "Tagliatelle", "de": "Tagliatelle", "es": "Tallarines", "it": "Tagliatelle", "pt": "Tagliatelle" },
+            { "fr": "Lasagnes", "en": "Lasagne sheets", "de": "Lasagneplatten", "es": "Láminas de lasaña", "it": "Lasagne", "pt": "Lasanha" },
+            { "fr": "Macaronis", "en": "Macaroni", "de": "Makkaroni", "es": "Macarrones rayados", "it": "Maccheroni", "pt": "Macarrão" }
+          ]
+        },
+        {
+          "name": { "fr": "Riz", "en": "Rice", "de": "Reis", "es": "Arroz", "it": "Riso", "pt": "Arroz" },
+          "variants": [
+            { "fr": "Riz basmati", "en": "Basmati rice", "de": "Basmatireis", "es": "Arroz basmati", "it": "Riso basmati", "pt": "Arroz basmati" },
+            { "fr": "Riz complet", "en": "Brown rice", "de": "Vollkornreis", "es": "Arroz integral", "it": "Riso integrale", "pt": "Arroz integral" },
+            { "fr": "Riz rond", "en": "Pudding rice", "de": "Milchreis", "es": "Arroz redondo", "it": "Riso originario", "pt": "Arroz carolino" }
+          ]
+        },
+        { "name": { "fr": "Semoule", "en": "Couscous", "de": "Couscous", "es": "Cuscús", "it": "Cuscus", "pt": "Cuscuz" }, "aliases": { "en": ["semolina"], "de": ["grieß"], "es": ["sémola"], "it": ["semola"], "pt": ["sêmola"] } },
+        { "name": { "fr": "Quinoa", "en": "Quinoa", "de": "Quinoa", "es": "Quinoa", "it": "Quinoa", "pt": "Quinoa" } },
+        { "name": { "fr": "Lentilles", "en": "Lentils", "de": "Linsen", "es": "Lentejas", "it": "Lenticchie", "pt": "Lentilhas" } },
+        { "name": { "fr": "Pois chiches", "en": "Chickpeas", "de": "Kichererbsen", "es": "Garbanzos", "it": "Ceci", "pt": "Grão-de-bico" } },
+        { "name": { "fr": "Farine", "en": "Flour", "de": "Mehl", "es": "Harina", "it": "Farina", "pt": "Farinha" } },
+        {
+          "name": { "fr": "Huile", "en": "Oil", "de": "Öl", "es": "Aceite", "it": "Olio", "pt": "Óleo" },
+          "variants": [
+            { "fr": "Huile d'olive", "en": "Olive oil", "de": "Olivenöl", "es": "Aceite de oliva", "it": "Olio d'oliva", "pt": "Azeite" },
+            { "fr": "Huile de tournesol", "en": "Sunflower oil", "de": "Sonnenblumenöl", "es": "Aceite de girasol", "it": "Olio di girasole", "pt": "Óleo de girassol" },
+            { "fr": "Huile de colza", "en": "Rapeseed oil", "de": "Rapsöl", "es": "Aceite de colza", "it": "Olio di colza", "pt": "Óleo de colza" }
+          ]
+        },
+        {
+          "name": { "fr": "Vinaigre", "en": "Vinegar", "de": "Essig", "es": "Vinagre", "it": "Aceto", "pt": "Vinagre" },
+          "variants": [
+            { "fr": "Vinaigre balsamique", "en": "Balsamic vinegar", "de": "Balsamico-Essig", "es": "Vinagre balsámico", "it": "Aceto balsamico", "pt": "Vinagre balsâmico" }
+          ]
+        },
+        { "name": { "fr": "Moutarde", "en": "Mustard", "de": "Senf", "es": "Mostaza", "it": "Senape", "pt": "Mostarda" } },
+        { "name": { "fr": "Mayonnaise", "en": "Mayonnaise", "de": "Mayonnaise", "es": "Mayonesa", "it": "Maionese", "pt": "Maionese" } },
+        { "name": { "fr": "Ketchup", "en": "Ketchup", "de": "Ketchup", "es": "Kétchup", "it": "Ketchup", "pt": "Ketchup" } },
+        { "name": { "fr": "Sel", "en": "Salt", "de": "Salz", "es": "Sal", "it": "Sale", "pt": "Sal" } },
+        { "name": { "fr": "Poivre", "en": "Pepper", "de": "Pfeffer", "es": "Pimienta", "it": "Pepe", "pt": "Pimenta" }, "aliases": { "en": ["black pepper"] } },
+        {
+          "name": { "fr": "Épices", "en": "Spices", "de": "Gewürze", "es": "Especias", "it": "Spezie", "pt": "Especiarias" },
+          "variants": [
+            { "fr": "Curry", "en": "Curry powder", "de": "Currypulver", "es": "Curry", "it": "Curry", "pt": "Caril" },
+            { "fr": "Paprika", "en": "Paprika", "de": "Paprikapulver", "es": "Pimentón", "it": "Paprica", "pt": "Paprica" },
+            { "fr": "Cumin", "en": "Cumin", "de": "Kreuzkümmel", "es": "Comino", "it": "Cumino", "pt": "Cominhos" },
+            { "fr": "Herbes de Provence", "en": "Herbes de Provence", "de": "Kräuter der Provence", "es": "Hierbas provenzales", "it": "Erbe di Provenza", "pt": "Ervas da Provença" }
+          ]
+        },
+        { "name": { "fr": "Bouillon", "en": "Stock", "de": "Brühe", "es": "Caldo", "it": "Brodo", "pt": "Caldo" }, "aliases": { "fr": ["bouillon cube"], "en": ["stock cubes"], "de": ["brühwürfel"], "es": ["pastillas de caldo"], "it": ["dado"], "pt": ["cubos de caldo"] } },
+        {
+          "name": { "fr": "Sauce tomate", "en": "Tomato sauce", "de": "Tomatensoße", "es": "Salsa de tomate", "it": "Sugo di pomodoro", "pt": "Molho de tomate" },
+          "variants": [
+            { "fr": "Coulis de tomate", "en": "Passata", "de": "Passierte Tomaten", "es": "Tomate triturado", "it": "Passata di pomodoro", "pt": "Polpa de tomate" },
+            { "fr": "Concentré de tomate", "en": "Tomato paste", "de": "Tomatenmark", "es": "Tomate concentrado", "it": "Concentrato di pomodoro", "pt": "Concentrado de tomate" }
+          ]
+        },
+        {
+          "name": { "fr": "Conserves", "en": "Canned food", "de": "Konserven", "es": "Conservas", "it": "Conserve", "pt": "Conservas" },
+          "variants": [
+            { "fr": "Maïs en boîte", "en": "Canned sweetcorn", "de": "Dosenmais", "es": "Maíz en lata", "it": "Mais in scatola", "pt": "Milho em lata" },
+            { "fr": "Haricots rouges", "en": "Kidney beans", "de": "Kidneybohnen", "es": "Alubias rojas", "it": "Fagioli rossi", "pt": "Feijão vermelho" }
+          ]
+        },
+        { "name": { "fr": "Chips", "en": "Crisps", "de": "Chips", "es": "Patatas fritas de bolsa", "it": "Patatine", "pt": "Batatas fritas de pacote" }, "aliases": { "en": ["chips"], "es": ["chips"], "it": ["chips"], "pt": ["chips"] } },
+        { "name": { "fr": "Olives", "en": "Olives", "de": "Oliven", "es": "Aceitunas", "it": "Olive", "pt": "Azeitonas" } },
+        { "name": { "fr": "Soupe", "en": "Soup", "de": "Suppe", "es": "Sopa", "it": "Zuppa", "pt": "Sopa" } }
+      ]
+    },
+    {
+      "category": "SWEET_GROCERY",
+      "name": { "fr": "Épicerie sucrée", "en": "Sweet groceries", "de": "Süßwaren und Frühstück", "es": "Dulces y desayuno", "it": "Dolci e colazione", "pt": "Doces e pequeno-almoço" },
+      "products": [
+        {
+          "name": { "fr": "Sucre", "en": "Sugar", "de": "Zucker", "es": "Azúcar", "it": "Zucchero", "pt": "Açúcar" },
+          "variants": [
+            { "fr": "Sucre en poudre", "en": "Caster sugar", "de": "Streuzucker", "es": "Azúcar blanquilla", "it": "Zucchero semolato", "pt": "Açúcar branco" },
+            { "fr": "Sucre roux", "en": "Brown sugar", "de": "Brauner Zucker", "es": "Azúcar moreno", "it": "Zucchero di canna", "pt": "Açúcar mascavado" },
+            { "fr": "Sucre glace", "en": "Icing sugar", "de": "Puderzucker", "es": "Azúcar glas", "it": "Zucchero a velo", "pt": "Açúcar em pó" }
+          ]
+        },
+        {
+          "name": { "fr": "Café", "en": "Coffee", "de": "Kaffee", "es": "Café", "it": "Caffè", "pt": "Café" },
+          "variants": [
+            { "fr": "Café moulu", "en": "Ground coffee", "de": "Gemahlener Kaffee", "es": "Café molido", "it": "Caffè macinato", "pt": "Café moído" },
+            { "fr": "Café en grains", "en": "Coffee beans", "de": "Kaffeebohnen", "es": "Café en grano", "it": "Caffè in grani", "pt": "Café em grão" },
+            { "fr": "Capsules de café", "en": "Coffee capsules", "de": "Kaffeekapseln", "es": "Cápsulas de café", "it": "Capsule di caffè", "pt": "Cápsulas de café" }
+          ]
+        },
+        { "name": { "fr": "Thé", "en": "Tea", "de": "Tee", "es": "Té", "it": "Tè", "pt": "Chá" }, "aliases": { "fr": ["infusion", "tisane"], "en": ["herbal tea"], "de": ["kräutertee"], "es": ["infusión"], "it": ["tisana"], "pt": ["infusão"] } },
+        {
+          "name": { "fr": "Chocolat", "en": "Chocolate", "de": "Schokolade", "es": "Chocolate", "it": "Cioccolato", "pt": "Chocolate" },
+          "variants": [
+            { "fr": "Chocolat noir", "en": "Dark chocolate", "de": "Zartbitterschokolade", "es": "Chocolate negro", "it": "Cioccolato fondente", "pt": "Chocolate preto" },
+            { "fr": "Chocolat au lait", "en": "Milk chocolate", "de": "Milchschokolade", "es": "Chocolate con leche", "it": "Cioccolato al latte", "pt": "Chocolate de leite" },
+            { "fr": "Chocolat en poudre", "en": "Drinking chocolate", "de": "Kakaopulver", "es": "Cacao en polvo", "it": "Cacao in polvere", "pt": "Chocolate em pó" }
+          ]
+        },
+        { "name": { "fr": "Céréales", "en": "Breakfast cereal", "de": "Frühstücksflocken", "es": "Cereales", "it": "Cereali", "pt": "Cereais" }, "aliases": { "fr": ["muesli"], "en": ["muesli"], "de": ["müsli", "cornflakes"], "es": ["muesli"], "it": ["muesli"], "pt": ["muesli"] } },
+        { "name": { "fr": "Confiture", "en": "Jam", "de": "Marmelade", "es": "Mermelada", "it": "Marmellata", "pt": "Compota" }, "aliases": { "de": ["konfitüre"], "pt": ["doce"] } },
+        { "name": { "fr": "Miel", "en": "Honey", "de": "Honig", "es": "Miel", "it": "Miele", "pt": "Mel" } },
+        { "name": { "fr": "Pâte à tartiner", "en": "Chocolate spread", "de": "Nuss-Nougat-Creme", "es": "Crema de cacao", "it": "Crema spalmabile", "pt": "Creme de barrar" } },
+        { "name": { "fr": "Biscuits", "en": "Biscuits", "de": "Kekse", "es": "Galletas", "it": "Biscotti", "pt": "Bolachas" }, "aliases": { "fr": ["gâteaux secs"], "en": ["cookies"], "pt": ["biscoitos"] } },
+        { "name": { "fr": "Compote", "en": "Fruit compote", "de": "Kompott", "es": "Compota", "it": "Composta", "pt": "Puré de fruta" }, "aliases": { "en": ["apple sauce"], "de": ["apfelmus"] } },
+        { "name": { "fr": "Levure chimique", "en": "Baking powder", "de": "Backpulver", "es": "Levadura química", "it": "Lievito per dolci", "pt": "Fermento em pó" } },
+        { "name": { "fr": "Bonbons", "en": "Sweets", "de": "Bonbons", "es": "Caramelos", "it": "Caramelle", "pt": "Rebuçados" }, "aliases": { "en": ["candy"], "de": ["süßigkeiten"], "es": ["golosinas"], "pt": ["balas"] } }
+      ]
+    },
+    {
+      "category": "FROZEN",
+      "name": { "fr": "Surgelés", "en": "Frozen food", "de": "Tiefkühlkost", "es": "Congelados", "it": "Surgelati", "pt": "Congelados" },
+      "products": [
+        { "name": { "fr": "Glaces", "en": "Ice cream", "de": "Eiscreme", "es": "Helado", "it": "Gelato", "pt": "Gelados" }, "aliases": { "fr": ["crème glacée"], "de": ["speiseeis"], "es": ["helados"], "it": ["gelati"], "pt": ["sorvete"] } },
+        { "name": { "fr": "Frites surgelées", "en": "Frozen chips", "de": "Tiefkühl-Pommes", "es": "Patatas fritas congeladas", "it": "Patatine fritte surgelate", "pt": "Batatas fritas congeladas" }, "aliases": { "en": ["frozen fries"] } },
+        { "name": { "fr": "Légumes surgelés", "en": "Frozen vegetables", "de": "Tiefkühlgemüse", "es": "Verduras congeladas", "it": "Verdure surgelate", "pt": "Legumes congelados" } },
+        { "name": { "fr": "Pizza surgelée", "en": "Frozen pizza", "de": "Tiefkühlpizza", "es": "Pizza congelada", "it": "Pizza surgelata", "pt": "Pizza congelada" } },
+        { "name": { "fr": "Poisson pané", "en": "Fish fingers", "de": "Fischstäbchen", "es": "Palitos de pescado", "it": "Bastoncini di pesce", "pt": "Douradinhos" }, "aliases": { "en": ["fish sticks"], "pt": ["palitos de peixe"] } }
+      ]
+    },
+    {
+      "category": "DRINKS",
+      "name": { "fr": "Boissons", "en": "Drinks", "de": "Getränke", "es": "Bebidas", "it": "Bevande", "pt": "Bebidas" },
+      "products": [
+        {
+          "name": { "fr": "Eau", "en": "Water", "de": "Wasser", "es": "Agua", "it": "Acqua", "pt": "Água" },
+          "variants": [
+            { "fr": "Eau minérale", "en": "Mineral water", "de": "Mineralwasser", "es": "Agua mineral", "it": "Acqua minerale", "pt": "Água mineral" },
+            { "fr": "Eau gazeuse", "en": "Sparkling water", "de": "Sprudelwasser", "es": "Agua con gas", "it": "Acqua frizzante", "pt": "Água com gás" }
+          ]
+        },
+        { "name": { "fr": "Jus d'orange", "en": "Orange juice", "de": "Orangensaft", "es": "Zumo de naranja", "it": "Succo d'arancia", "pt": "Sumo de laranja" }, "aliases": { "fr": ["jus"], "en": ["juice"], "de": ["saft"], "es": ["zumo", "jugo de naranja"], "it": ["succo"], "pt": ["sumo", "suco de laranja"] } },
+        { "name": { "fr": "Jus de pomme", "en": "Apple juice", "de": "Apfelsaft", "es": "Zumo de manzana", "it": "Succo di mela", "pt": "Sumo de maçã" }, "aliases": { "es": ["jugo de manzana"], "pt": ["suco de maçã"] } },
+        { "name": { "fr": "Sodas", "en": "Soft drinks", "de": "Limonade", "es": "Refrescos", "it": "Bibite", "pt": "Refrigerantes" }, "aliases": { "fr": ["soda"], "en": ["soda"], "de": ["softdrinks"], "es": ["refresco"], "it": ["bibita"], "pt": ["refrigerante"] } },
+        { "name": { "fr": "Sirop", "en": "Squash", "de": "Sirup", "es": "Sirope", "it": "Sciroppo", "pt": "Xarope" }, "aliases": { "en": ["cordial", "syrup"] } },
+        { "name": { "fr": "Bière", "en": "Beer", "de": "Bier", "es": "Cerveza", "it": "Birra", "pt": "Cerveja" }, "aliases": { "fr": ["bières"], "en": ["beers"], "es": ["cervezas"], "it": ["birre"], "pt": ["cervejas"] } },
+        {
+          "name": { "fr": "Vin", "en": "Wine", "de": "Wein", "es": "Vino", "it": "Vino", "pt": "Vinho" },
+          "variants": [
+            { "fr": "Vin rouge", "en": "Red wine", "de": "Rotwein", "es": "Vino tinto", "it": "Vino rosso", "pt": "Vinho tinto" },
+            { "fr": "Vin blanc", "en": "White wine", "de": "Weißwein", "es": "Vino blanco", "it": "Vino bianco", "pt": "Vinho branco" },
+            { "fr": "Vin rosé", "en": "Rosé wine", "de": "Roséwein", "es": "Vino rosado", "it": "Vino rosato", "pt": "Vinho rosé" }
+          ]
+        },
+        { "name": { "fr": "Champagne", "en": "Champagne", "de": "Champagner", "es": "Champán", "it": "Champagne", "pt": "Champanhe" }, "aliases": { "en": ["sparkling wine"], "de": ["sekt"], "es": ["cava"], "it": ["spumante"], "pt": ["espumante"] } }
+      ]
+    },
+    {
+      "category": "DELI",
+      "name": { "fr": "Traiteur", "en": "Deli", "de": "Feinkost", "es": "Platos preparados", "it": "Gastronomia", "pt": "Charcutaria" },
+      "products": [
+        { "name": { "fr": "Pâte feuilletée", "en": "Puff pastry", "de": "Blätterteig", "es": "Masa de hojaldre", "it": "Pasta sfoglia", "pt": "Massa folhada" } },
+        { "name": { "fr": "Pâte brisée", "en": "Shortcrust pastry", "de": "Mürbeteig", "es": "Masa quebrada", "it": "Pasta frolla", "pt": "Massa quebrada" } },
+        { "name": { "fr": "Pâte à pizza", "en": "Pizza dough", "de": "Pizzateig", "es": "Masa de pizza", "it": "Impasto per pizza", "pt": "Massa de pizza" } },
+        { "name": { "fr": "Houmous", "en": "Hummus", "de": "Hummus", "es": "Hummus", "it": "Hummus", "pt": "Húmus" } },
+        { "name": { "fr": "Tofu", "en": "Tofu", "de": "Tofu", "es": "Tofu", "it": "Tofu", "pt": "Tofu" } },
+        {
+          "name": { "fr": "Pâtes fraîches", "en": "Fresh pasta", "de": "Frische Nudeln", "es": "Pasta fresca", "it": "Pasta fresca", "pt": "Massa fresca" },
+          "variants": [
+            { "fr": "Ravioli", "en": "Ravioli", "de": "Ravioli", "es": "Raviolis", "it": "Ravioli", "pt": "Raviolis" }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "HYGIENE_HOUSEHOLD",
+      "name": { "fr": "Hygiène et maison", "en": "Hygiene and household", "de": "Drogerie und Haushalt", "es": "Higiene y hogar", "it": "Igiene e casa", "pt": "Higiene e casa" },
+      "products": [
+        { "name": { "fr": "Papier toilette", "en": "Toilet paper", "de": "Toilettenpapier", "es": "Papel higiénico", "it": "Carta igienica", "pt": "Papel higiénico" }, "aliases": { "fr": ["PQ"], "en": ["toilet roll"], "de": ["klopapier"] } },
+        { "name": { "fr": "Essuie-tout", "en": "Kitchen roll", "de": "Küchenrolle", "es": "Papel de cocina", "it": "Carta da cucina", "pt": "Rolo de cozinha" }, "aliases": { "fr": ["sopalin"], "en": ["paper towels"], "it": ["scottex"] } },
+        { "name": { "fr": "Mouchoirs", "en": "Tissues", "de": "Taschentücher", "es": "Pañuelos", "it": "Fazzoletti", "pt": "Lenços de papel" } },
+        { "name": { "fr": "Liquide vaisselle", "en": "Washing-up liquid", "de": "Spülmittel", "es": "Lavavajillas", "it": "Detersivo per piatti", "pt": "Detergente da loiça" }, "aliases": { "en": ["dish soap"] } },
+        { "name": { "fr": "Pastilles lave-vaisselle", "en": "Dishwasher tablets", "de": "Spülmaschinentabs", "es": "Pastillas para lavavajillas", "it": "Pastiglie per lavastoviglie", "pt": "Pastilhas para máquina da loiça" } },
+        { "name": { "fr": "Lessive", "en": "Laundry detergent", "de": "Waschmittel", "es": "Detergente para ropa", "it": "Detersivo per bucato", "pt": "Detergente da roupa" } },
+        { "name": { "fr": "Adoucissant", "en": "Fabric softener", "de": "Weichspüler", "es": "Suavizante", "it": "Ammorbidente", "pt": "Amaciador" } },
+        { "name": { "fr": "Éponges", "en": "Sponges", "de": "Schwämme", "es": "Estropajos", "it": "Spugne", "pt": "Esponjas" } },
+        { "name": { "fr": "Sacs poubelle", "en": "Bin bags", "de": "Müllbeutel", "es": "Bolsas de basura", "it": "Sacchi della spazzatura", "pt": "Sacos do lixo" }, "aliases": { "en": ["trash bags"] } },
+        { "name": { "fr": "Papier aluminium", "en": "Aluminium foil", "de": "Alufolie", "es": "Papel de aluminio", "it": "Carta stagnola", "pt": "Papel de alumínio" }, "aliases": { "en": ["tin foil"], "it": ["alluminio"] } },
+        { "name": { "fr": "Film alimentaire", "en": "Cling film", "de": "Frischhaltefolie", "es": "Film transparente", "it": "Pellicola trasparente", "pt": "Película aderente" } },
+        { "name": { "fr": "Dentifrice", "en": "Toothpaste", "de": "Zahnpasta", "es": "Pasta de dientes", "it": "Dentifricio", "pt": "Pasta de dentes" } },
+        { "name": { "fr": "Brosse à dents", "en": "Toothbrush", "de": "Zahnbürste", "es": "Cepillo de dientes", "it": "Spazzolino", "pt": "Escova de dentes" } },
+        { "name": { "fr": "Gel douche", "en": "Shower gel", "de": "Duschgel", "es": "Gel de ducha", "it": "Bagnoschiuma", "pt": "Gel de banho" } },
+        { "name": { "fr": "Shampoing", "en": "Shampoo", "de": "Shampoo", "es": "Champú", "it": "Shampoo", "pt": "Champô" }, "aliases": { "pt": ["xampu"] } },
+        { "name": { "fr": "Savon", "en": "Soap", "de": "Seife", "es": "Jabón", "it": "Sapone", "pt": "Sabonete" } },
+        { "name": { "fr": "Déodorant", "en": "Deodorant", "de": "Deo", "es": "Desodorante", "it": "Deodorante", "pt": "Desodorizante" } },
+        { "name": { "fr": "Coton", "en": "Cotton wool", "de": "Watte", "es": "Algodón", "it": "Cotone", "pt": "Algodão" } }
+      ]
+    },
+    {
+      "category": "BABY_PETS",
+      "name": { "fr": "Bébé et animaux", "en": "Baby and pets", "de": "Baby und Haustier", "es": "Bebé y mascotas", "it": "Bambini e animali", "pt": "Bebé e animais" },
+      "products": [
+        { "name": { "fr": "Couches", "en": "Nappies", "de": "Windeln", "es": "Pañales", "it": "Pannolini", "pt": "Fraldas" }, "aliases": { "en": ["diapers"] } },
+        { "name": { "fr": "Lingettes", "en": "Wipes", "de": "Feuchttücher", "es": "Toallitas", "it": "Salviette", "pt": "Toalhitas" } },
+        {
+          "name": { "fr": "Croquettes", "en": "Dry pet food", "de": "Trockenfutter", "es": "Pienso", "it": "Crocchette", "pt": "Ração" },
+          "aliases": { "en": ["kibble"], "es": ["croquetas"], "pt": ["croquetes"] },
+          "variants": [
+            { "fr": "Croquettes chat", "en": "Cat food", "de": "Katzenfutter", "es": "Pienso para gatos", "it": "Crocchette per gatti", "pt": "Ração para gato" },
+            { "fr": "Croquettes chien", "en": "Dog food", "de": "Hundefutter", "es": "Pienso para perros", "it": "Crocchette per cani", "pt": "Ração para cão" }
+          ]
+        },
+        { "name": { "fr": "Litière", "en": "Cat litter", "de": "Katzenstreu", "es": "Arena para gatos", "it": "Lettiera", "pt": "Areia para gato" } }
+      ]
+    }
+  ]
+}

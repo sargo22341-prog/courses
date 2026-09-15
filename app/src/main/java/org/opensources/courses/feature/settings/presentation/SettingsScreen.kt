@@ -22,6 +22,8 @@ import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.SwitchRow
 import org.opensources.courses.feature.catalog.presentation.CatalogSection
 import org.opensources.courses.feature.catalog.presentation.CatalogSettingsViewModel
+import org.opensources.courses.feature.language.domain.AppLanguage
+import org.opensources.courses.feature.language.presentation.components.LanguageSelector
 import org.opensources.courses.feature.settings.presentation.components.HomeAssistantEntry
 import org.opensources.courses.feature.settings.presentation.components.ThemeModeSelector
 
@@ -43,10 +45,26 @@ fun SettingsRoute(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             SettingsCard(stringResource(R.string.settings_theme)) { ThemeModeSelector(state.themeMode, viewModel::setThemeMode) }
+            LanguageSection(state.language, viewModel::setLanguage)
             ShoppingListSection(state.groupByCategory, viewModel::setGroupByCategory)
             HomeAssistantEntry(state.homeAssistant, onOpenHomeAssistant)
             CatalogSection(catalogState, onSyncNow = catalogViewModel::forceSync)
         }
+    }
+}
+
+@Composable
+private fun LanguageSection(
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
+) {
+    SettingsCard(stringResource(R.string.settings_language)) {
+        LanguageSelector(language, onLanguageChange)
+        Text(
+            text = stringResource(R.string.settings_language_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

@@ -15,6 +15,7 @@ import org.opensources.courses.feature.lists.data.ShoppingListDao
 import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.data.ShoppingItemDao
 import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
+import org.opensources.courses.feature.shopping.data.renamed
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -160,8 +161,7 @@ class RoomSyncLocalStore
             checked: Boolean,
         ) = withoutPendingChanges(itemLocalId) { item ->
             itemDao.update(
-                item.copy(
-                    name = name,
+                item.renamed(name).copy(
                     quantity = quantity,
                     unit = unit,
                     isChecked = checked,

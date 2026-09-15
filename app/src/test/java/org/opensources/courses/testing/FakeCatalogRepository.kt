@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
+import org.opensources.courses.feature.catalog.domain.CatalogProductRef
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
@@ -18,9 +19,11 @@ fun product(
     baseScore: Int = 0,
     aliases: List<String> = emptyList(),
     category: String? = null,
+    id: String = "id:$name",
+    source: CatalogSource = CatalogSource.SEED,
 ): ProductCandidate =
     ProductCandidate(
-        product = CatalogProduct("id:$name", name, category, null, null, CatalogSource.SEED),
+        product = CatalogProduct(id, name, category, null, null, source),
         aliases = aliases,
         baseScore = baseScore,
         useCount = useCount,
@@ -35,9 +38,14 @@ class FakeCatalogRepository(
     val usage = mutableMapOf<String, Int>()
     var importedVersion: String? = null
     var imported: List<CatalogImportProduct> = emptyList()
+    var seedVersion: String? = null
+    var seed: List<CatalogImportProduct> = emptyList()
 
     /** Shop sections of catalog products, by normalized name. */
     val categories = mutableMapOf<String, GroceryCategory>()
+
+    /** Shop sections of catalog products, by id. */
+    val categoriesById = mutableMapOf<String, GroceryCategory>()
     private val count = MutableStateFlow(initial.size)
 
     override suspend fun findCandidates(
@@ -80,8 +88,25 @@ class FakeCatalogRepository(
         imported = products
     }
 
+    override suspend fun replaceSeedCatalog(
+        version: String,
+        products: List<CatalogImportProduct>,
+    ) {
+        seedVersion = version
+        seed = products
+    }
+
     override fun observeProductCount(): Flow<Int> = count
+
+    override suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef> =
+        refs().filter { it.normalizedName in normalizedNames }
+
+    override suspend fun findByIds(ids: Set<String>): List<CatalogProductRef> = refs().filter { it.id in ids }
 
     override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> =
         flowOf(categories.filterKeys { it in normalizedNames })
+
+    override fun observeCategoriesByIds(ids: Set<String>): Flow<Map<String, GroceryCategory>> = flowOf(categoriesById.filterKeys { it in ids })
+
+    private fun refs() = candidates.map { CatalogProductRef(it.product.id, TextNormalizer.normalize(it.product.name), it.product.source) }
 }

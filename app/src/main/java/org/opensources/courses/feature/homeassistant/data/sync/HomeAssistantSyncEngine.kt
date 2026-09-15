@@ -23,6 +23,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
+import org.opensources.courses.feature.language.domain.AppLanguageRepository
 import javax.inject.Inject
 
 /**
@@ -52,8 +53,9 @@ class HomeAssistantSyncEngine
         private val queue: SyncQueue,
         catalog: CatalogRepository,
         private val liveUpdates: HaLiveUpdates,
+        languages: AppLanguageRepository,
     ) : RemoteSyncEngine {
-        private val pusher = HaItemPusher(gateway, store, queue)
+        private val pusher = HaItemPusher(gateway, store, queue, languages)
         private val reconciler = HaItemReconciler(store, queue, catalog)
 
         override val isEnabled: Flow<Boolean> = config.config.map { it.enabled && it.isConfigured }.distinctUntilChanged()

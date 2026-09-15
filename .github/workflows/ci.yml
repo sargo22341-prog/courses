@@ -1,0 +1,142 @@
+# Compilation et tests sur chaque pull request et chaque push.
+# Sur main : montée de version, APK release signé, commit + tag vX.Y.Z et GitHub Release.
+# Fonctionnement, secrets requis et limites : docs/release.md et docs/adr/0021-release-automatique-github-actions.md.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Partie de la version à incrémenter
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Compilation et tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Compiler et lancer les tests JVM
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin --console=plain
+
+      - name: Conserver les rapports de tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-de-tests
+          path: app/build/reports/tests/
+
+  release:
+    name: Montée de version et APK signé
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Deux montées de version en parallèle produiraient le même numéro.
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+    env:
+      KEYSTORE_BASE64: ${{ secrets.COURSES_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.COURSES_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.COURSES_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.COURSES_KEY_PASSWORD }}
+    steps:
+      - name: Vérifier les secrets de signature
+        run: |
+          # Jamais de release non signée : sans clé, le job s'arrête avant toute montée de version.
+          missing=()
+          [[ -n "$KEYSTORE_BASE64" ]] || missing+=(COURSES_KEYSTORE_BASE64)
+          [[ -n "$KEYSTORE_PASSWORD" ]] || missing+=(COURSES_KEYSTORE_PASSWORD)
+          if (( ${#missing[@]} )); then
+            echo "::error::Secrets manquants : ${missing[*]} (voir docs/release.md)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Monter la version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump || 'patch' }}
+        run: |
+          bash scripts/bump-version.sh "$BUMP"
+          tag="v$(sed -n 's/^versionName=//p' app/version.properties)"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "::error::Le tag $tag existe déjà."
+            exit 1
+          fi
+
+      - name: Compiler l'APK release
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease --console=plain
+
+      - name: Signer et vérifier l'APK
+        id: apk
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+        run: |
+          keystore="$RUNNER_TEMP/courses-release.keystore"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$keystore"
+
+          build_tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          unsigned=$(ls app/build/outputs/apk/release/*-release-unsigned.apk)
+          apk="$RUNNER_TEMP/courses-$VERSION_NAME.apk"
+
+          args=(--ks "$keystore" --ks-key-alias "${KEY_ALIAS:-courses}" --ks-pass env:KEYSTORE_PASSWORD)
+          if [[ -n "$KEY_PASSWORD" ]]; then
+            args+=(--key-pass env:KEY_PASSWORD)
+          fi
+          "$build_tools/apksigner" sign "${args[@]}" --out "$apk" "$unsigned"
+          "$build_tools/apksigner" verify --print-certs "$apk"
+
+          echo "path=$apk" >> "$GITHUB_OUTPUT"
+
+      - name: Supprimer la clé du runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/courses-release.keystore"
+
+      - name: Commit et tag de la version
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Version $VERSION_NAME [skip ci]"
+          git tag -a "v$VERSION_NAME" -m "courses $VERSION_NAME"
+          # Atomique : si main a avancé pendant le build, ni le commit ni le tag ne sont poussés.
+          git push --atomic origin "HEAD:$GITHUB_REF_NAME" "v$VERSION_NAME"
+
+      - name: Publier la GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          APK: ${{ steps.apk.outputs.path }}
+        run: gh release create "v$VERSION_NAME" "$APK" --title "courses $VERSION_NAME" --generate-notes

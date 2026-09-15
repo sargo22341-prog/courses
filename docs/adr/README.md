@@ -36,6 +36,7 @@ décision, ses conséquences et les alternatives écartées.
 | [0018](0018-confiance-aux-certificats-utilisateur.md) | Confiance aux autorités de certification de l'utilisateur | acceptée |
 | [0019](0019-dto-reseau-conserves-par-r8.md) | DTOs réseau conservés par R8 dans `data.remote` | acceptée |
 | [0020](0020-migrations-room-sans-perte.md) | Schéma Room exporté et migrations sans perte | acceptée |
+| [0021](0021-release-automatique-github-actions.md) | Release signée et montée de version par GitHub Actions | acceptée |
 
 ## Modèle
 

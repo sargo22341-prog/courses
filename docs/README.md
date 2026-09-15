@@ -32,7 +32,7 @@ Documentation technique et fonctionnelle de l'application. La présentation gén
 | --- | --- |
 | [Développement](developpement.md) | prérequis, compilation, vérifications, R8, captures d'écran |
 | [Tests](tests.md) | suites JVM et instrumentées, couverture par sujet |
-| [Release signée](release.md) | clé de production, script de release, passage debug ↔ production |
+| [Release signée](release.md) | CI GitHub Actions, montée de version, clé de production, script de release, passage debug ↔ production |
 
 ## Ressources
 

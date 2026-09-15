@@ -196,7 +196,7 @@ if ($installExitCode -ne 0) {
         throw "La version deja installee utilise une autre signature. Une desinstallation manuelle est necessaire une seule fois, mais elle effacera les donnees de l'application."
     }
     if ($installOutput -match "INSTALL_FAILED_VERSION_DOWNGRADE") {
-        throw "Le versionCode de cet APK est inferieur a celui installe. Augmente versionCode dans app/build.gradle.kts."
+        throw "Le versionCode de cet APK est inferieur a celui installe. Recupere la derniere version de main (app/version.properties) avant de relancer."
     }
     throw "L'installation ADB a echoue."
 }

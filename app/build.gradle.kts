@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -5,6 +7,11 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+}
+
+// Kept outside this script so the CI can bump it on every push to main (docs/release.md).
+val appVersion = Properties().apply {
+    load(providers.fileContents(layout.projectDirectory.file("version.properties")).asText.get().reader())
 }
 
 android {
@@ -16,8 +23,8 @@ android {
         // Product decision: Android 17 (API 37) only, no backward compatibility layer.
         minSdk = 37
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = checkNotNull(appVersion.getProperty("versionCode")).toInt()
+        versionName = checkNotNull(appVersion.getProperty("versionName"))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

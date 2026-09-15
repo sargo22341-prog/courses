@@ -192,9 +192,12 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 - Ne pas versionner : binaires générés, `build/`, `local.properties`, secrets, keystores, fichiers
   temporaires, code généré massif inutilisé, police sans licence explicite.
 - Fichiers temporaires de session : dans le scratchpad, jamais dans le dépôt.
-- Release de production : uniquement via `scripts/release-to-phone.ps1` (procédure dans
-  `docs/release.md`). La clé `courses.jks` reste sur un support USB, jamais dans le dépôt ; son mot
-  de passe n'est jamais écrit ni demandé par l'agent.
+- Release de production : via la CI GitHub Actions (`.github/workflows/ci.yml`, à chaque push sur
+  `main`) ou `scripts/release-to-phone.ps1` (procédures dans `docs/release.md`,
+  ADR 0021). La clé `courses.jks` n'existe que sur un support USB et dans les secrets GitHub,
+  jamais dans le dépôt ; son mot de passe n'est jamais écrit ni demandé par l'agent.
+- Version de l'application : `app/version.properties`, montée par la CI ; ne pas la modifier à la
+  main sur `main`.
 
 ## 10. Identité
 

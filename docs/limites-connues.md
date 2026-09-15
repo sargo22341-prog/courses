@@ -57,6 +57,13 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
 - Le changement de langue depuis les paramètres Android est relu au retour au premier plan de
   l'application ; il n'a pas été vérifié sur toutes les versions de GrapheneOS.
 
+## Release automatique
+
+- Le workflow GitHub Actions n'a pas encore été exécuté sur GitHub : SDK Android 37 sur le runner,
+  push sur `main` protégée et publication de la release restent à valider au premier push.
+- Un push sur `main` pendant qu'une release compile fait échouer le push de version de cette
+  release ; la version sort au push suivant.
+
 ## Réseau
 
 - **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement

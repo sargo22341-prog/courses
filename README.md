@@ -59,7 +59,8 @@ Captures prises sur un émulateur avec des données fictives.
 
 ## Installation
 
-Il n'existe pas de version publiée sur un store : l'application se compile depuis les sources.
+Il n'existe pas de version publiée sur un store : l'APK signé de chaque version est joint aux
+releases GitHub du dépôt, ou l'application se compile depuis les sources.
 
 Prérequis : Android Studio récent (JDK 21 embarqué), SDK Android 37, et un téléphone ou un
 émulateur sous **Android 17 (API 37)** minimum.
@@ -118,3 +119,14 @@ Toute la documentation est dans [`docs/`](docs/README.md) :
   [Release signée](docs/release.md)
 
 Règles de contribution (humains et agents) : [`AGENTS.md`](AGENTS.md).
+
+## Licence
+
+Copyright © 2026 sargo.
+
+courses est un logiciel libre distribué sous licence **GNU General Public License v3.0** : vous
+pouvez le redistribuer et le modifier selon ses termes ; toute version modifiée et redistribuée
+doit rester sous la même licence. Texte complet : [`LICENSE`](LICENSE).
+
+Les données du catalogue proviennent d'[Open Food Facts](https://world.openfoodfacts.org) et
+restent sous licence [ODbL](https://opendatacommons.org/licenses/odbl/1-0/).

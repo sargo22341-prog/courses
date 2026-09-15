@@ -1,12 +1,62 @@
-# Release signée vers un téléphone
+# Release signée
 
-La version de production est signée avec une clé Android conservée **hors du dépôt**, sur un
-support USB qui reste débranché en dehors des signatures. Le script
+La version de production est signée avec une clé Android conservée **hors du dépôt** : sur un
+support USB qui reste débranché en dehors des signatures, et dans les secrets GitHub pour la
+release automatique ([ADR 0021](adr/0021-release-automatique-github-actions.md)).
+
+## Release automatique (GitHub Actions)
+
+Le workflow `.github/workflows/ci.yml` :
+
+- sur **chaque pull request et chaque push** : `assembleDebug`, `testDebugUnitTest` et
+  `compileDebugAndroidTestKotlin` (les rapports de tests sont joints au run en cas d'échec) ;
+- sur **chaque push sur `main`**, si ces vérifications passent :
+  1. `scripts/bump-version.sh` incrémente le patch de `versionName` et `versionCode` dans
+     `app/version.properties` ;
+  2. compile `assembleRelease`, signe l'APK avec `apksigner` et vérifie la signature ;
+  3. committe `Version X.Y.Z [skip ci]`, crée le tag `vX.Y.Z` et pousse les deux de façon
+     atomique ;
+  4. publie une GitHub Release `vX.Y.Z` avec `courses-X.Y.Z.apk` et des notes générées.
+- **Actions → CI → Run workflow** sur `main` permet de choisir `minor` ou `major` au lieu de
+  `patch`.
+
+Le commit de version, poussé avec le jeton du workflow, ne relance pas la CI. Si `main` a avancé
+pendant le build, le push est refusé et rien n'est publié : le push suivant produit la version.
+Après une release, **récupérer `main`** (`git pull`) avant de travailler ou de lancer le script
+local, sinon le `versionCode` local est en retard.
+
+### Secrets à créer
+
+Settings → Secrets and variables → Actions :
+
+| Secret | Contenu |
+| --- | --- |
+| `COURSES_KEYSTORE_BASE64` | le fichier `courses.jks` encodé en base64 |
+| `COURSES_KEYSTORE_PASSWORD` | mot de passe du keystore |
+| `COURSES_KEY_ALIAS` | alias de la clé (facultatif, `courses` par défaut) |
+| `COURSES_KEY_PASSWORD` | mot de passe de la clé (facultatif, celui du keystore par défaut) |
+
+Encodage sans écrire de fichier intermédiaire, puis coller le presse-papiers dans le secret :
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("E:\courses-signing\courses.jks")) | Set-Clipboard
+```
+
+Sans `COURSES_KEYSTORE_BASE64` ou `COURSES_KEYSTORE_PASSWORD`, le job de release échoue avant
+toute montée de version : aucune release non signée n'est publiée. Pour que les APK de la CI
+s'installent par-dessus la version installée avec le script, il faut **la même clé** dans les
+secrets. Si `main` est protégée, autoriser GitHub Actions à y pousser.
+
+La clé est décodée dans le dossier temporaire du runner, puis supprimée à la fin du job.
+
+## Release locale vers un téléphone
+
+Le script
 `scripts/release-to-phone.ps1` compile la variante `release` (R8 + réduction des ressources),
 trouve la clé, fait demander le mot de passe par `apksigner`, vérifie la signature, installe la
 mise à jour avec ADB et lance l'application.
 
-## Création unique de la clé
+### Création unique de la clé
 
 La clé **doit** s'appeler `courses.jks` (ou `courses.keystore` / `courses.p12`) : c'est ce nom
 que le script cherche. Remplacer `E:` par la lettre du support USB :
@@ -32,7 +82,7 @@ Vérifier la clé créée :
 & "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -list -v -keystore "E:\courses-signing\courses.jks"
 ```
 
-## Exécution
+### Exécution
 
 1. Brancher le support contenant `courses.jks`, puis le téléphone autorisé en débogage USB.
 2. `Terminal > Run Task` → `courses: release signée → téléphone`
@@ -57,7 +107,8 @@ L'APK final reste un artefact local ignoré par Git :
 ## Mises à jour
 
 - Chaque nouvelle release installée par-dessus une précédente doit avoir un `versionCode`
-  supérieur ou égal (`app/build.gradle.kts`) ; sinon le script s'arrête avec un message clair.
+  supérieur ou égal (`app/version.properties`, monté par la CI) ; sinon le script s'arrête avec un
+  message clair.
 - Une application installée avec la clé de **débogage** ne peut pas être mise à jour avec la clé
   de production : la première transition demande une désinstallation manuelle, qui **efface les
   données** de l'application. Les mises à jour suivantes fonctionnent avec `adb install -r` tant
@@ -93,8 +144,12 @@ Diagnostic et correction (le téléphone doit être visible par `adb devices`) :
 Si l'espace privé est verrouillé, `pm` peut refuser d'y accéder : le déverrouiller, ou y
 désinstaller l'application depuis ses propres paramètres, puis relancer l'installation.
 
-## Limite de sécurité
+## Limites de sécurité
 
 Un programme exécuté sous le même compte Windows peut lire les fichiers accessibles à ce compte.
 La séparation pratique consiste à garder la clé sur un support externe débranché, à ne jamais
 enregistrer son mot de passe et à relire les changements du script avant une signature.
+
+Côté GitHub, toute personne pouvant modifier le workflow sur `main` peut faire signer un APK : les
+secrets ne sont pas exposés aux pull requests venant de forks, mais un collaborateur disposant du
+droit d'écriture y a indirectement accès. Relire tout changement de `.github/workflows/`.

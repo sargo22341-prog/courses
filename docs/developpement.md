@@ -52,8 +52,10 @@ connexion ») était supprimée et toute la release affichait « Adresse invalid
 obfusqués autorisés), règle vérifiée par `RetrofitKeepRulesTest`. **Tout nouveau DTO réseau doit
 rester dans un package `data.remote`** ([ADR 0019](adr/0019-dto-reseau-conserves-par-r8.md)).
 
-La version de production signée se construit uniquement avec `scripts/release-to-phone.ps1` :
-voir [Release signée](release.md). La version debug et la version de production ne sont pas
+La version de production signée est produite par la CI GitHub Actions à chaque push sur `main`
+(montée de version automatique dans `app/version.properties`), ou localement avec
+`scripts/release-to-phone.ps1` : voir [Release signée](release.md). Les mêmes vérifications que
+ci-dessus tournent en CI sur chaque pull request. La version debug et la version de production ne sont pas
 signées avec la même clé : pour passer de l'une à l'autre sur un téléphone, voir « Installer la
 version debug après la version de production » dans ce même document.
 

@@ -1,8 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "categories": [
     {
       "name": "Produits laitiers",
+      "category": "DAIRY_EGGS",
       "products": [
         { "name": "Lait", "variants": ["Lait demi-écrémé", "Lait entier", "Lait écrémé", "Lait d'amande", "Lait d'avoine", "Lait de soja", "Lait de coco", "Lait sans lactose"] },
         { "name": "Beurre", "variants": ["Beurre doux", "Beurre demi-sel", "Beurre salé"] },
@@ -17,6 +18,7 @@
     },
     {
       "name": "Boulangerie",
+      "category": "BAKERY",
       "products": [
         { "name": "Pain", "variants": ["Pain complet", "Pain de mie", "Pain aux céréales", "Pain de campagne", "Pain burger"] },
         { "name": "Baguette", "aliases": ["pain baguette"], "variants": ["Baguette tradition"] },
@@ -29,6 +31,7 @@
     },
     {
       "name": "Fruits",
+      "category": "FRUITS_VEGETABLES",
       "products": [
         { "name": "Pommes", "aliases": ["pomme"], "variants": ["Pommes Golden", "Pommes Gala", "Pommes Granny"] },
         { "name": "Poires" },
@@ -53,6 +56,7 @@
     },
     {
       "name": "Légumes",
+      "category": "FRUITS_VEGETABLES",
       "products": [
         { "name": "Tomates", "aliases": ["tomate"], "variants": ["Tomates cerises", "Tomates concassées", "Tomates pelées", "Tomates grappe"] },
         { "name": "Pommes de terre", "aliases": ["patates"], "variants": ["Pommes de terre nouvelles"] },
@@ -81,6 +85,7 @@
     },
     {
       "name": "Viandes et poissons",
+      "category": "MEAT_FISH",
       "products": [
         { "name": "Poulet", "variants": ["Blancs de poulet", "Cuisses de poulet", "Poulet entier"] },
         { "name": "Bœuf", "aliases": ["boeuf"], "variants": ["Steaks hachés", "Viande hachée", "Rôti de bœuf", "Entrecôte"] },
@@ -100,6 +105,7 @@
     },
     {
       "name": "Épicerie salée",
+      "category": "SAVORY_GROCERY",
       "products": [
         { "name": "Pâtes", "aliases": ["pasta"], "variants": ["Spaghetti", "Penne", "Coquillettes", "Tagliatelles", "Lasagnes", "Macaronis"] },
         { "name": "Riz", "variants": ["Riz basmati", "Riz complet", "Riz rond"] },
@@ -126,6 +132,7 @@
     },
     {
       "name": "Épicerie sucrée",
+      "category": "SWEET_GROCERY",
       "products": [
         { "name": "Sucre", "variants": ["Sucre en poudre", "Sucre roux", "Sucre glace"] },
         { "name": "Café", "variants": ["Café moulu", "Café en grains", "Capsules de café"] },
@@ -143,6 +150,7 @@
     },
     {
       "name": "Surgelés",
+      "category": "FROZEN",
       "products": [
         { "name": "Glaces", "aliases": ["crème glacée"] },
         { "name": "Frites surgelées" },
@@ -153,6 +161,7 @@
     },
     {
       "name": "Boissons",
+      "category": "DRINKS",
       "products": [
         { "name": "Eau", "variants": ["Eau minérale", "Eau gazeuse"] },
         { "name": "Jus d'orange", "aliases": ["jus"] },
@@ -166,6 +175,7 @@
     },
     {
       "name": "Traiteur",
+      "category": "DELI",
       "products": [
         { "name": "Pâte feuilletée" },
         { "name": "Pâte brisée" },
@@ -177,6 +187,7 @@
     },
     {
       "name": "Hygiène et maison",
+      "category": "HYGIENE_HOUSEHOLD",
       "products": [
         { "name": "Papier toilette", "aliases": ["PQ"] },
         { "name": "Essuie-tout", "aliases": ["sopalin"] },
@@ -200,6 +211,7 @@
     },
     {
       "name": "Bébé et animaux",
+      "category": "BABY_PETS",
       "products": [
         { "name": "Couches" },
         { "name": "Lingettes" },

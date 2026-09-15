@@ -1,6 +1,8 @@
 package org.opensources.courses.feature.catalog.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.feature.catalog.data.local.CatalogAliasEntity
 import org.opensources.courses.feature.catalog.data.local.CatalogDao
@@ -11,6 +13,7 @@ import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductCandidate
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import java.time.Clock
@@ -64,6 +67,16 @@ class CatalogRepositoryImpl
 
         override fun observeProductCount(): Flow<Int> = dao.observeCount()
 
+        override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> {
+            if (normalizedNames.isEmpty()) return flowOf(emptyMap())
+            return dao.observeCategories(normalizedNames.toList()).map { rows ->
+                rows
+                    .sortedBy { SOURCE_PRIORITY.indexOf(it.source) }
+                    .distinctBy { it.normalizedName }
+                    .associate { it.normalizedName to it.groceryCategory }
+            }
+        }
+
         private suspend fun List<ProductCandidateRow>.toCandidates(): List<ProductCandidate> {
             if (isEmpty()) return emptyList()
             val aliases = dao.aliasesFor(map { it.product.id }).groupBy({ it.productId }, { it.alias })
@@ -80,6 +93,9 @@ class CatalogRepositoryImpl
 
         companion object {
             private const val CUSTOM_PREFIX = "custom:"
+
+            /** The curated seed places products more reliably than the generic taxonomy. */
+            private val SOURCE_PRIORITY = listOf(CatalogSource.SEED, CatalogSource.OPEN_FOOD_FACTS, CatalogSource.CUSTOM)
 
             /**
              * Atomically replaces every product of [source] with [products]. Products are upserted
@@ -107,6 +123,7 @@ class CatalogRepositoryImpl
                                 source = source,
                                 baseScore = it.baseScore,
                                 catalogVersion = version,
+                                groceryCategory = it.groceryCategory,
                             )
                         },
                     )

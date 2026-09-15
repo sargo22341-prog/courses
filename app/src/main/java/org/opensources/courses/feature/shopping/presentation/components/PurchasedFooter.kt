@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -18,7 +17,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,15 +29,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
 
+/** [onRequestDeletePurchased] only asks: the screen shows the confirmation dialog. */
 @Composable
 fun PurchasedFooter(
     purchasedCount: Int,
     hidePurchased: Boolean,
     onToggleHidePurchased: () -> Unit,
-    onDeletePurchased: () -> Unit,
+    onRequestDeletePurchased: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
@@ -68,25 +66,11 @@ fun PurchasedFooter(
                         text = { Text(stringResource(R.string.shopping_delete_purchased)) },
                         onClick = {
                             menuOpen = false
-                            confirmDelete = true
+                            onRequestDeletePurchased()
                         },
                     )
                 }
             }
         }
-    }
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.shopping_delete_purchased_title)) },
-            text = { Text(stringResource(R.string.shopping_delete_purchased_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDeletePurchased()
-                }) { Text(stringResource(R.string.action_delete)) }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
-        )
     }
 }

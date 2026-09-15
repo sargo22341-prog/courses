@@ -2,6 +2,7 @@ package org.opensources.courses.core.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
@@ -17,6 +18,9 @@ private val CoursesShapes =
         extraLarge = RoundedCornerShape(32.dp),
     )
 
+/** Palette of the light or dark theme, also used to preview a theme other than the current one. */
+fun themeColorScheme(dark: Boolean): ColorScheme = if (dark) DarkColors else LightColors
+
 @Composable
 fun CoursesTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -28,8 +32,9 @@ fun CoursesTheme(
             ThemeMode.DARK -> true
             ThemeMode.SYSTEM -> isSystemInDarkTheme()
         }
+    SystemBarsAppearance(darkTheme = dark)
     MaterialTheme(
-        colorScheme = if (dark) DarkColors else LightColors,
+        colorScheme = themeColorScheme(dark),
         typography = CoursesTypography,
         shapes = CoursesShapes,
         content = content,

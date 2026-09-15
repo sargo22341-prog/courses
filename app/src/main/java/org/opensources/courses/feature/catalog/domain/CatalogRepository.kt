@@ -27,4 +27,11 @@ interface CatalogRepository {
     )
 
     fun observeProductCount(): Flow<Int>
+
+    /**
+     * Shop section of the catalog products named exactly like one of [normalizedNames], keyed by
+     * that name. Names without a known section are absent; the bundled catalog wins over
+     * OpenFoodFacts when both know a name. Updated when the catalog changes.
+     */
+    fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>>
 }

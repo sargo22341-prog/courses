@@ -15,6 +15,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val groupByCategory: Boolean = false,
     val homeAssistantEnabled: Boolean = false,
     val homeAssistantUrl: String = "",
 )
@@ -28,10 +29,14 @@ class SettingsViewModel
     ) : ViewModel() {
         val uiState: StateFlow<SettingsUiState> =
             combine(preferences.preferences, haConfig.config) { prefs, ha ->
-                SettingsUiState(prefs.themeMode, ha.enabled && ha.isConfigured, ha.baseUrl)
+                SettingsUiState(prefs.themeMode, prefs.groupByCategory, ha.enabled && ha.isConfigured, ha.baseUrl)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
         fun setThemeMode(mode: ThemeMode) {
             viewModelScope.launch { preferences.setThemeMode(mode) }
+        }
+
+        fun setGroupByCategory(enabled: Boolean) {
+            viewModelScope.launch { preferences.setGroupByCategory(enabled) }
         }
     }

@@ -52,6 +52,33 @@
     <string name="shopping_edit_item">Modifier %1$s</string>
     <string name="shopping_no_suggestion">Aucun produit trouvé</string>
 
+    <!-- Catégories (rayons) -->
+    <string name="category_fruits_vegetables">Fruits et légumes</string>
+    <string name="category_bakery">Boulangerie</string>
+    <string name="category_dairy_eggs">Produits laitiers et œufs</string>
+    <string name="category_meat_fish">Viandes et poissons</string>
+    <string name="category_deli">Traiteur et plats préparés</string>
+    <string name="category_savory_grocery">Épicerie salée</string>
+    <string name="category_sweet_grocery">Épicerie sucrée</string>
+    <string name="category_frozen">Surgelés</string>
+    <string name="category_drinks">Boissons</string>
+    <string name="category_hygiene_household">Hygiène et maison</string>
+    <string name="category_baby_pets">Bébé et animaux</string>
+    <string name="category_other">Autres</string>
+    <!-- Pictogrammes des catégories : des emoji, identiques dans toutes les langues. -->
+    <string name="category_icon_fruits_vegetables" translatable="false">🥕</string>
+    <string name="category_icon_bakery" translatable="false">🥖</string>
+    <string name="category_icon_dairy_eggs" translatable="false">🧀</string>
+    <string name="category_icon_meat_fish" translatable="false">🥩</string>
+    <string name="category_icon_deli" translatable="false">🍱</string>
+    <string name="category_icon_savory_grocery" translatable="false">🥫</string>
+    <string name="category_icon_sweet_grocery" translatable="false">🍫</string>
+    <string name="category_icon_frozen" translatable="false">🧊</string>
+    <string name="category_icon_drinks" translatable="false">🥤</string>
+    <string name="category_icon_hygiene_household" translatable="false">🧴</string>
+    <string name="category_icon_baby_pets" translatable="false">🍼</string>
+    <string name="category_icon_other" translatable="false">🛒</string>
+
     <!-- État de synchronisation -->
     <string name="sync_synced">Synchronisé</string>
     <string name="sync_offline">Hors connexion</string>
@@ -86,6 +113,9 @@
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
     <string name="theme_system">Système</string>
+    <string name="settings_shopping_list">Liste de courses</string>
+    <string name="settings_group_by_category">Ranger les articles par catégorie</string>
+    <string name="settings_group_by_category_hint">Les articles à acheter sont regroupés par rayon grâce au catalogue alimentaire, y compris ceux ajoutés dans Home Assistant. Un article non reconnu va dans « Autres ».</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Non connecté — facultatif</string>
     <string name="settings_home_assistant_on">Activé — %1$s</string>
@@ -112,6 +142,9 @@
     <string name="ha_enabled">Activer la synchronisation</string>
     <string name="ha_enable_requires_config">Enregistrez d’abord l’adresse et le token.</string>
     <string name="ha_connection">Connexion</string>
+    <string name="ha_connected">Connecté</string>
+    <string name="ha_connection_expand">Afficher les paramètres de connexion</string>
+    <string name="ha_connection_collapse">Masquer les paramètres de connexion</string>
     <string name="ha_url">Adresse de Home Assistant</string>
     <string name="ha_url_placeholder">http://homeassistant.local:8123</string>
     <string name="ha_token">Token d’accès longue durée</string>

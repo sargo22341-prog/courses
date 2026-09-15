@@ -112,4 +112,6 @@ dependencies {
     // method removed in Android 17.
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    // MigrationTestHelper: migrations are validated against the schemas exported in app/schemas.
+    androidTestImplementation(libs.androidx.room.testing)
 }

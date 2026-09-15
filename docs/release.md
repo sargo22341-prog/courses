@@ -63,6 +63,36 @@ L'APK final reste un artefact local ignoré par Git :
   données** de l'application. Les mises à jour suivantes fonctionnent avec `adb install -r` tant
   que la même clé est utilisée.
 
+## Installer la version debug après la version de production
+
+La version debug est signée avec la clé de débogage d'Android Studio, la production avec
+`courses.jks` : Android refuse de remplacer l'une par l'autre
+(`INSTALL_FAILED_UPDATE_INCOMPATIBLE: … signatures do not match`), y compris quand l'application
+semble désinstallée. Android conserve en effet le paquet, avec sa signature, tant qu'il reste dans
+**un** profil de l'appareil :
+
+- **Espace privé** ou **profil professionnel** : la désinstallation depuis l'écran d'accueil ne
+  retire l'application que du profil principal ;
+- **archivage** ou désinstallation « en conservant les données » : Android garde la signature pour
+  une réinstallation.
+
+Diagnostic et correction (le téléphone doit être visible par `adb devices`) :
+
+```powershell
+# Le paquet est-il encore connu, et pour quels profils ?
+& C:\platform-tools\adb.exe shell pm list packages -U --user all org.opensources.courses
+& C:\platform-tools\adb.exe shell pm list users
+
+# Désinstallation complète, tous profils (efface les données de ces profils)
+& C:\platform-tools\adb.exe uninstall org.opensources.courses
+
+# Message exact en cas de nouvel échec
+.\gradlew.bat :app:installDebug
+```
+
+Si l'espace privé est verrouillé, `pm` peut refuser d'y accéder : le déverrouiller, ou y
+désinstaller l'application depuis ses propres paramètres, puis relancer l'installation.
+
 ## Limite de sécurité
 
 Un programme exécuté sous le même compte Windows peut lire les fichiers accessibles à ce compte.

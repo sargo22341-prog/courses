@@ -40,8 +40,8 @@ sealed interface CatalogSyncStatus {
 
 /**
  * No backend: the app itself checks the age of its local catalog when it opens and refreshes it
- * from OpenFoodFacts when it is older than a week and a network is available. The user can also
- * force a refresh from the settings.
+ * from OpenFoodFacts when it is older than a week and a network is available. A catalog imported in
+ * an older format is refreshed at once. The user can also force a refresh from the settings.
  */
 @Singleton
 class CatalogSyncManager
@@ -60,9 +60,11 @@ class CatalogSyncManager
 
         suspend fun syncIfStale(): CatalogSyncResult {
             val info = stateStore.current()
-            if (!policy.isStale(info.lastSyncAt, clock.instant())) return CatalogSyncResult.NotNeeded
+            // Its ETag has not changed, but its import lacks data this version extracts (shop sections).
+            val outdatedFormat = info.formatVersion < remote.formatVersion
+            if (!outdatedFormat && !policy.isStale(info.lastSyncAt, clock.instant())) return CatalogSyncResult.NotNeeded
             if (!connectivity.isOnline.value) return CatalogSyncResult.Offline
-            return synchronize(info.version)
+            return synchronize(currentVersion = if (outdatedFormat) null else info.version)
         }
 
         /** Ignores the cache validators and downloads the catalog again. */
@@ -80,12 +82,12 @@ class CatalogSyncManager
                     try {
                         when (val fetched = remote.fetch(currentVersion)) {
                             RemoteCatalogResult.NotModified -> {
-                                stateStore.markSynced(clock.instant(), currentVersion)
+                                stateStore.markSynced(clock.instant(), currentVersion, formatVersion = null)
                                 CatalogSyncResult.UpToDate
                             }
                             is RemoteCatalogResult.Updated -> {
                                 repository.replaceRemoteCatalog(fetched.version, fetched.products)
-                                stateStore.markSynced(clock.instant(), fetched.version)
+                                stateStore.markSynced(clock.instant(), fetched.version, remote.formatVersion)
                                 CatalogSyncResult.Updated(fetched.products.size)
                             }
                         }

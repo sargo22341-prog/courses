@@ -7,12 +7,15 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
 import org.opensources.courses.feature.catalog.domain.CatalogSource
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 
 /**
  * @property normalizedName [org.opensources.courses.feature.catalog.domain.TextNormalizer] form,
  * the only column searched.
  * @property catalogVersion version of the import that last wrote the row; rows of an older version
  * are removed at the end of an import.
+ * @property groceryCategory shop section (database version 2); null for custom products and for
+ * products the source cannot place.
  */
 @Entity(tableName = "catalog_products", indices = [Index("normalizedName"), Index("source")])
 data class CatalogProductEntity(
@@ -25,6 +28,7 @@ data class CatalogProductEntity(
     val source: CatalogSource,
     val baseScore: Int,
     val catalogVersion: String?,
+    val groceryCategory: GroceryCategory? = null,
 )
 
 @Entity(
@@ -61,6 +65,12 @@ data class ProductCandidateRow(
     @Embedded val product: CatalogProductEntity,
     val useCount: Int,
     val lastUsedAt: Long?,
+)
+
+data class ProductCategoryRow(
+    val normalizedName: String,
+    val groceryCategory: GroceryCategory,
+    val source: CatalogSource,
 )
 
 fun CatalogProductEntity.toDomain(): CatalogProduct =

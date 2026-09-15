@@ -2,6 +2,13 @@ package org.opensources.courses.feature.catalog.domain
 
 interface CatalogRemoteSource {
     /**
+     * Version of what [fetch] extracts from the downloaded file. It increases when the import
+     * produces new data (shop sections…), so a catalog imported by an older version of the app is
+     * downloaded again once, even if it is recent.
+     */
+    val formatVersion: Int
+
+    /**
      * Downloads the catalog. When [currentVersion] is given and unchanged remotely, returns
      * [RemoteCatalogResult.NotModified] without downloading it again.
      *

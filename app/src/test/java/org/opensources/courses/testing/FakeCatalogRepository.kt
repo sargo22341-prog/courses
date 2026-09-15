@@ -2,10 +2,12 @@ package org.opensources.courses.testing
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductCandidate
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
 
@@ -33,6 +35,9 @@ class FakeCatalogRepository(
     val usage = mutableMapOf<String, Int>()
     var importedVersion: String? = null
     var imported: List<CatalogImportProduct> = emptyList()
+
+    /** Shop sections of catalog products, by normalized name. */
+    val categories = mutableMapOf<String, GroceryCategory>()
     private val count = MutableStateFlow(initial.size)
 
     override suspend fun findCandidates(
@@ -76,4 +81,7 @@ class FakeCatalogRepository(
     }
 
     override fun observeProductCount(): Flow<Int> = count
+
+    override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> =
+        flowOf(categories.filterKeys { it in normalizedNames })
 }

@@ -48,17 +48,20 @@ fun HomeAssistantRoute(
         ) {
             Text(stringResource(R.string.ha_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LocalNetworkPermissionCard()
-            HaConnectionCard(
-                state = state,
-                url = viewModel.urlInput,
-                token = viewModel.tokenInput,
-                onUrlChange = viewModel::onUrlChange,
-                onTokenChange = viewModel::onTokenChange,
-                onScanToken = { scanningToken = true },
-                onEnabledChange = viewModel::setEnabled,
-                onSave = viewModel::save,
-                onTest = viewModel::testConnection,
-            )
+            // The card folds itself when a connection is saved: it waits for the saved configuration.
+            if (state.isLoaded) {
+                HaConnectionCard(
+                    state = state,
+                    url = viewModel.urlInput,
+                    token = viewModel.tokenInput,
+                    onUrlChange = viewModel::onUrlChange,
+                    onTokenChange = viewModel::onTokenChange,
+                    onScanToken = { scanningToken = true },
+                    onEnabledChange = viewModel::setEnabled,
+                    onSave = viewModel::save,
+                    onTest = viewModel::testConnection,
+                )
+            }
             if (state.config.enabled) {
                 ListModeCard(state.config.listMode, viewModel::setListMode)
                 HaLinkedListsCard(state, onAutoCreateChange = viewModel::setAutoCreateLists, onChoose = viewModel::openPicker)

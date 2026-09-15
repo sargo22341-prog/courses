@@ -26,6 +26,8 @@ class OpenFoodFactsCatalogSource
         private val mapper = TaxonomyCatalogMapper()
         private val serializer = MapSerializer(String.serializer(), TaxonomyEntryDto.serializer())
 
+        override val formatVersion: Int = TaxonomyCatalogMapper.FORMAT_VERSION
+
         @OptIn(ExperimentalSerializationApi::class)
         override suspend fun fetch(currentVersion: String?): RemoteCatalogResult =
             withContext(ioDispatcher) {

@@ -13,6 +13,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.opensources.courses.feature.homeassistant.domain.HaCreatedList
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
@@ -214,8 +215,10 @@ class HomeAssistantClient
             } catch (exception: SerializationException) {
                 throw HomeAssistantException(HaErrorKind.PROTOCOL, exception)
             } catch (exception: IllegalArgumentException) {
-                // Retrofit rejects a malformed absolute URL before any request is made.
-                throw HomeAssistantException(HaErrorKind.INVALID_URL, exception)
+                // Addresses are checked by url() before any call, so this is Retrofit refusing a method
+                // of HomeAssistantApi (a build problem, e.g. R8 removing a response class), not the
+                // address typed by the user: it must never be reported as an invalid address.
+                throw HomeAssistantException(HaErrorKind.PROTOCOL, exception)
             }
 
         private fun kindForStatus(code: Int): HaErrorKind =
@@ -226,7 +229,12 @@ class HomeAssistantClient
                 else -> HaErrorKind.PROTOCOL
             }
 
-        private fun HaCredentials.url(path: String): String = baseUrl.trimEnd('/') + path
+        /** A malformed address is reported as such before Retrofit or OkHttp see it. */
+        private fun HaCredentials.url(path: String): String {
+            val url = baseUrl.trimEnd('/') + path
+            if (url.toHttpUrlOrNull() == null) throw HomeAssistantException(HaErrorKind.INVALID_URL)
+            return url
+        }
 
         private fun HaCredentials.bearer(): String = "Bearer $token"
 

@@ -37,6 +37,7 @@ import org.opensources.courses.R
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.AddItemField
+import org.opensources.courses.feature.shopping.presentation.components.DeletePurchasedDialog
 import org.opensources.courses.feature.shopping.presentation.components.EditItemDialog
 import org.opensources.courses.feature.shopping.presentation.components.PurchasedFooter
 import org.opensources.courses.feature.shopping.presentation.components.ShoppingListContent
@@ -71,6 +72,7 @@ fun ShoppingRoute(
     )
 }
 
+/** [onDeletePurchased] deletes: it is only called once the user confirmed. */
 class ShoppingActions(
     val onQueryChange: (String) -> Unit = {},
     val onSubmitQuery: () -> Unit = {},
@@ -94,6 +96,7 @@ fun ShoppingScreen(
     actions: ShoppingActions,
 ) {
     var editedItemId by rememberSaveable { mutableStateOf<String?>(null) }
+    var confirmDeletePurchased by rememberSaveable { mutableStateOf(false) }
     val searching = query.isNotBlank()
     Scaffold(
         topBar = {
@@ -125,7 +128,7 @@ fun ShoppingScreen(
                     purchasedCount = state.purchased.size,
                     hidePurchased = state.hidePurchased,
                     onToggleHidePurchased = actions.onToggleHidePurchased,
-                    onDeletePurchased = actions.onDeletePurchased,
+                    onRequestDeletePurchased = { confirmDeletePurchased = true },
                 )
             }
         },
@@ -153,12 +156,22 @@ fun ShoppingScreen(
                         onToggleItem = actions.onToggleItem,
                         onDeleteItem = actions.onDeleteItem,
                         onEditItem = { editedItemId = it.id },
+                        onRequestDeletePurchased = { confirmDeletePurchased = true },
                     )
                 }
             }
         }
     }
     EditItemDialogHost(state, editedItemId, actions, onClose = { editedItemId = null })
+    if (confirmDeletePurchased) {
+        DeletePurchasedDialog(
+            onConfirm = {
+                confirmDeletePurchased = false
+                actions.onDeletePurchased()
+            },
+            onDismiss = { confirmDeletePurchased = false },
+        )
+    }
 }
 
 /** Pull to refresh fetches changes made in Home Assistant; without a remote there is nothing to fetch. */

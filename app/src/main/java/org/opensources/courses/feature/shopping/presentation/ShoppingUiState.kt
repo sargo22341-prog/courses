@@ -3,12 +3,15 @@ package org.opensources.courses.feature.shopping.presentation
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
+import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 
 data class ShoppingUiState(
     val isLoading: Boolean = true,
     val listName: String = "",
     val toBuy: List<ShoppingItem> = emptyList(),
+    /** [toBuy] grouped by shop section; null when the "Ranger par catégorie" setting is off. */
+    val toBuySections: List<ItemSection>? = null,
     val purchased: List<ShoppingItem> = emptyList(),
     val hidePurchased: Boolean = false,
     val suggestions: List<ProductSuggestion> = emptyList(),

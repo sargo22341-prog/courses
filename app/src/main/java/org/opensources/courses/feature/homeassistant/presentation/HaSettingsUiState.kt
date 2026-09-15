@@ -96,6 +96,8 @@ data class HaSettingsUiState(
     val pickerListId: String? = null,
     /** Lists that existed before Home Assistant was set up and still wait for the user's choice. */
     val setupListIds: List<String> = emptyList(),
+    /** The saved configuration has been read: before that, nothing is known to be saved or not. */
+    val isLoaded: Boolean = false,
 ) {
     /** The list chosen by the user, otherwise the next list of the first setup. */
     val pickerList: ShoppingList?

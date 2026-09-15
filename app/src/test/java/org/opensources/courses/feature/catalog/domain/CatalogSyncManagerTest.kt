@@ -22,10 +22,16 @@ class CatalogSyncManagerTest {
 
     private val products = listOf(CatalogImportProduct("en:milks", "Laits", "Produits laitiers", null, 3))
 
+    /** A catalog imported by the current version of the app, [age] ago. */
+    private fun imported(
+        age: Duration,
+        version: String,
+    ) = CatalogSyncInfo(TestNow.minus(age), version, CURRENT_FORMAT)
+
     @Test
     fun `stale catalog is downloaded with the stored version and imported`() =
         runTest {
-            store.state.value = CatalogSyncInfo(TestNow.minus(Duration.ofDays(12)), "etag-1")
+            store.state.value = imported(Duration.ofDays(12), "etag-1")
             remote.result = RemoteCatalogResult.Updated("etag-2", products)
 
             val result = manager.syncIfStale()
@@ -33,16 +39,28 @@ class CatalogSyncManagerTest {
             assertEquals(CatalogSyncResult.Updated(1), result)
             assertEquals(listOf<String?>("etag-1"), remote.requestedVersions)
             assertEquals("etag-2", repository.importedVersion)
-            assertEquals(CatalogSyncInfo(TestNow, "etag-2"), store.state.value)
+            assertEquals(CatalogSyncInfo(TestNow, "etag-2", CURRENT_FORMAT), store.state.value)
         }
 
     @Test
     fun `fresh catalog is not downloaded`() =
         runTest {
-            store.state.value = CatalogSyncInfo(TestNow.minus(Duration.ofDays(2)), "etag-1")
+            store.state.value = imported(Duration.ofDays(2), "etag-1")
 
             assertEquals(CatalogSyncResult.NotNeeded, manager.syncIfStale())
             assertEquals(emptyList<String?>(), remote.requestedVersions)
+        }
+
+    @Test
+    fun `fresh catalog imported in an older format is downloaded again in full`() =
+        runTest {
+            store.state.value = CatalogSyncInfo(TestNow.minus(Duration.ofDays(1)), "etag-1", formatVersion = 0)
+            remote.result = RemoteCatalogResult.Updated("etag-1", products)
+
+            assertEquals(CatalogSyncResult.Updated(1), manager.syncIfStale())
+            // Without the ETag, otherwise the server would answer "not modified".
+            assertEquals(listOf<String?>(null), remote.requestedVersions)
+            assertEquals(CURRENT_FORMAT, store.state.value.formatVersion)
         }
 
     @Test
@@ -58,7 +76,7 @@ class CatalogSyncManagerTest {
     @Test
     fun `forced sync ignores freshness and cache validators`() =
         runTest {
-            store.state.value = CatalogSyncInfo(TestNow.minus(Duration.ofHours(1)), "etag-1")
+            store.state.value = imported(Duration.ofHours(1), "etag-1")
             remote.result = RemoteCatalogResult.Updated("etag-2", products)
 
             assertEquals(CatalogSyncResult.Updated(1), manager.forceSync())
@@ -78,18 +96,18 @@ class CatalogSyncManagerTest {
     @Test
     fun `not modified only refreshes the sync date`() =
         runTest {
-            store.state.value = CatalogSyncInfo(TestNow.minus(Duration.ofDays(8)), "etag-1")
+            store.state.value = imported(Duration.ofDays(8), "etag-1")
             remote.result = RemoteCatalogResult.NotModified
 
             assertEquals(CatalogSyncResult.UpToDate, manager.syncIfStale())
             assertNull(repository.importedVersion)
-            assertEquals(CatalogSyncInfo(TestNow, "etag-1"), store.state.value)
+            assertEquals(CatalogSyncInfo(TestNow, "etag-1", CURRENT_FORMAT), store.state.value)
         }
 
     @Test
     fun `download failure keeps the current catalog and date`() =
         runTest {
-            val previous = CatalogSyncInfo(TestNow.minus(Duration.ofDays(9)), "etag-1")
+            val previous = imported(Duration.ofDays(9), "etag-1")
             store.state.value = previous
             remote.failure = CatalogDownloadException("boom")
 
@@ -102,6 +120,8 @@ class CatalogSyncManagerTest {
         var result: RemoteCatalogResult = RemoteCatalogResult.NotModified
         var failure: Exception? = null
         val requestedVersions = mutableListOf<String?>()
+
+        override val formatVersion: Int = CURRENT_FORMAT
 
         override suspend fun fetch(currentVersion: String?): RemoteCatalogResult {
             requestedVersions += currentVersion
@@ -120,8 +140,9 @@ class CatalogSyncManagerTest {
         override suspend fun markSynced(
             at: Instant,
             version: String?,
+            formatVersion: Int?,
         ) {
-            state.value = CatalogSyncInfo(at, version ?: state.value.version)
+            state.value = CatalogSyncInfo(at, version ?: state.value.version, formatVersion ?: state.value.formatVersion)
         }
 
         override suspend fun seedVersion(): Int = seed
@@ -129,5 +150,9 @@ class CatalogSyncManagerTest {
         override suspend fun setSeedVersion(version: Int) {
             seed = version
         }
+    }
+
+    private companion object {
+        const val CURRENT_FORMAT = 3
     }
 }

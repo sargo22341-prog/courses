@@ -24,6 +24,7 @@ class DataStoreCatalogSyncStateStore
                 CatalogSyncInfo(
                     lastSyncAt = preferences[LAST_SYNC]?.let(Instant::ofEpochMilli),
                     version = preferences[VERSION],
+                    formatVersion = preferences[FORMAT_VERSION] ?: 0,
                 )
             }
 
@@ -32,10 +33,12 @@ class DataStoreCatalogSyncStateStore
         override suspend fun markSynced(
             at: Instant,
             version: String?,
+            formatVersion: Int?,
         ) {
             dataStore.edit { preferences ->
                 preferences[LAST_SYNC] = at.toEpochMilli()
                 if (version != null) preferences[VERSION] = version
+                if (formatVersion != null) preferences[FORMAT_VERSION] = formatVersion
             }
         }
 
@@ -48,6 +51,7 @@ class DataStoreCatalogSyncStateStore
         private companion object {
             val LAST_SYNC = longPreferencesKey("last_sync_epoch_ms")
             val VERSION = stringPreferencesKey("catalog_version")
+            val FORMAT_VERSION = intPreferencesKey("catalog_format_version")
             val SEED_VERSION = intPreferencesKey("seed_version")
         }
     }

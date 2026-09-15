@@ -8,9 +8,11 @@ object HaUrlNormalizer {
      * cannot be an http(s) address.
      */
     fun normalize(input: String): String? {
-        val trimmed = input.trim().trimEnd('/')
+        val trimmed = input.trim()
         if (trimmed.isEmpty()) return null
-        val withScheme = if (SCHEME.containsMatchIn(trimmed)) trimmed else "http://$trimmed"
+        // The scheme is detected before trailing slashes are removed: "https://" alone must not
+        // lose its "//" and be read as the host "https".
+        val withScheme = (if (SCHEME.containsMatchIn(trimmed)) trimmed else "http://$trimmed").trimEnd('/')
         val uri = runCatching { URI(withScheme) }.getOrNull() ?: return null
         if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.host.isNullOrBlank()) return null
         return withScheme

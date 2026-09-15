@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -34,6 +35,8 @@ import org.opensources.courses.feature.lists.domain.ShoppingListDefaults
 import org.opensources.courses.feature.lists.domain.ShoppingListRepository
 import org.opensources.courses.feature.settings.domain.AppPreferencesRepository
 import org.opensources.courses.feature.shopping.domain.AddItemUseCase
+import org.opensources.courses.feature.shopping.domain.GroupItemsByCategoryUseCase
+import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItemRepository
 import org.opensources.courses.navigation.ShoppingDestination
@@ -49,6 +52,7 @@ class ShoppingViewModel
         private val items: ShoppingItemRepository,
         private val addItem: AddItemUseCase,
         private val searchSuggestions: SearchSuggestionsUseCase,
+        private val groupItemsByCategory: GroupItemsByCategoryUseCase,
         private val preferences: AppPreferencesRepository,
         private val syncCoordinator: SyncCoordinator,
     ) : ViewModel() {
@@ -71,6 +75,18 @@ class ShoppingViewModel
                 if (list == null) flowOf(null to emptyList()) else items.observeItems(list.id).map { list to it }
             }
 
+        /** Sections are computed from the same emission as the items, so both never disagree on screen. */
+        private val listContent: Flow<ListContent> =
+            combine(listWithItems, preferences.preferences.map { it.groupByCategory }.distinctUntilChanged(), ::Pair)
+                .flatMapLatest { (listAndItems, grouped) ->
+                    val (list, all) = listAndItems
+                    if (grouped) {
+                        groupItemsByCategory(all.filterNot { it.isChecked }).map { ListContent(list, all, it) }
+                    } else {
+                        flowOf(ListContent(list, all, toBuySections = null))
+                    }
+                }
+
         private val suggestions: Flow<List<ProductSuggestion>> =
             snapshotFlow { query }
                 .debounce(SEARCH_DEBOUNCE_MILLIS)
@@ -80,12 +96,13 @@ class ShoppingViewModel
         private val refreshing = MutableStateFlow(false)
 
         val uiState: StateFlow<ShoppingUiState> =
-            combine(listWithItems, preferences.preferences, suggestions, syncCoordinator.snapshot, refreshing) { (list, all), prefs, found, sync, isRefreshing ->
+            combine(listContent, preferences.preferences, suggestions, syncCoordinator.snapshot, refreshing) { content, prefs, found, sync, isRefreshing ->
                 ShoppingUiState(
-                    isLoading = list == null,
-                    listName = list?.name.orEmpty(),
-                    toBuy = all.filterNot { it.isChecked },
-                    purchased = all.filter { it.isChecked },
+                    isLoading = content.list == null,
+                    listName = content.list?.name.orEmpty(),
+                    toBuy = content.items.filterNot { it.isChecked },
+                    toBuySections = content.toBuySections,
+                    purchased = content.items.filter { it.isChecked },
                     hidePurchased = prefs.hidePurchased,
                     suggestions = found,
                     sync = sync,
@@ -165,6 +182,12 @@ class ShoppingViewModel
         }
 
         private suspend fun currentListId(): String? = currentList.first()?.id
+
+        private data class ListContent(
+            val list: ShoppingList?,
+            val items: List<ShoppingItem>,
+            val toBuySections: List<ItemSection>?,
+        )
 
         private companion object {
             const val SEARCH_DEBOUNCE_MILLIS = 60L

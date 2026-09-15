@@ -53,7 +53,7 @@ class HomeAssistantSettingsViewModel
                 combine(connection, sync, ::Pair),
                 combine(remoteLists, pickerListId, setupListIds, ::Triple),
             ) { config, lists, tracked, (connectionStatus, syncStatus), (remote, picker, setup) ->
-                HaSettingsUiState(config, lists, tracked, connectionStatus, syncStatus, remote, picker, setup)
+                HaSettingsUiState(config, lists, tracked, connectionStatus, syncStatus, remote, picker, setup, isLoaded = true)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HaSettingsUiState())
 
         init {

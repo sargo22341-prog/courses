@@ -82,4 +82,12 @@ interface CatalogDao {
 
     @Query("SELECT COUNT(*) FROM catalog_products")
     fun observeCount(): Flow<Int>
+
+    @Query(
+        """
+        SELECT normalizedName, groceryCategory, source FROM catalog_products
+        WHERE groceryCategory IS NOT NULL AND normalizedName IN (:normalizedNames)
+        """,
+    )
+    fun observeCategories(normalizedNames: List<String>): Flow<List<ProductCategoryRow>>
 }

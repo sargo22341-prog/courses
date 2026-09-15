@@ -3,8 +3,10 @@ package org.opensources.courses.feature.catalog.data.remote
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 
 class TaxonomyCatalogMapperTest {
     private val mapper = TaxonomyCatalogMapper()
@@ -55,5 +57,29 @@ class TaxonomyCatalogMapperTest {
     @Test
     fun `normalized duplicates keep the most generic entry`() {
         assertFalse("fr:laits" in products)
+    }
+
+    @Test
+    fun `shop section is read on the taxonomy chain`() {
+        assertEquals(GroceryCategory.DAIRY_EGGS, products.getValue("en:dairies").groceryCategory)
+        assertEquals(GroceryCategory.DAIRY_EGGS, products.getValue("en:semi-skimmed-milks").groceryCategory)
+    }
+
+    @Test
+    fun `the most specific known section wins and unknown chains have none`() {
+        val mapped =
+            mapper
+                .map(
+                    mapOf(
+                        "en:plant-based-foods-and-beverages" to TaxonomyEntryDto(name = mapOf("fr" to "Aliments végétaux")),
+                        "en:breads" to TaxonomyEntryDto(name = mapOf("fr" to "Pains"), parents = listOf("en:plant-based-foods-and-beverages")),
+                        "en:baguettes" to TaxonomyEntryDto(name = mapOf("fr" to "Baguettes"), parents = listOf("en:breads")),
+                        "en:food-additives" to TaxonomyEntryDto(name = mapOf("fr" to "Additifs alimentaires")),
+                    ),
+                ).associateBy { it.id }
+
+        assertEquals(GroceryCategory.BAKERY, mapped.getValue("en:baguettes").groceryCategory)
+        assertEquals(GroceryCategory.SAVORY_GROCERY, mapped.getValue("en:plant-based-foods-and-beverages").groceryCategory)
+        assertNull(mapped.getValue("en:food-additives").groceryCategory)
     }
 }

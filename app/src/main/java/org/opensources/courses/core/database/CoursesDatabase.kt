@@ -1,5 +1,6 @@
 package org.opensources.courses.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import org.opensources.courses.core.sync.SyncOperationDao
@@ -21,6 +22,9 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  *
  * Schemas are exported to `app/schemas`: any change to an entity must bump [version] and ship a
  * migration (or an `AutoMigration`) validated against the exported JSON.
+ *
+ * - 2: `catalog_products.groceryCategory` (shop sections), a nullable column filled by the next
+ *   seed and OpenFoodFacts imports.
  */
 @Database(
     entities = [
@@ -32,8 +36,9 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
         SyncOperationEntity::class,
         HaTrackedListEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class CoursesDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao

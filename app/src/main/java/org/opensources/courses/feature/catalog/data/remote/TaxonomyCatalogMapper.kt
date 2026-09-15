@@ -12,7 +12,8 @@ import org.opensources.courses.feature.catalog.domain.TextNormalizer
  *   (`Miels du Jura`): too specific to be typed in a shopping list;
  * - be short (≤ 4 words, ≤ 40 characters) and contain no digit (`Laits 2ème âge`).
  * Names are de-duplicated on their normalized form, keeping the most generic entry.
- * The base score favours generic categories (close to a root) over specific ones.
+ * The base score favours generic categories (close to a root) over specific ones, and the shop
+ * section comes from [OpenFoodFactsGroceryCategories].
  */
 class TaxonomyCatalogMapper(
     private val language: String = "fr",
@@ -30,6 +31,7 @@ class TaxonomyCatalogMapper(
                     category = categoryName(ancestors, entries),
                     parentId = entry.parents.firstOrNull { entries[it]?.name?.containsKey(language) == true },
                     baseScore = (MAX_BASE_SCORE - ancestors.size).coerceAtLeast(0),
+                    groceryCategory = OpenFoodFactsGroceryCategories.categoryOf(listOf(id) + ancestors),
                 )
             val key = TextNormalizer.normalize(product.name)
             val existing = byName[key]
@@ -71,10 +73,16 @@ class TaxonomyCatalogMapper(
         return shelf?.let { entries[it]?.name?.get(language) }
     }
 
-    private companion object {
-        const val MAX_WORDS = 4
-        const val MAX_NAME_LENGTH = 40
-        const val MAX_DEPTH = 15
-        const val MAX_BASE_SCORE = 5
+    companion object {
+        /**
+         * Version of the data [map] produces, exposed as the catalog format version: increase it
+         * whenever [map] extracts new data so older imports are downloaded again. 1: shop sections.
+         */
+        const val FORMAT_VERSION = 1
+
+        private const val MAX_WORDS = 4
+        private const val MAX_NAME_LENGTH = 40
+        private const val MAX_DEPTH = 15
+        private const val MAX_BASE_SCORE = 5
     }
 }

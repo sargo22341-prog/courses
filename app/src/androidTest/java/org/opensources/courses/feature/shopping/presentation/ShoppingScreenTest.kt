@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +24,9 @@ import org.opensources.courses.core.designsystem.theme.CoursesTheme
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
+import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.ADD_ITEM_FIELD_TAG
 
@@ -66,6 +70,55 @@ class ShoppingScreenTest {
         composeRule.onNodeWithText("Lait").performClick()
 
         assertEquals("Lait", toggled?.name)
+    }
+
+    @Test
+    fun deletingPurchasedItemsFromTheirHeaderAsksForConfirmation() {
+        var deleted = false
+        composeRule.setContent {
+            CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
+        }
+
+        composeRule.onNodeWithContentDescription("Supprimer les articles achetés").performClick()
+        composeRule.onNodeWithText("Supprimer les articles achetés ?").assertIsDisplayed()
+        assertFalse(deleted)
+
+        composeRule.onNodeWithText("Supprimer").performClick()
+
+        assertTrue(deleted)
+        composeRule.onNodeWithText("Supprimer les articles achetés ?").assertDoesNotExist()
+    }
+
+    @Test
+    fun cancellingTheConfirmationKeepsPurchasedItems() {
+        var deleted = false
+        composeRule.setContent {
+            CoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeletePurchased = { deleted = true })) }
+        }
+
+        composeRule.onNodeWithContentDescription("Supprimer les articles achetés").performClick()
+        composeRule.onNodeWithText("Annuler").performClick()
+
+        assertFalse(deleted)
+        composeRule.onNodeWithText("Pain").assertIsDisplayed()
+    }
+
+    @Test
+    fun itemsToBuyAreShownUnderTheirCategoryWhenGrouped() {
+        val grouped =
+            state.copy(
+                toBuySections =
+                    listOf(
+                        ItemSection(GroceryCategory.DAIRY_EGGS, listOf(item("Lait", quantity = 2.0))),
+                        ItemSection(GroceryCategory.OTHER, listOf(item("Sauce maison"))),
+                    ),
+            )
+        composeRule.setContent { CoursesTheme { ShoppingScreen(grouped, query = "", actions = ShoppingActions()) } }
+
+        composeRule.onNodeWithText("Produits laitiers et œufs").assertIsDisplayed()
+        composeRule.onNodeWithText("Lait").assertIsDisplayed()
+        composeRule.onNodeWithText("Autres").assertIsDisplayed()
+        composeRule.onNodeWithText("Sauce maison").assertIsDisplayed()
     }
 
     @Test

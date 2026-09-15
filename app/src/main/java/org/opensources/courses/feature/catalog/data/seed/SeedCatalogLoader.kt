@@ -15,6 +15,7 @@ import org.opensources.courses.feature.catalog.data.local.CatalogDao
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.CatalogSyncStateStore
+import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import javax.inject.Inject
 
@@ -24,9 +25,11 @@ data class SeedCatalogDto(
     val categories: List<SeedCategoryDto>,
 )
 
+/** @property category name of a [GroceryCategory] constant. */
 @Serializable
 data class SeedCategoryDto(
     val name: String,
+    val category: String,
     val products: List<SeedProductDto>,
 )
 
@@ -77,16 +80,18 @@ object SeedCatalogMapper {
     private const val PRODUCT_SCORE = 8
     private const val VARIANT_SCORE = 6
 
+    /** @throws IllegalArgumentException when a section is not a [GroceryCategory] (guarded by tests). */
     fun map(seed: SeedCatalogDto): List<CatalogImportProduct> =
         seed.categories
             .flatMap { category ->
+                val groceryCategory = GroceryCategory.valueOf(category.category)
                 category.products.flatMap { product ->
                     val parentId = idFor(product.name)
                     listOf(
-                        CatalogImportProduct(parentId, product.name, category.name, null, PRODUCT_SCORE, product.aliases),
+                        CatalogImportProduct(parentId, product.name, category.name, null, PRODUCT_SCORE, product.aliases, groceryCategory),
                     ) +
                         product.variants.map { variant ->
-                            CatalogImportProduct(idFor(variant), variant, category.name, parentId, VARIANT_SCORE)
+                            CatalogImportProduct(idFor(variant), variant, category.name, parentId, VARIANT_SCORE, groceryCategory = groceryCategory)
                         }
                 }
             }.distinctBy { it.id }

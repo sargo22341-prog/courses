@@ -2,6 +2,8 @@ package org.opensources.courses.feature.homeassistant.data.remote
 
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType
@@ -194,6 +196,53 @@ class HomeAssistantClientTest {
 
             assertErrorKind(HaErrorKind.UNREACHABLE) { client.testConnection(credentials) }
         }
+
+    @Test
+    fun `malformed address is reported as invalid before any request`() =
+        runTest {
+            assertErrorKind(HaErrorKind.INVALID_URL) { client.testConnection(HaCredentials("https://ha nas.home", "secret-token")) }
+            assertEquals(0, server.requestCount)
+        }
+
+    @Test
+    fun `Retrofit refusing a method is not blamed on the address`() =
+        runTest {
+            // What a release build did when R8 had removed ApiStatusDto: "Adresse invalide" for a valid address.
+            val client = HomeAssistantClient(ConverterlessApi(), json)
+
+            assertErrorKind(HaErrorKind.PROTOCOL) { client.testConnection(credentials) }
+        }
+
+    private class ConverterlessApi : HomeAssistantApi {
+        private fun refuse(): Nothing = throw IllegalArgumentException("Unable to create converter for class java.lang.Object")
+
+        override suspend fun apiStatus(
+            url: String,
+            authorization: String,
+        ): ApiStatusDto = refuse()
+
+        override suspend fun states(
+            url: String,
+            authorization: String,
+        ): List<EntityStateDto> = refuse()
+
+        override suspend fun callService(
+            url: String,
+            authorization: String,
+            body: JsonObject,
+        ): JsonElement = refuse()
+
+        override suspend fun configFlow(
+            url: String,
+            authorization: String,
+            body: JsonObject,
+        ): ConfigFlowDto = refuse()
+
+        override suspend fun deleteConfigEntry(
+            url: String,
+            authorization: String,
+        ): JsonElement = refuse()
+    }
 
     private suspend fun assertErrorKind(
         expected: HaErrorKind,

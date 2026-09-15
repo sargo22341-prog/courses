@@ -10,6 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensources.courses.core.designsystem.theme.CoursesTheme
+import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
 
 @RunWith(AndroidJUnit4::class)
 class HaConnectionCardTest {
@@ -52,5 +53,19 @@ class HaConnectionCardTest {
         setCard(state = HaSettingsUiState(connection = HaActionStatus.Done(HaMessage.INVALID_TOKEN_QR)))
 
         composeRule.onNodeWithText("Ce QR code ne contient pas de token Home Assistant.").assertIsDisplayed()
+    }
+
+    @Test
+    fun savedConnectionIsFoldedUntilConnectedIsTapped() {
+        val saved = HomeAssistantConfig.Default.copy(enabled = true, baseUrl = "https://ha.nas.home", hasToken = true)
+        setCard(state = HaSettingsUiState(config = saved, isLoaded = true))
+
+        composeRule.onNodeWithText("Adresse de Home Assistant").assertDoesNotExist()
+        composeRule.onNodeWithText("Activer la synchronisation").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Connecté").performClick()
+
+        composeRule.onNodeWithText("Adresse de Home Assistant").assertIsDisplayed()
+        composeRule.onNodeWithText("Tester la connexion").assertIsDisplayed()
     }
 }

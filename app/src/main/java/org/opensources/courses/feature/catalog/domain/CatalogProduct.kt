@@ -38,7 +38,12 @@ data class ProductSuggestion(
     val category: String?,
 )
 
-/** A product produced by a remote import, before it is stored. */
+/**
+ * A product produced by an import, before it is stored.
+ *
+ * @property category display name of its category in the source (`Produits laitiers`, `Laits`).
+ * @property groceryCategory shop section used to sort a list, when the source allows to tell it.
+ */
 data class CatalogImportProduct(
     val id: String,
     val name: String,
@@ -46,4 +51,5 @@ data class CatalogImportProduct(
     val parentId: String?,
     val baseScore: Int,
     val aliases: List<String> = emptyList(),
+    val groceryCategory: GroceryCategory? = null,
 )

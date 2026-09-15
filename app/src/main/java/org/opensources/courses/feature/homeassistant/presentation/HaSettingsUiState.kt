@@ -5,7 +5,6 @@ import org.opensources.courses.R
 import org.opensources.courses.core.sync.SyncFailure
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
-import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
 import org.opensources.courses.feature.lists.domain.ShoppingList
@@ -89,7 +88,6 @@ sealed interface RemoteListsState {
 data class HaSettingsUiState(
     val config: HomeAssistantConfig = HomeAssistantConfig.Default,
     val lists: List<ShoppingList> = emptyList(),
-    val trackedEntityIds: Set<String> = emptySet(),
     val connection: HaActionStatus = HaActionStatus.Idle,
     val sync: HaActionStatus = HaActionStatus.Idle,
     val remoteLists: RemoteListsState = RemoteListsState.NotLoaded,
@@ -107,12 +105,12 @@ data class HaSettingsUiState(
 
     val isSetupPicker: Boolean get() = pickerListId == null && pickerList != null
 
-    /** Home Assistant lists offered in the picker, according to the selected mode. */
+    /** Every Home Assistant list can be linked by hand, whatever the list mode. */
     val pickerOptions: List<HaTodoList>
-        get() {
-            val loaded = (remoteLists as? RemoteListsState.Loaded)?.lists.orEmpty()
-            return if (config.listMode == HaListMode.APP_CREATED_ONLY) loaded.filter { it.entityId in trackedEntityIds } else loaded
-        }
+        get() = (remoteLists as? RemoteListsState.Loaded)?.lists.orEmpty()
+
+    /** Lists imported by the "all lists" mode, removed from this phone when that mode is left. */
+    val importedListCount: Int get() = lists.count { it.importedFromRemote }
 
     fun isRemoteUnavailable(entityId: String): Boolean =
         (remoteLists as? RemoteListsState.Loaded)?.lists?.firstOrNull { it.entityId == entityId }?.isAvailable == false

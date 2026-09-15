@@ -253,8 +253,27 @@ coupé : désactiver la synchronisation ne déconnecte pas Home Assistant.
 - tester la connexion. « Adresse invalide. » n'est affiché que pour une adresse réellement
   malformée, vérifiée avant tout appel ; une erreur interne de Retrofit est signalée comme
   « Réponse inattendue de Home Assistant. » ;
-- mode d'affichage des listes : **Toutes les listes** ou **Uniquement les listes créées par cette
-  application** ;
+- **Listes Home Assistant** (mode, `HaListMode`) :
+  - **Uniquement les listes créées par cette application** (par défaut) : seules les listes créées
+    depuis l'application sont synchronisées ; une liste qui existait déjà se lie à la main avec
+    « Choisir ». Une liste supprimée dans Home Assistant est déliée et reste sur le téléphone ;
+  - **Toutes les listes** : à l'activation puis à chaque synchronisation, chaque liste `todo.*`
+    **modifiable** (ajout, modification et suppression d'articles) et disponible, qui n'est liée à
+    aucune liste de l'application, y est **importée** avec ses articles
+    (`shopping_lists.importedFromRemote`). Elle prend le nom de Home Assistant ; si ce nom existe
+    déjà dans l'application, un numéro est ajouté (« Courses 2 », `HaListNameAllocator`). Un
+    renommage fait ensuite dans Home Assistant renomme la liste importée (`remoteName` retient le
+    dernier nom appliqué, donc un renommage fait dans l'application n'est pas écrasé tant que le nom
+    ne change pas dans Home Assistant). Une liste **supprimée dans Home Assistant** est supprimée de
+    l'application, sauf si elle contient des modifications pas encore envoyées ou si c'est la
+    dernière liste : elle est alors seulement déliée ;
+  - **supprimer** dans l'application une liste liée créée ailleurs, la passer en « Ne pas
+    synchroniser » ou la lier à une autre liste la mémorise dans `ha_ignored_lists` : elle reste dans
+    Home Assistant et n'est plus importée. La lier de nouveau avec « Choisir » annule ce choix ;
+  - **repasser en « Uniquement les listes créées »** supprime du téléphone les listes importées,
+    après confirmation (elles restent dans Home Assistant). La dernière liste de l'application est
+    gardée, déliée. Le moteur refait ce ménage à la synchronisation suivante, au cas où une
+    synchronisation en cours aurait importé une liste entre-temps ;
 - **Créer automatiquement les nouvelles listes** (activé par défaut) : toute liste créée dans
   l'application est aussitôt marquée à synchroniser (`CREATE_LIST` écrit dans la même transaction
   que la liste) et créée dans Home Assistant à la synchronisation suivante. Désactivé, une nouvelle
@@ -263,7 +282,9 @@ coupé : désactiver la synchronisation ne déconnecte pas Home Assistant.
   déjà et n'est pas synchronisée est proposée tour à tour (créer dans Home Assistant, lier à une
   liste existante, ne pas synchroniser, ou « Plus tard »). Cette question n'est posée qu'une fois
   (`lists_setup_done` dans DataStore) ;
-- pour chaque liste locale : lier à une liste `todo.*` existante, **créer** la liste dans Home
+- pour chaque liste locale : lier à une liste `todo.*` existante (toutes les listes de Home
+  Assistant sont proposées, quel que soit le mode ; une copie importée de cette liste est alors
+  remplacée), **créer** la liste dans Home
   Assistant (intégration *Local To-do*, créée par l'application et mémorisée dans
   `ha_tracked_lists`), ou ne pas synchroniser ;
 - **noms déjà pris** : si une liste `todo.*` de Home Assistant porte déjà ce nom (casse, accents et
@@ -305,6 +326,10 @@ laisse la description vide.
   (`CREATE_ITEM`, `UPDATE_ITEM`, `DELETE_ITEM`, `CHECK_ITEM`, `UNCHECK_ITEM`, `CREATE_LIST`,
   `DELETE_LIST`, `UPDATE_LIST`) **dans la même transaction Room**. Rien ne peut être perdu entre
   les deux, même application tuée.
+- Supprimer une liste liée écrit un `DELETE_LIST`. Avec l'identifiant d'entrée de configuration
+  (liste créée par l'application), la liste est supprimée dans Home Assistant ; sans (liste créée
+  ailleurs), elle y reste et est seulement mémorisée comme ignorée. Tant que l'opération est en
+  file, la liste n'est pas réimportée.
 - Une suppression d'article synchronisé laisse une **pierre tombale** (`isDeleted`) masquée à
   l'UI, purgée quand Home Assistant a confirmé.
 - `SyncCoordinator` décide **quand** synchroniser (démarrage, retour du réseau, nouvelle opération
@@ -432,6 +457,7 @@ rester dans un package `data.remote`.
 | Synchronisation Home Assistant | `HomeAssistantSyncEngineTest`, `HomeAssistantClientTest` (MockWebServer), `ItemDescriptionCodecTest` |
 | Adresse Home Assistant, erreur Retrofit de la release | `HaUrlNormalizerTest`, `HomeAssistantClientTest`, `RetrofitKeepRulesTest` |
 | Création automatique des listes, noms déjà pris, premier paramétrage | `HaListNameAllocatorTest`, `HomeAssistantClientTest`, `HomeAssistantSyncEngineTest`, `RoomRepositoriesTest`, `HaListPickerDialogTest` |
+| Modes des listes (import, noms, renommage, suppression, listes ignorées, retour au mode par défaut) | `HomeAssistantListImportTest`, `HaListImportRoomTest` (Room réel), `HaListModeCardTest`, `HomeAssistantClientTest`, `CoursesDatabaseMigrationTest` |
 | Changements des deux côtés, catalogue, liste indisponible | `HomeAssistantBidirectionalSyncTest`, `ConflictResolverTest`, `HaListPickerDialogTest` |
 | Temps réel, synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
 | Âge et format du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
@@ -463,9 +489,10 @@ rester dans un package `data.remote`.
   Home Assistant est rangé correctement sans traitement particulier.
 - **Pictogrammes en emoji** : aucune bibliothèque d'icônes supplémentaire (le jeu d'icônes Material
   « extended » pèse plusieurs Mo), rendus en couleur par la police système.
-- **Room avec schéma exporté** : version 2 (ajout de `catalog_products.groceryCategory` par
-  `AutoMigration`). Toute évolution du schéma incrémente la version et fournit une migration testée
-  contre `app/schemas` (`CoursesDatabaseMigrationTest`).
+- **Room avec schéma exporté** : version 3, par `AutoMigration` (2 : `catalog_products.groceryCategory` ;
+  3 : `shopping_lists.importedFromRemote`, `shopping_lists.remoteName` et table `ha_ignored_lists`).
+  Toute évolution du schéma incrémente la version et fournit une migration testée contre
+  `app/schemas` (`CoursesDatabaseMigrationTest`).
 
 ## Limites connues
 
@@ -502,3 +529,8 @@ rester dans un package `data.remote`.
   complet de l'application contre une vraie instance reste à valider.
 - **Création automatique** : elle ne s'applique qu'aux listes créées après l'activation du
   réglage ; une liste passée en « Ne pas synchroniser » n'est jamais recréée automatiquement.
+- **Mode « Toutes les listes »** : une liste que Home Assistant ne renvoie plus du tout dans
+  `/api/states` (intégration supprimée ou pas encore rechargée) est considérée comme supprimée et
+  retirée de l'application ; une intégration simplement arrêtée (`unavailable`) ne retire rien. Un
+  renommage fait dans Home Assistant remplace un renommage local antérieur. Une liste ignorée ne
+  réapparaît qu'en la liant avec « Choisir » ; il n'y a pas d'écran listant les listes ignorées.

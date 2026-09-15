@@ -49,11 +49,10 @@ class HomeAssistantSettingsViewModel
             combine(
                 configRepository.config,
                 listRepository.observeLists(),
-                linkRepository.observeTrackedEntityIds(),
                 combine(connection, sync, ::Pair),
                 combine(remoteLists, pickerListId, setupListIds, ::Triple),
-            ) { config, lists, tracked, (connectionStatus, syncStatus), (remote, picker, setup) ->
-                HaSettingsUiState(config, lists, tracked, connectionStatus, syncStatus, remote, picker, setup, isLoaded = true)
+            ) { config, lists, (connectionStatus, syncStatus), (remote, picker, setup) ->
+                HaSettingsUiState(config, lists, connectionStatus, syncStatus, remote, picker, setup, isLoaded = true)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HaSettingsUiState())
 
         init {
@@ -136,8 +135,19 @@ class HomeAssistantSettingsViewModel
             }
         }
 
+        /**
+         * "All lists" imports the Home Assistant lists straight away. Leaving it removes the imported
+         * lists (the screen asks first); the engine removes them again at its next synchronisation, in
+         * case one running meanwhile imported a list.
+         */
         fun setListMode(mode: HaListMode) {
-            viewModelScope.launch { configRepository.setListMode(mode) }
+            viewModelScope.launch {
+                configRepository.setListMode(mode)
+                when (mode) {
+                    HaListMode.ALL_LISTS -> syncNow()
+                    HaListMode.APP_CREATED_ONLY -> linkRepository.removeImportedLists()
+                }
+            }
         }
 
         fun setAutoSync(enabled: Boolean) {

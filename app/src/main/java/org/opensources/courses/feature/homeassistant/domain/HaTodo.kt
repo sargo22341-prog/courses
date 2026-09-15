@@ -10,6 +10,8 @@ data class HaTodoList(
     val supportsDescription: Boolean,
     /** False when its integration is stopped (`unavailable`): its items cannot be read or written. */
     val isAvailable: Boolean = true,
+    /** False when items cannot be added, changed and removed (read-only list): it is never imported. */
+    val isEditable: Boolean = true,
 )
 
 /** @property completedAt when the item was completed (epoch millis): the only date Home Assistant keeps on items. */

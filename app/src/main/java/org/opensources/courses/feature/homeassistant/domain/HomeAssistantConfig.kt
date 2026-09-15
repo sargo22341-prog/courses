@@ -1,10 +1,10 @@
 package org.opensources.courses.feature.homeassistant.domain
 
 enum class HaListMode {
-    /** Every `todo.*` entity of Home Assistant can be linked. */
+    /** Every editable Home Assistant list is imported into the app, lists created there later included. */
     ALL_LISTS,
 
-    /** Only the lists this application created in Home Assistant. */
+    /** Only lists created by this application are synchronised; others are linked by hand. */
     APP_CREATED_ONLY,
 }
 
@@ -26,7 +26,7 @@ data class HomeAssistantConfig(
     val isConfigured: Boolean get() = baseUrl.isNotBlank() && hasToken
 
     companion object {
-        val Default = HomeAssistantConfig(false, "", false, HaListMode.ALL_LISTS, autoSync = true)
+        val Default = HomeAssistantConfig(false, "", false, HaListMode.APP_CREATED_ONLY, autoSync = true)
     }
 }
 

@@ -12,6 +12,8 @@ import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.catalog.data.CatalogRepositoryImpl
 import org.opensources.courses.feature.homeassistant.data.HaListLinkRepositoryImpl
+import org.opensources.courses.feature.homeassistant.data.HaLocalListWriter
+import org.opensources.courses.feature.homeassistant.data.sync.RoomSyncLocalStore
 import org.opensources.courses.feature.lists.data.ShoppingListRepositoryImpl
 import org.opensources.courses.feature.shopping.data.ShoppingItemRepositoryImpl
 import java.time.Clock
@@ -24,9 +26,13 @@ class TestRepositories(
     val queue = SyncQueue(database.syncOperationDao(), clock)
     val remoteSync = FakeRemoteSyncEngine()
     private val transactions = RoomTransactionRunner(database)
-    val lists = ShoppingListRepositoryImpl(database.shoppingListDao(), queue, remoteSync, transactions, clock)
-    val items = ShoppingItemRepositoryImpl(database.shoppingItemDao(), database.shoppingListDao(), queue, transactions, clock)
-    val links = HaListLinkRepositoryImpl(database.shoppingListDao(), database.shoppingItemDao(), database.haTrackedListDao(), queue, transactions, clock)
+    private val listDao = database.shoppingListDao()
+    private val itemDao = database.shoppingItemDao()
+    private val writer = HaLocalListWriter(listDao, itemDao, database.haIgnoredListDao(), queue, clock)
+    val lists = ShoppingListRepositoryImpl(listDao, queue, remoteSync, transactions, clock)
+    val items = ShoppingItemRepositoryImpl(itemDao, listDao, queue, transactions, clock)
+    val links = HaListLinkRepositoryImpl(listDao, itemDao, database.haTrackedListDao(), writer, queue, transactions, clock)
+    val syncStore = RoomSyncLocalStore(listDao, itemDao, database.haTrackedListDao(), writer, queue, transactions, clock)
     val catalog = CatalogRepositoryImpl(database.catalogDao(), transactions, clock)
 
     companion object {

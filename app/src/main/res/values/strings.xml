@@ -171,7 +171,15 @@
     <string name="ha_error_protocol">Réponse inattendue de Home Assistant.</string>
     <string name="ha_list_mode">Listes Home Assistant</string>
     <string name="ha_mode_all">Toutes les listes</string>
+    <string name="ha_mode_all_hint">Toutes les listes modifiables de Home Assistant apparaissent dans l’application, même celles créées plus tard. Si le nom existe déjà ici, un numéro est ajouté (« Courses 2 »).</string>
     <string name="ha_mode_app">Uniquement les listes créées par cette application</string>
+    <string name="ha_mode_app_hint">Seules les listes créées depuis l’application sont synchronisées. Une liste existante peut être liée plus bas avec « Choisir ».</string>
+    <string name="ha_mode_app_confirm_title">Retirer les listes importées ?</string>
+    <plurals name="ha_mode_app_confirm_body">
+        <item quantity="one">%d liste importée de Home Assistant sera supprimée de ce téléphone. Elle reste dans Home Assistant.</item>
+        <item quantity="other">%d listes importées de Home Assistant seront supprimées de ce téléphone. Elles restent dans Home Assistant.</item>
+    </plurals>
+    <string name="ha_mode_app_confirm">Retirer</string>
     <string name="ha_lists_section">Listes synchronisées</string>
     <string name="ha_auto_create_lists">Créer automatiquement les nouvelles listes</string>
     <string name="ha_auto_create_on">Chaque liste créée dans l’application est aussi créée dans Home Assistant. Si le nom y existe déjà, un numéro est ajouté (« Courses 2 »).</string>
@@ -188,8 +196,7 @@
     <string name="ha_picker_create">Créer « %1$s » dans Home Assistant</string>
     <string name="ha_picker_none">Ne pas synchroniser</string>
     <string name="ha_picker_loading">Chargement des listes…</string>
-    <string name="ha_picker_empty_all">Aucune liste trouvée dans Home Assistant.</string>
-    <string name="ha_picker_empty_app">Aucune liste créée par cette application.</string>
+    <string name="ha_picker_empty">Aucune liste trouvée dans Home Assistant.</string>
     <string name="ha_auto_sync">Synchronisation automatique</string>
     <string name="ha_sync_section">Synchronisation</string>
     <string name="ha_sync_now">Synchroniser maintenant</string>

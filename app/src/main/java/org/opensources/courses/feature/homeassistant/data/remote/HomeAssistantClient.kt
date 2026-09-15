@@ -48,6 +48,7 @@ class HomeAssistantClient
                         name = state.attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: state.entityId,
                         supportsDescription = features and FEATURE_SET_DESCRIPTION != 0,
                         isAvailable = state.state != STATE_UNAVAILABLE,
+                        isEditable = features and FEATURE_EDIT_ITEMS == FEATURE_EDIT_ITEMS,
                     )
                 }.sortedBy { it.name.lowercase() }
 
@@ -242,6 +243,9 @@ class HomeAssistantClient
             const val TODO_DOMAIN = "todo."
             const val STATE_UNAVAILABLE = "unavailable"
             const val FEATURE_SET_DESCRIPTION = 64
+
+            /** `TodoListEntityFeature` CREATE (1), DELETE (2) and UPDATE (4) items. */
+            const val FEATURE_EDIT_ITEMS = 7
             const val LOCAL_TODO_HANDLER = "local_todo"
             const val FLOW_CREATE_ENTRY = "create_entry"
             const val FLOW_ABORT = "abort"

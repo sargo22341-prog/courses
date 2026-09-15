@@ -2,10 +2,16 @@ package org.opensources.courses.feature.homeassistant.data.sync
 
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * @property importedFromRemote added by the "all lists" mode: its name follows Home Assistant.
+ * @property remoteName Home Assistant name last applied to an imported list.
+ */
 data class SyncListRef(
     val localId: String,
     val name: String,
     val remoteId: String?,
+    val importedFromRemote: Boolean = false,
+    val remoteName: String? = null,
 )
 
 data class SyncItemRef(
@@ -42,8 +48,37 @@ interface SyncLocalStore {
 
     suspend fun markListSynced(listLocalId: String)
 
-    /** The remote list disappeared: keep everything locally, stop synchronising. */
+    /** Home Assistant lists the user removed from the app or unlinked: never imported again. */
+    suspend fun ignoredEntityIds(): Set<String>
+
+    suspend fun ignoreList(entityId: String)
+
+    /**
+     * "All lists" mode: adds the Home Assistant list to the app, linked, under its Home Assistant name
+     * or a free variant of it (« Courses 2 »). Does nothing if it is already linked or ignored.
+     */
+    suspend fun importList(
+        entityId: String,
+        remoteName: String,
+    )
+
+    /** Home Assistant renamed an imported list: the local name follows, kept unique. */
+    suspend fun applyRemoteListName(
+        listLocalId: String,
+        remoteName: String,
+    )
+
+    /** The remote list disappeared and the list must stay: keep everything locally, stop synchronising. */
     suspend fun unlinkList(listLocalId: String)
+
+    /**
+     * The remote list disappeared in "all lists" mode: the local list goes too, unless it holds
+     * changes not sent yet or is the last list, which are only unlinked.
+     */
+    suspend fun removeRemotelyDeletedList(listLocalId: String)
+
+    /** The "all lists" mode was left: removes the lists it imported. */
+    suspend fun removeImportedLists()
 
     suspend fun forgetTrackedList(entityId: String)
 

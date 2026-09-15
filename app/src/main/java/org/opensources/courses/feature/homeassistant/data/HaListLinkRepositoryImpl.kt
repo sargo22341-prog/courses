@@ -1,7 +1,5 @@
 package org.opensources.courses.feature.homeassistant.data
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
@@ -19,27 +17,38 @@ class HaListLinkRepositoryImpl
         private val listDao: ShoppingListDao,
         private val itemDao: ShoppingItemDao,
         private val trackedDao: HaTrackedListDao,
+        private val writer: HaLocalListWriter,
         private val queue: SyncQueue,
         private val transactions: TransactionRunner,
         private val clock: Clock,
     ) : HaListLinkRepository {
-        override fun observeTrackedEntityIds(): Flow<Set<String>> = trackedDao.observeAll().map { lists -> lists.map { it.entityId }.toSet() }
-
         override suspend fun linkToExisting(
             listId: String,
             entityId: String,
         ) {
             transactions.inTransaction {
-                val list = listDao.getById(listId) ?: return@inTransaction
+                if (listDao.getById(listId) == null) return@inTransaction
                 // One Home Assistant list feeds at most one local list.
-                listDao.getAll().filter { it.remoteId == entityId && it.localId != listId }.forEach { unlinkInTransaction(it.localId) }
+                listDao.getAll().filter { it.remoteId == entityId && it.localId != listId }.forEach { other ->
+                    when {
+                        other.importedFromRemote && !writer.hasPendingItemChanges(other.localId) -> writer.remove(other)
+                        else -> writer.unlink(other)
+                    }
+                }
+                // Read after the loop: removing a list may have made this one the default.
+                val list = listDao.getById(listId) ?: return@inTransaction
+                list.remoteId?.takeIf { it != entityId }?.let { writer.ignore(it) }
+                writer.stopIgnoring(entityId)
                 val tracked = trackedDao.getByEntityId(entityId)
+                val sameRemote = list.remoteId == entityId
                 resetItems(listId)
                 listDao.update(
                     list.copy(
                         remoteId = entityId,
                         remoteEntryId = tracked?.configEntryId,
                         createdByApp = tracked != null,
+                        importedFromRemote = list.importedFromRemote && sameRemote,
+                        remoteName = list.remoteName.takeIf { sameRemote },
                         syncStatus = SyncStatus.SYNCED,
                         updatedAt = clock.millis(),
                     ),
@@ -51,9 +60,19 @@ class HaListLinkRepositoryImpl
         override suspend fun createInHomeAssistant(listId: String) {
             transactions.inTransaction {
                 val list = listDao.getById(listId) ?: return@inTransaction
+                // The Home Assistant list it leaves must not come back as an imported copy.
+                list.remoteId?.let { writer.ignore(it) }
                 resetItems(listId)
                 listDao.update(
-                    list.copy(remoteId = null, remoteEntryId = null, createdByApp = true, syncStatus = SyncStatus.PENDING, updatedAt = clock.millis()),
+                    list.copy(
+                        remoteId = null,
+                        remoteEntryId = null,
+                        createdByApp = true,
+                        importedFromRemote = false,
+                        remoteName = null,
+                        syncStatus = SyncStatus.PENDING,
+                        updatedAt = clock.millis(),
+                    ),
                 )
                 // Queued first, so item creations for this list always run after it.
                 queue.enqueue(SyncOperationType.CREATE_LIST, listLocalId = listId)
@@ -62,22 +81,15 @@ class HaListLinkRepositoryImpl
         }
 
         override suspend fun unlink(listId: String) {
-            transactions.inTransaction { unlinkInTransaction(listId) }
+            transactions.inTransaction {
+                val list = listDao.getById(listId) ?: return@inTransaction
+                list.remoteId?.let { writer.ignore(it) }
+                writer.unlink(list)
+            }
         }
 
-        private suspend fun unlinkInTransaction(listId: String) {
-            val list = listDao.getById(listId) ?: return
-            queue.clearList(listId)
-            itemDao.getAllForList(listId).forEach { item ->
-                if (item.isDeleted) {
-                    itemDao.delete(item.localId)
-                } else {
-                    itemDao.update(item.copy(remoteId = null, syncStatus = SyncStatus.LOCAL_ONLY))
-                }
-            }
-            listDao.update(
-                list.copy(remoteId = null, remoteEntryId = null, createdByApp = false, syncStatus = SyncStatus.LOCAL_ONLY, updatedAt = clock.millis()),
-            )
+        override suspend fun removeImportedLists() {
+            transactions.inTransaction { writer.removeImportedLists() }
         }
 
         /** Forgets previous remote ids and pending operations; tombstones are purged. */

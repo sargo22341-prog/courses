@@ -18,6 +18,7 @@ import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
@@ -27,14 +28,19 @@ import javax.inject.Inject
 /**
  * Bidirectional synchronisation with Home Assistant to-do lists.
  *
- * For each synchronised list:
+ * Lists first: deletions of lists removed in the app are sent. In "all lists" mode, every editable
+ * Home Assistant list missing from the app is then imported, and a list deleted in Home Assistant
+ * leaves the app; in "lists created by the app" mode, lists imported earlier are removed and a list
+ * deleted in Home Assistant is only unlinked.
+ *
+ * Then, for each synchronised list:
  * 1. create the remote list if a `CREATE_LIST` operation is pending;
  * 2. read remote items and give local items without uid the uid of a same-named remote item;
  * 3. push pending item operations ([HaItemPusher]);
  * 4. read remote items again and apply them ([HaItemReconciler], [ConflictResolver] rules).
  *
- * Deletions of lists created by the app are sent first. `UPDATE_LIST` (rename) cannot be sent:
- * the Home Assistant REST API offers no way to rename a to-do entity, so the new name stays local.
+ * `UPDATE_LIST` (rename) cannot be sent: the Home Assistant REST API offers no way to rename a to-do
+ * entity, so the new name stays local. A rename made in Home Assistant renames imported lists.
  * A linked list that is unavailable in Home Assistant is skipped: its changes stay queued.
  */
 class HomeAssistantSyncEngine
@@ -70,10 +76,14 @@ class HomeAssistantSyncEngine
 
         override suspend fun synchronize(): SyncOutcome {
             val credentials = config.credentials() ?: return SyncOutcome.Skipped
+            val importsAllLists = config.config.first().listMode == HaListMode.ALL_LISTS
             return try {
+                // Also catches a list imported by a synchronisation that ran while the mode was left.
+                if (!importsAllLists) store.removeImportedLists()
                 var failures = sendListDeletions(credentials)
                 var unavailable = 0
                 val remoteLists = gateway.getTodoLists(credentials).associateBy { it.entityId }
+                if (importsAllLists) importMissingLists(remoteLists.values)
                 for (list in store.synchronizedLists()) {
                     // Its integration is stopped: nothing can be read, nothing is unlinked or lost.
                     if (list.remoteId?.let(remoteLists::get)?.isAvailable == false) {
@@ -82,7 +92,7 @@ class HomeAssistantSyncEngine
                     }
                     failures +=
                         try {
-                            synchronizeList(credentials, list, remoteLists)
+                            synchronizeList(credentials, list, remoteLists, importsAllLists)
                         } catch (exception: HomeAssistantException) {
                             if (exception.isFatal) throw exception
                             1
@@ -98,13 +108,27 @@ class HomeAssistantSyncEngine
             }
         }
 
+        /**
+         * "All lists" mode: adds the editable Home Assistant lists not linked yet, except those the user
+         * removed or unlinked and those whose deletion is still queued.
+         */
+        private suspend fun importMissingLists(remoteLists: Collection<HaTodoList>) {
+            val deleting = queue.pending().filter { it.type == SyncOperationType.DELETE_LIST }.mapNotNull { it.remoteListId }
+            val excluded = store.synchronizedLists().mapNotNull { it.remoteId }.toSet() + deleting + store.ignoredEntityIds()
+            remoteLists
+                .filter { it.isAvailable && it.isEditable && it.entityId !in excluded }
+                .forEach { store.importList(it.entityId, it.name) }
+        }
+
         private suspend fun synchronizeList(
             credentials: HaCredentials,
             list: SyncListRef,
             remoteLists: Map<String, HaTodoList>,
+            importsAllLists: Boolean,
         ): Int {
             val listOperations = queue.pending().filter { it.listLocalId == list.localId }
-            val remoteList = resolveRemoteList(credentials, list, listOperations, remoteLists) ?: return 0
+            val remoteList = resolveRemoteList(credentials, list, listOperations, remoteLists, importsAllLists) ?: return 0
+            if (list.importedFromRemote && list.remoteName != remoteList.name) store.applyRemoteListName(list.localId, remoteList.name)
             queue.complete(listOperations.filter { it.type == SyncOperationType.UPDATE_LIST }.map { it.id })
             val remoteItems = gateway.getItems(credentials, remoteList.entityId)
             reconciler.adoptByName(list.localId, remoteItems)
@@ -119,10 +143,11 @@ class HomeAssistantSyncEngine
             list: SyncListRef,
             listOperations: List<SyncOperation>,
             remoteLists: Map<String, HaTodoList>,
+            importsAllLists: Boolean,
         ): HaTodoList? {
             if (list.remoteId != null) {
                 return remoteLists[list.remoteId] ?: run {
-                    store.unlinkList(list.localId)
+                    if (importsAllLists) store.removeRemotelyDeletedList(list.localId) else store.unlinkList(list.localId)
                     null
                 }
             }
@@ -147,7 +172,11 @@ class HomeAssistantSyncEngine
                         return@forEach
                     }
                 }
-                operation.remoteListId?.let { store.forgetTrackedList(it) }
+                operation.remoteListId?.let { entityId ->
+                    store.forgetTrackedList(entityId)
+                    // Created elsewhere, so not deleted remotely: the "all lists" mode must not bring it back.
+                    if (operation.remoteEntryId == null) store.ignoreList(entityId)
+                }
                 queue.complete(listOf(operation.id))
             }
             return failures

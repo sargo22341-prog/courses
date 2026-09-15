@@ -79,8 +79,9 @@ class ShoppingListRepositoryImpl
         }
 
         /**
-         * Deleting a list linked to a Home Assistant list the user created elsewhere only unlinks it:
-         * the remote list is removed only when this application created it.
+         * The remote list is deleted only when this application created it (config entry known). A
+         * linked list created elsewhere stays remote: its deletion operation, without config entry, only
+         * tells the remote not to bring it back.
          */
         override suspend fun deleteList(id: String): Boolean =
             transactions.inTransaction {
@@ -88,12 +89,13 @@ class ShoppingListRepositoryImpl
                 val list = lists.firstOrNull { it.localId == id } ?: return@inTransaction true
                 if (lists.size <= 1) return@inTransaction false
                 queue.clearList(id)
-                if (list.createdByApp && list.remoteEntryId != null) {
+                val remoteEntryId = list.remoteEntryId.takeIf { list.createdByApp }
+                if (list.remoteId != null || remoteEntryId != null) {
                     queue.enqueue(
                         SyncOperationType.DELETE_LIST,
                         listLocalId = id,
                         remoteListId = list.remoteId,
-                        remoteEntryId = list.remoteEntryId,
+                        remoteEntryId = remoteEntryId,
                     )
                 }
                 dao.delete(id)

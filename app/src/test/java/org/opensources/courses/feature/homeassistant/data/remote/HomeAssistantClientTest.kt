@@ -72,9 +72,27 @@ class HomeAssistantClientTest {
             assertEquals(listOf("todo.courses", "todo.shopping_list"), lists.map { it.entityId })
             assertTrue(lists[0].supportsDescription)
             assertFalse(lists[1].supportsDescription)
+            assertTrue(lists.all { it.isEditable })
             val request = server.takeRequest()
             assertEquals("/api/states", request.url.encodedPath)
             assertEquals("Bearer secret-token", request.headers["Authorization"])
+        }
+
+    @Test
+    fun `a list that cannot add, change and remove items is read-only`() =
+        runTest {
+            respond(
+                """
+                [
+                  {"entity_id":"todo.lecture","state":"3","attributes":{"friendly_name":"Lecture","supported_features":1}},
+                  {"entity_id":"todo.sans_suppression","state":"0","attributes":{"friendly_name":"Sans suppression","supported_features":5}}
+                ]
+                """.trimIndent(),
+            )
+
+            val lists = client.getTodoLists(credentials)
+
+            assertTrue(lists.none { it.isEditable })
         }
 
     @Test

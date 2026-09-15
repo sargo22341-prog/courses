@@ -7,10 +7,12 @@ import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
+import org.opensources.courses.feature.homeassistant.data.HaLocalListWriter
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListEntity
-import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
+import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.lists.data.ShoppingListDao
+import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.data.ShoppingItemDao
 import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
 import java.time.Clock
@@ -23,12 +25,13 @@ class RoomSyncLocalStore
         private val listDao: ShoppingListDao,
         private val itemDao: ShoppingItemDao,
         private val trackedDao: HaTrackedListDao,
-        private val linkRepository: HaListLinkRepository,
+        private val writer: HaLocalListWriter,
         private val queue: SyncQueue,
         private val transactions: TransactionRunner,
         private val clock: Clock,
     ) : SyncLocalStore {
-        override suspend fun synchronizedLists(): List<SyncListRef> = listDao.getSynchronized().map { SyncListRef(it.localId, it.name, it.remoteId) }
+        override suspend fun synchronizedLists(): List<SyncListRef> =
+            listDao.getSynchronized().map { SyncListRef(it.localId, it.name, it.remoteId, it.importedFromRemote, it.remoteName) }
 
         override fun observeLinkedEntityIds(): Flow<Set<String>> =
             listDao.observeAll().map { lists -> lists.mapNotNull { it.remoteId }.toSet() }.distinctUntilChanged()
@@ -56,7 +59,70 @@ class RoomSyncLocalStore
             if (list.remoteId != null && list.syncStatus == SyncStatus.PENDING) listDao.update(list.copy(syncStatus = SyncStatus.SYNCED))
         }
 
-        override suspend fun unlinkList(listLocalId: String) = linkRepository.unlink(listLocalId)
+        override suspend fun ignoredEntityIds(): Set<String> = writer.ignoredEntityIds()
+
+        override suspend fun ignoreList(entityId: String) = writer.ignore(entityId)
+
+        override suspend fun importList(
+            entityId: String,
+            remoteName: String,
+        ) {
+            transactions.inTransaction {
+                val lists = listDao.getAll()
+                if (lists.any { it.remoteId == entityId } || entityId in writer.ignoredEntityIds()) return@inTransaction
+                val tracked = trackedDao.getByEntityId(entityId)
+                val now = clock.millis()
+                listDao.insert(
+                    ShoppingListEntity(
+                        localId = UUID.randomUUID().toString(),
+                        name = HaListNameAllocator.uniqueName(remoteName, lists.map { it.name }),
+                        isDefault = lists.none { it.isDefault },
+                        createdAt = now,
+                        updatedAt = now,
+                        remoteId = entityId,
+                        remoteEntryId = tracked?.configEntryId,
+                        createdByApp = tracked != null,
+                        importedFromRemote = true,
+                        remoteName = remoteName,
+                        syncStatus = SyncStatus.SYNCED,
+                    ),
+                )
+            }
+        }
+
+        override suspend fun applyRemoteListName(
+            listLocalId: String,
+            remoteName: String,
+        ) {
+            transactions.inTransaction {
+                val list = listDao.getById(listLocalId) ?: return@inTransaction
+                if (!list.importedFromRemote || list.remoteName == remoteName) return@inTransaction
+                val otherNames = listDao.getAll().filter { it.localId != listLocalId }.map { it.name }
+                listDao.update(
+                    list.copy(name = HaListNameAllocator.uniqueName(remoteName, otherNames), remoteName = remoteName, updatedAt = clock.millis()),
+                )
+            }
+        }
+
+        override suspend fun unlinkList(listLocalId: String) {
+            transactions.inTransaction { listDao.getById(listLocalId)?.let { writer.unlink(it) } }
+        }
+
+        override suspend fun removeRemotelyDeletedList(listLocalId: String) {
+            transactions.inTransaction {
+                val list = listDao.getById(listLocalId) ?: return@inTransaction
+                // Changes not sent yet are never lost: such a list stays, unlinked.
+                if (writer.hasPendingItemChanges(listLocalId)) {
+                    writer.unlink(list)
+                } else {
+                    writer.remove(list)
+                }
+            }
+        }
+
+        override suspend fun removeImportedLists() {
+            transactions.inTransaction { writer.removeImportedLists() }
+        }
 
         override suspend fun forgetTrackedList(entityId: String) = trackedDao.delete(entityId)
 

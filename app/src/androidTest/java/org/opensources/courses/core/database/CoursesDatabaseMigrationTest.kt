@@ -50,7 +50,32 @@ class CoursesDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun version2ListsAreKeptAndAreNotImportedLists() {
+        helper.createDatabase(DB_NAME_V2, 2).use { db ->
+            db.execSQL(
+                "INSERT INTO shopping_lists (localId, name, isDefault, createdAt, updatedAt, remoteId, remoteEntryId, createdByApp, syncStatus) " +
+                    "VALUES ('l1', 'Courses', 1, 0, 0, 'todo.courses', NULL, 0, 'SYNCED')",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME_V2, 3, true).use { db ->
+            db.query("SELECT name, remoteId, importedFromRemote, remoteName FROM shopping_lists WHERE localId = 'l1'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Courses", cursor.getString(0))
+                assertEquals("todo.courses", cursor.getString(1))
+                assertEquals(0, cursor.getInt(2))
+                assertTrue(cursor.isNull(3))
+            }
+            db.query("SELECT COUNT(*) FROM ha_ignored_lists").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB_NAME = "migration-test.db"
+        const val DB_NAME_V2 = "migration-test-v2.db"
     }
 }

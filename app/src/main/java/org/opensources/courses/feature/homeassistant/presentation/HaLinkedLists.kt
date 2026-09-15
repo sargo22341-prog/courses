@@ -22,7 +22,6 @@ import org.opensources.courses.R
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.StatusText
 import org.opensources.courses.core.designsystem.component.SwitchRow
-import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.lists.domain.ShoppingList
 
 @Composable
@@ -86,8 +85,7 @@ fun HaListPickerDialog(
                     is RemoteListsState.Failed -> StatusText(stringResource(remote.message.text), isError = true)
                     is RemoteListsState.Loaded ->
                         if (state.pickerOptions.isEmpty()) {
-                            val empty = if (state.config.listMode == HaListMode.APP_CREATED_ONLY) R.string.ha_picker_empty_app else R.string.ha_picker_empty_all
-                            StatusText(stringResource(empty), isError = false)
+                            StatusText(stringResource(R.string.ha_picker_empty), isError = false)
                         } else {
                             LazyColumn(Modifier.heightIn(max = 280.dp)) {
                                 items(state.pickerOptions, key = { it.entityId }) { option ->

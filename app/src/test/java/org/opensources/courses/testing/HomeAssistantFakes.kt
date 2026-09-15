@@ -26,7 +26,7 @@ import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 class FakeHaConfigRepository(
     var storedCredentials: HaCredentials? = HaCredentials("http://ha.local:8123", "token"),
 ) : HaConfigRepository {
-    override val config = MutableStateFlow(HomeAssistantConfig(true, "http://ha.local:8123", true, HaListMode.ALL_LISTS, autoSync = true))
+    override val config = MutableStateFlow(HomeAssistantConfig(true, "http://ha.local:8123", true, HaListMode.APP_CREATED_ONLY, autoSync = true))
 
     override suspend fun credentials(): HaCredentials? = storedCredentials
 
@@ -42,7 +42,9 @@ class FakeHaConfigRepository(
 
     override suspend fun setEnabled(enabled: Boolean) = Unit
 
-    override suspend fun setListMode(mode: HaListMode) = Unit
+    override suspend fun setListMode(mode: HaListMode) {
+        config.value = config.value.copy(listMode = mode)
+    }
 
     override suspend fun setAutoSync(enabled: Boolean) = Unit
 
@@ -73,6 +75,7 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
     val deletedEntries = mutableListOf<String>()
     var failure: HaErrorKind? = null
     var failingUpdates: HaErrorKind? = null
+    var failingDeletions: HaErrorKind? = null
     private var nextUid = 1
 
     fun addRemote(
@@ -166,7 +169,9 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         configEntryId: String,
     ) {
         check()
+        failingDeletions?.let { throw HomeAssistantException(it) }
         deletedEntries += configEntryId
+        lists.remove(configEntryId.removePrefix("entry-"))
     }
 }
 
@@ -179,9 +184,56 @@ class FakeSyncLocalStore(
     val catalogProductIds = mutableMapOf<String, String?>()
     val tracked = mutableSetOf<String>()
     val unlinked = mutableSetOf<String>()
+    val ignored = mutableSetOf<String>()
+    val removedLists = mutableSetOf<String>()
     private var nextId = 1
 
     override suspend fun synchronizedLists(): List<SyncListRef> = lists.values.toList()
+
+    override suspend fun ignoredEntityIds(): Set<String> = ignored.toSet()
+
+    override suspend fun ignoreList(entityId: String) {
+        ignored += entityId
+    }
+
+    override suspend fun importList(
+        entityId: String,
+        remoteName: String,
+    ) {
+        if (entityId in ignored || lists.values.any { it.remoteId == entityId }) return
+        val id = "imported${nextId++}"
+        val name = HaListNameAllocator.uniqueName(remoteName, lists.values.map { it.name })
+        lists[id] = SyncListRef(id, name, entityId, importedFromRemote = true, remoteName = remoteName)
+    }
+
+    override suspend fun applyRemoteListName(
+        listLocalId: String,
+        remoteName: String,
+    ) {
+        val list = lists.getValue(listLocalId)
+        if (!list.importedFromRemote || list.remoteName == remoteName) return
+        val name = HaListNameAllocator.uniqueName(remoteName, lists.values.filter { it.localId != listLocalId }.map { it.name })
+        lists[listLocalId] = list.copy(name = name, remoteName = remoteName)
+    }
+
+    override suspend fun removeRemotelyDeletedList(listLocalId: String) {
+        if (queue.pending().any { it.listLocalId == listLocalId && it.type.isItemOperation }) {
+            unlinkList(listLocalId)
+        } else {
+            removeList(listLocalId)
+        }
+    }
+
+    override suspend fun removeImportedLists() {
+        lists.values.filter { it.importedFromRemote }.forEach { removeList(it.localId) }
+    }
+
+    private suspend fun removeList(listLocalId: String) {
+        lists.remove(listLocalId)
+        items.values.removeAll { it.listLocalId == listLocalId }
+        removedLists += listLocalId
+        queue.clearList(listLocalId)
+    }
 
     override fun observeLinkedEntityIds(): Flow<Set<String>> = flowOf(lists.values.mapNotNull { it.remoteId }.toSet())
 

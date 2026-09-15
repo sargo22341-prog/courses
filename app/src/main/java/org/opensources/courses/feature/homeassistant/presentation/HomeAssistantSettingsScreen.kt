@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -24,12 +23,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.opensources.courses.R
 import org.opensources.courses.core.designsystem.component.BackTopBar
-import org.opensources.courses.core.designsystem.component.RadioRow
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.core.designsystem.component.StatusText
 import org.opensources.courses.core.designsystem.component.SwitchRow
 import org.opensources.courses.core.scanner.QrCodeScannerDialog
-import org.opensources.courses.feature.homeassistant.domain.HaListMode
 
 @Composable
 fun HomeAssistantRoute(
@@ -63,7 +60,7 @@ fun HomeAssistantRoute(
                 )
             }
             if (state.config.enabled) {
-                ListModeCard(state.config.listMode, viewModel::setListMode)
+                HaListModeCard(state.config.listMode, state.importedListCount, viewModel::setListMode)
                 HaLinkedListsCard(state, onAutoCreateChange = viewModel::setAutoCreateLists, onChoose = viewModel::openPicker)
                 SyncCard(state, onAutoSyncChange = viewModel::setAutoSync, onSyncNow = viewModel::syncNow)
             }
@@ -91,23 +88,6 @@ fun HomeAssistantRoute(
             onUnlink = { viewModel.unlink(list.id) },
             onDismiss = { viewModel.closePicker(list.id) },
         )
-    }
-}
-
-@Composable
-private fun ListModeCard(
-    mode: HaListMode,
-    onModeChange: (HaListMode) -> Unit,
-) {
-    SettingsCard(stringResource(R.string.ha_list_mode)) {
-        Column(Modifier.selectableGroup()) {
-            RadioRow(stringResource(R.string.ha_mode_all), mode == HaListMode.ALL_LISTS, onClick = { onModeChange(HaListMode.ALL_LISTS) })
-            RadioRow(
-                stringResource(R.string.ha_mode_app),
-                mode == HaListMode.APP_CREATED_ONLY,
-                onClick = { onModeChange(HaListMode.APP_CREATED_ONLY) },
-            )
-        }
     }
 }
 

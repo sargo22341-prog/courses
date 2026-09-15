@@ -16,6 +16,9 @@ aucun APK n'était publié.
   pull request et chaque push.
 - À chaque push sur `main` validé, il monte le patch de la version, compile l'APK release, le
   signe, committe la version, pose le tag `vX.Y.Z` et publie une GitHub Release avec l'APK.
+- La description de la release est le texte écrit à la main dans `RELEASE_NOTES.md`, sous une
+  ligne marqueur ; `scripts/release-notes.sh` le relève puis vide la liste dans le même commit que
+  la montée de version. Sans notes, GitHub génère la liste des commits.
 - La version vit dans `app/version.properties`, lu par Gradle et modifié par
   `scripts/bump-version.sh` ; `versionCode` augmente de 1 à chaque release.
 - La clé de production est aussi stockée dans les secrets GitHub (base64 + mots de passe). La

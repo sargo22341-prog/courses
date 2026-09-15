@@ -1,5 +1,6 @@
 # Compilation et tests sur chaque pull request et chaque push.
-# Sur main : montée de version, APK release signé, commit + tag vX.Y.Z et GitHub Release.
+# Sur main : montée de version, APK release signé, commit + tag vX.Y.Z et GitHub Release
+# dont le texte vient de RELEASE_NOTES.md (liste vidée dans le commit de version).
 # Fonctionnement, secrets requis et limites : docs/release.md et docs/adr/0021-release-automatique-github-actions.md.
 name: CI
 
@@ -95,6 +96,15 @@ jobs:
             exit 1
           fi
 
+      - name: Relever puis vider les notes de version
+        id: notes
+        run: |
+          # Les notes partent dans la release ; la liste vidée part dans le commit de version.
+          notes="$RUNNER_TEMP/release-notes.md"
+          bash scripts/release-notes.sh extract "$notes"
+          bash scripts/release-notes.sh reset
+          echo "path=$notes" >> "$GITHUB_OUTPUT"
+
       - name: Compiler l'APK release
         run: |
           chmod +x gradlew
@@ -141,4 +151,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION_NAME: ${{ steps.version.outputs.name }}
           APK: ${{ steps.apk.outputs.path }}
-        run: gh release create "v$VERSION_NAME" "$APK" --title "courses $VERSION_NAME" --generate-notes
+          NOTES: ${{ steps.notes.outputs.path }}
+        run: |
+          if [[ -s "$NOTES" ]]; then
+            notes=(--notes-file "$NOTES")
+          else
+            notes=(--generate-notes)
+          fi
+          gh release create "v$VERSION_NAME" "$APK" --title "courses $VERSION_NAME" "${notes[@]}"

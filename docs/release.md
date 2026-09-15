@@ -13,12 +13,28 @@ Le workflow `.github/workflows/ci.yml` :
 - sur **chaque push sur `main`**, si ces vérifications passent :
   1. `scripts/bump-version.sh` incrémente le patch de `versionName` et `versionCode` dans
      `app/version.properties` ;
-  2. compile `assembleRelease`, signe l'APK avec `apksigner` et vérifie la signature ;
-  3. committe `Version X.Y.Z [skip ci]`, crée le tag `vX.Y.Z` et pousse les deux de façon
-     atomique ;
-  4. publie une GitHub Release `vX.Y.Z` avec `courses-X.Y.Z.apk` et des notes générées.
+  2. `scripts/release-notes.sh` relève les notes de `RELEASE_NOTES.md` puis vide la liste ;
+  3. compile `assembleRelease`, signe l'APK avec `apksigner` et vérifie la signature ;
+  4. committe `Version X.Y.Z [skip ci]` (version montée **et** notes vidées), crée le tag
+     `vX.Y.Z` et pousse les deux de façon atomique ;
+  5. publie une GitHub Release `vX.Y.Z` avec `courses-X.Y.Z.apk` ; sa description est le texte
+     relevé à l'étape 2, ou la liste des commits générée par GitHub s'il était vide.
 - **Actions → CI → Run workflow** sur `main` permet de choisir `minor` ou `major` au lieu de
   `patch`.
+
+### Notes de version
+
+Écrire les changements dans `RELEASE_NOTES.md`, à la racine, **sous** la ligne `<!-- notes -->`
+(Markdown libre, en pratique une ligne `- …` par changement), et les committer avec le travail
+concerné. Tout ce qui suit le marqueur devient la description de la prochaine release ; ce qui le
+précède (titre, mode d'emploi) est conservé. Si le marqueur est supprimé, le job de release échoue
+avant toute publication.
+
+Les notes ne sont vidées que dans le commit de version : si le push de ce commit est refusé,
+elles restent en place et partent avec la release suivante. Après une release, `git pull` avant
+d'ajouter de nouvelles notes, sinon la liste vidée par la CI entre en conflit avec l'ancienne.
+
+### Exécution sur GitHub uniquement
 
 Le workflow ne s'exécute que sur GitHub : un serveur Gitea ou Forgejo qui héberge une copie du
 dépôt lit aussi `.github/workflows`, mais ses jobs y sont ignorés (`github.server_url`). Le commit

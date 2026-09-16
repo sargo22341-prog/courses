@@ -1,5 +1,8 @@
 package org.opensources.courses.navigation
 
+import androidx.activity.BackEventCompat
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,11 +34,13 @@ class NavigationTransitionsTest {
     val composeRule = createComposeRule()
 
     private lateinit var navController: NavHostController
+    private lateinit var backDispatcher: OnBackPressedDispatcher
 
     @Before
     fun setUp() {
         composeRule.setContent {
             navController = rememberNavController()
+            backDispatcher = checkNotNull(LocalOnBackPressedDispatcherOwner.current).onBackPressedDispatcher
             NavHost(
                 navController = navController,
                 startDestination = FIRST,
@@ -45,6 +50,8 @@ class NavigationTransitionsTest {
                 exitTransition = { screenExit() },
                 popEnterTransition = { screenPopEnter() },
                 popExitTransition = { screenPopExit() },
+                predictivePopEnterTransition = { screenPopEnter() },
+                predictivePopExitTransition = { screenPopExit() },
             ) {
                 composable(FIRST) { Box(Modifier.fillMaxSize().background(Color.Red)) }
                 composable(SECOND) { Box(Modifier.fillMaxSize().background(Color.Blue)) }
@@ -63,6 +70,22 @@ class NavigationTransitionsTest {
         composeRule.runOnUiThread { navController.popBackStack() }
         assertScreensSideBySideHalfway()
     }
+
+    /** Without its own transitions, the back gesture would fade and shrink the screen instead. */
+    @Test
+    fun backGestureSlidesTheScreensLikeGoingBack() {
+        composeRule.runOnUiThread { navController.navigate(SECOND) }
+        composeRule.waitForIdle()
+        composeRule.mainClock.autoAdvance = false
+
+        composeRule.runOnUiThread {
+            backDispatcher.dispatchOnBackStarted(backEvent(progress = 0f))
+            backDispatcher.dispatchOnBackProgressed(backEvent(progress = 0.5f))
+        }
+        assertScreensSideBySideHalfway()
+    }
+
+    private fun backEvent(progress: Float) = BackEventCompat(0f, 0f, progress, BackEventCompat.EDGE_LEFT)
 
     /** Going forward the first screen leaves on the left; going back it returns from the left. */
     private fun assertScreensSideBySideHalfway() {

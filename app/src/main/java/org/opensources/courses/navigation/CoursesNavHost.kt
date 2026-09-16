@@ -33,6 +33,9 @@ fun CoursesNavHost(
         exitTransition = { screenExit() },
         popEnterTransition = { screenPopEnter() },
         popExitTransition = { screenPopExit() },
+        // The back gesture has its own transitions (a fade and shrink by default): same slide instead.
+        predictivePopEnterTransition = { screenPopEnter() },
+        predictivePopExitTransition = { screenPopExit() },
     ) {
         composable<WelcomeDestination> {
             WelcomeRoute(

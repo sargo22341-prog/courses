@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import org.opensources.courses.core.model.SyncStatus
 
 @Dao
 interface ShoppingItemDao {
@@ -40,4 +41,19 @@ interface ShoppingItemDao {
 
     @Query("DELETE FROM shopping_items WHERE localId = :id")
     suspend fun delete(id: String)
+
+    /** Checked items of the list, tombstones apart; returns how many were deleted. */
+    @Query("DELETE FROM shopping_items WHERE listLocalId = :listId AND isChecked = 1 AND isDeleted = 0")
+    suspend fun deleteChecked(listId: String): Int
+
+    /** Local deletions that will no longer be sent anywhere. */
+    @Query("DELETE FROM shopping_items WHERE listLocalId = :listId AND isDeleted = 1")
+    suspend fun deleteTombstones(listId: String)
+
+    /** Forgets the remote ids of the list's items, which take [status]. */
+    @Query("UPDATE shopping_items SET remoteId = NULL, syncStatus = :status WHERE listLocalId = :listId")
+    suspend fun detachFromRemote(
+        listId: String,
+        status: SyncStatus,
+    )
 }

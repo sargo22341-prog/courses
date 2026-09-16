@@ -25,13 +25,15 @@ combine trois sources, toutes stockées dans Room :
   Seuls les noms dans la langue de l'application sont importés. Entrées nommées / produits gardés
   après nettoyage (estimation) : français ~10 700 / ~6 500, anglais ~9 200 / ~7 600, allemand
   ~3 600 / ~3 200, espagnol ~3 600 / ~2 600, italien ~3 700 / ~2 300, portugais ~1 300 / ~900.
+- Lecture en flux : seuls les noms dans la langue de l'application sont gardés ; ceux des autres
+  langues sont écartés dès leur lecture (`taxonomyJson`) au lieu d'être tous gardés en mémoire.
 - Nettoyage (`TaxonomyCatalogMapper`) : nom obligatoire dans la langue de l'application ;
   exclusion des appellations protégées (AOP/IGP) et des entrées liées à une origine ; au plus
   4 mots et 40 caractères ; aucun chiffre ; dédoublonnage sur le nom normalisé en gardant l'entrée
   la plus générique. Il reste quelques milliers de produits : la base reste petite.
-- Stockage : `catalog_products` (nom, nom normalisé indexé, catégorie, rayon, parent, source, score
-  de base, version d'import), `catalog_aliases`, et `product_usage` (habitudes, **séparées** du
-  catalogue pour ne jamais être effacées par une mise à jour,
+- Stockage : `catalog_products` (nom, nom normalisé indexé, catégorie, rayon, source, score de
+  base, version d'import), `catalog_aliases` (alias et alias normalisé), et `product_usage`
+  (habitudes, **séparées** du catalogue pour ne jamais être effacées par une mise à jour,
   [ADR 0008](adr/0008-habitudes-separees-du-catalogue.md)).
 
 ## Mise à jour hebdomadaire, sans backend
@@ -54,23 +56,31 @@ ouverture de l'app → date du dernier téléchargement (DataStore)
   (`TaxonomyCatalogMapper.FORMAT_VERSION`, 1 = rayons), un catalogue importé par une version
   précédente de l'application est retéléchargé une fois en entier au prochain démarrage avec
   réseau, même s'il a moins de 7 jours.
+- **Catalogue de base** : sa version est connue sans lire le fichier
+  (`AssetSeedCatalogSource.VERSION`, gardée égale à celle de `seed.json` par un test) ; le fichier
+  n'est lu que s'il faut l'importer.
 - **Langue** : un catalogue importé dans une autre langue que celle de l'application
   (`catalog_language` dans DataStore) est retéléchargé en entier dès qu'un réseau est disponible
   ([Langues](langues.md)).
 
 ## Recherche et classement
 
-`SearchSuggestionsUseCase` (100 % local) :
+`SearchSuggestionsUseCase` (100 % local), exécuté hors du fil principal (dispatcher `Default`) 60 ms
+après la dernière frappe ; une frappe suivante annule la recherche en cours :
 
 1. Normalisation (`TextNormalizer`) : minuscules, sans accents, `œ → oe`, `ß → ss`, ponctuation →
-   espaces, identique dans toutes les langues.
-2. Présélection SQL : nom ou alias contenant la saisie.
+   espaces, identique dans toutes les langues. Seule la saisie est normalisée à chaque frappe : les
+   noms et alias du catalogue sont comparés sous leur forme normalisée enregistrée dans Room.
+2. Présélection SQL : nom ou alias contenant la saisie (300 candidats au plus), en ne lisant que
+   les colonnes utiles au classement.
 3. Classement (`SuggestionRanker`), par paliers de 1 000 points que les bonus ne peuvent pas
    franchir : **exact > préfixe > début de mot > partiel > approximatif**. À palier égal :
    fréquence d'utilisation (+20 par ajout, plafonné), récence (+150 sur 3 jours, +100 sur
    14 jours, +40 sur 60 jours), score de base du catalogue, puis nom le plus court.
 4. Si les résultats sont insuffisants : recherche tolérante aux fautes (`FuzzyMatcher`, distance
-   d'édition avec transpositions sur les préfixes de mots : `lati → Lait`, `tomatos → Tomates`).
+   d'édition avec transpositions sur les préfixes de mots : `lati → Lait`, `tomatos → Tomates`),
+   sur les produits dont un mot commence par la même lettre (3 000 au plus : en français, environ
+   2 400 des 6 800 produits partagent la lettre la plus fréquente, « d » de « de »).
 
 ## Ajout d'un article
 

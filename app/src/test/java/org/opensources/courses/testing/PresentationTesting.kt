@@ -12,10 +12,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
+import org.opensources.courses.core.sync.SyncRequest
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
 
 /** `viewModelScope` runs on the test scheduler, eagerly. */
@@ -32,7 +34,7 @@ class MainDispatcherRule(
 class FakeRemoteSyncEngine : RemoteSyncEngine {
     override val isEnabled = MutableStateFlow(true)
     override val isAutoSyncEnabled = MutableStateFlow(true)
-    override val remoteChanges = MutableSharedFlow<Unit>()
+    override val remoteChanges = MutableSharedFlow<RemoteChange>()
     var outcome: SyncOutcome = SyncOutcome.Success
     var pause: CompletableDeferred<Unit>? = null
     var synchronizations = 0
@@ -40,7 +42,7 @@ class FakeRemoteSyncEngine : RemoteSyncEngine {
 
     override suspend fun synchronizesNewLists(): Boolean = false
 
-    override suspend fun synchronize(): SyncOutcome {
+    override suspend fun synchronize(request: SyncRequest): SyncOutcome {
         synchronizations++
         pause?.await()
         return outcome

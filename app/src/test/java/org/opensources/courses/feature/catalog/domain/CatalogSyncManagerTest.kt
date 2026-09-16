@@ -26,7 +26,7 @@ class CatalogSyncManagerTest {
     private val connectivity = FakeConnectivityObserver(online = true)
     private val manager = CatalogSyncManager(remote, seed, repository, store, languages, connectivity, fixedClock())
 
-    private val products = listOf(CatalogImportProduct("en:milks", "Laits", "Produits laitiers", null, 3))
+    private val products = listOf(CatalogImportProduct("en:milks", "Laits", "Produits laitiers", 3))
 
     /** A catalog imported by the current version of the app, [age] ago. */
     private fun imported(
@@ -160,6 +160,8 @@ class CatalogSyncManagerTest {
 
             assertFalse(manager.importSeedIfNeeded())
             assertNull(repository.seedVersion)
+            // Nothing to import: the bundled file is not even read.
+            assertTrue(seed.requested.isEmpty())
             assertEquals(0, manager.revision.value)
         }
 
@@ -206,9 +208,11 @@ class CatalogSyncManagerTest {
     private class FakeSeedSource : SeedCatalogSource {
         val requested = mutableListOf<AppLanguage>()
 
-        override suspend fun load(language: AppLanguage): SeedCatalog {
+        override val version: Int = SEED_VERSION
+
+        override suspend fun load(language: AppLanguage): List<CatalogImportProduct> {
             requested += language
-            return SeedCatalog(SEED_VERSION, listOf(CatalogImportProduct("seed:lait", "Leite", "Laticínios", null, 8)))
+            return listOf(CatalogImportProduct("seed:lait", "Leite", "Laticínios", 8))
         }
     }
 

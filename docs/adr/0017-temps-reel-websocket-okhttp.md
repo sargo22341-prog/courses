@@ -1,6 +1,7 @@
 # ADR 0017 — Temps réel Home Assistant par WebSocket OkHttp, un seul chemin de fusion
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; la synchronisation déclenchée par un événement est ciblée sur sa liste
+  ([ADR 0024](0024-synchronisation-ciblee.md))
 - **Voir aussi** : [Home Assistant](../home-assistant.md#suivi-des-changements-faits-dans-home-assistant)
 
 ## Contexte

@@ -41,13 +41,15 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 
 | Sujet | Tests |
 | --- | --- |
-| Autocomplétion, ranking, recherche floue | `SuggestionRankerTest`, `SearchSuggestionsUseCaseTest`, `FuzzyMatcherTest`, `TextNormalizerTest` |
+| Autocomplétion, ranking, recherche floue (hors fil principal, formes normalisées enregistrées) | `SuggestionRankerTest`, `SearchSuggestionsUseCaseTest`, `FuzzyMatcherTest`, `TextNormalizerTest` |
 | Création, doublons, produit personnalisé | `AddItemUseCaseTest` |
 | Création, coche/décoche, suppression, file (Room réel) | `RoomRepositoriesTest` |
-| Migrations Room (données de la version 1 conservées) | `CoursesDatabaseMigrationTest` |
+| Migrations Room (données des versions 1, 2 et 3 conservées) | `CoursesDatabaseMigrationTest` |
 | File de synchronisation | `SyncQueueTest` |
 | Refus, abandon des opérations, lecture unique de la file, texte modifié par Home Assistant, token non administrateur | `HomeAssistantRefusedChangesTest`, `HomeAssistantClientTest`, `HaGivenUpChangesRoomTest` (Room réel) |
-| Synchronisation périodique au premier plan seulement, exécution exclusive | `SyncCoordinatorTest`, `ForgetHomeAssistantUseCaseTest` |
+| Synchronisation périodique au premier plan seulement (10 min en temps réel), demandes fusionnées, exécution exclusive | `SyncCoordinatorTest`, `ForgetHomeAssistantUseCaseTest` |
+| Synchronisation ciblée (listes reprises ou relues, liste de l'événement seule, une transaction par liste) | `HomeAssistantTargetedSyncTest` |
+| Liaison, déliaison et suppression des achetés d'une liste liée (Room réel) | `HaListLinkRoomTest` |
 | Oublier la connexion, adresse invalide refusée, version du token | `HaConfigRepositoryImplTest` (DataStore réel), `ForgetHomeAssistantUseCaseTest`, `HaGivenUpChangesRoomTest`, `HaConnectionCardTest` |
 | ViewModels (premier paramétrage, suggestion exacte, tirer pour actualiser, suppression annulable, liste créée, accueil) | `HomeAssistantSettingsViewModelTest`, `ShoppingViewModelTest`, `ListsViewModelTest`, `WelcomeViewModelTest`, `ListsRouteTest` |
 | Conflits | `ConflictResolverTest` |
@@ -56,7 +58,7 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Création automatique des listes, noms déjà pris, premier paramétrage | `HaListNameAllocatorTest`, `HomeAssistantClientTest`, `HomeAssistantSyncEngineTest`, `RoomRepositoriesTest`, `HaListPickerDialogTest` |
 | Modes des listes (import, noms, renommage, suppression, listes ignorées, retour au mode par défaut) | `HomeAssistantListImportTest`, `HaListImportRoomTest` (Room réel), `HaListModeCardTest`, `HomeAssistantClientTest`, `CoursesDatabaseMigrationTest` |
 | Changements des deux côtés, catalogue, liste indisponible | `HomeAssistantBidirectionalSyncTest`, `ConflictResolverTest`, `HaListPickerDialogTest` |
-| Temps réel (dont token refusé sans nouvel essai), synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
+| Temps réel (liste de chaque événement, connexion perdue, token refusé sans nouvel essai), synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
 | Âge et format du catalogue, synchronisation forcée | `CatalogFreshnessPolicyTest`, `CatalogSyncManagerTest`, `TaxonomyCatalogMapperTest` |
 | Réimport du catalogue avec le même `ETag` dans une autre langue (aucun produit de l'ancienne langue ne reste) | `RoomRepositoriesTest` (Room réel) |
 | Catégories (import, singulier/pluriel, rangement, priorité du catalogue de base, pas de requête en cochant) | `TaxonomyCatalogMapperTest`, `SeedCatalogMapperTest`, `CategoryNameKeysTest`, `GroupItemsByCategoryUseCaseTest`, `RoomRepositoriesTest`, `ShoppingScreenTest` |
@@ -65,8 +67,8 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
 | Parcours UI (affichés en français quelle que soit la langue du téléphone, `FrenchCoursesTheme`) | `ShoppingScreenTest` (dont suppression des achetés avec confirmation, glissement et « Annuler »), `WelcomeScreenTest` (choix de la langue), `HaConnectionCardTest` (connexion repliée, oubli, avertissement `http://`), `HaListPickerDialogTest` (zones de 48 dp), `ListsRouteTest`, `ThemeModeSelectorTest` |
 | Transitions entre écrans | `NavigationTransitionsTest` |
-| Icônes des barres système selon le thème choisi | `SystemBarsAppearanceTest` |
-| QR code du token (décodage ZXing, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
+| Icônes des barres système selon le thème choisi, palette sombre reconnue | `SystemBarsAppearanceTest`, `ThemePaletteTest` |
+| QR code du token (décodage ZXing du carré central, codes inversés une image sur deux, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
 | Certificats CA utilisateur, trafic local, clair refusé vers OpenFoodFacts | `NetworkSecurityConfigTest` (le test CA ne s'exécute que si une CA utilisateur est installée) |
 | Traductions (placeholders, pluriels `many`) | `StringResourcesTest` |
 | Connexion réelle au réseau local | `LocalNetworkConnectionTest` : ignoré sans arguments (voir ci-dessous) |

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Binds
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,11 +46,12 @@ abstract class CatalogDataModule {
     companion object {
         @Provides
         @Singleton
-        fun openFoodFactsApi(client: OkHttpClient): OpenFoodFactsApi =
+        fun openFoodFactsApi(client: Lazy<OkHttpClient>): OpenFoodFactsApi =
             Retrofit
                 .Builder()
                 .baseUrl(OpenFoodFactsApi.BASE_URL)
-                .client(client)
+                // The client is only built for a download, not at every start.
+                .callFactory { request -> client.get().newCall(request) }
                 .build()
                 .create(OpenFoodFactsApi::class.java)
 

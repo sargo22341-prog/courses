@@ -97,8 +97,10 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
 - **À l'ouverture** : chaque retour de l'application au premier plan déclenche une synchronisation.
 - **Temps réel** : tant que l'application est au premier plan (synchronisation automatique activée,
   réseau disponible), une connexion WebSocket (`/api/websocket`, commande `todo/item/subscribe`)
-  suit toutes les listes liées. Chaque changement annoncé déclenche une synchronisation normale
-  (regroupée sur 1,5 s) : il n'y a qu'un seul chemin de fusion. Connexion perdue : nouvel essai
+  suit toutes les listes liées. Chaque changement annoncé déclenche la synchronisation de **sa**
+  liste (regroupée sur 1,5 s, sans relire `/api/states`) : il n'y a qu'un seul chemin de fusion.
+  Tant que la connexion fonctionne, le nouvel essai périodique passe de 2 à 10 minutes
+  ([ADR 0024](adr/0024-synchronisation-ciblee.md)). Connexion perdue : nouvel essai
   après 5 s, puis un délai croissant jusqu'à 5 min. **Token refusé** (ou adresse invalide) : aucun
   nouvel essai ; une dernière synchronisation est demandée, qui affiche l'erreur, et la connexion
   est rouverte dès qu'un autre token ou une autre adresse est enregistré. Elle est fermée quand
@@ -116,7 +118,7 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
 
 | Type | Appels |
 | --- | --- |
-| REST | `GET /api/`, `GET /api/states`, `POST /api/services/todo/get_items?return_response`, `todo.add_item`, `todo.update_item`, `todo.remove_item` |
+| REST | `GET /api/`, `GET /api/states` (seulement quand les listes doivent être relues), `POST /api/services/todo/get_items?return_response`, `todo.add_item`, `todo.update_item`, `todo.remove_item` (réponse ignorée) |
 | Configuration | `POST /api/config/config_entries/flow` (création *Local To-do*), `DELETE /api/config/config_entries/entry/{id}` |
 | WebSocket | `auth`, `todo/item/subscribe` |
 

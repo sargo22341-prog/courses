@@ -10,7 +10,6 @@ import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 
 /**
- * @property version incremented on every local modification (conflict diagnostics).
  * @property remoteId Home Assistant to-do item `uid`, once known.
  * @property isDeleted tombstone: the item was deleted locally but the deletion has not reached
  * Home Assistant yet. Tombstones are hidden from the UI and purged after synchronisation.
@@ -37,7 +36,6 @@ data class ShoppingItemEntity(
     val catalogProductId: String?,
     val createdAt: Long,
     val updatedAt: Long,
-    val version: Int = 1,
     val remoteId: String? = null,
     val syncStatus: SyncStatus = SyncStatus.LOCAL_ONLY,
     val isDeleted: Boolean = false,
@@ -59,7 +57,4 @@ fun ShoppingItemEntity.toDomain(): ShoppingItem =
         unit = unit,
         isChecked = isChecked,
         catalogProductId = catalogProductId,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        syncStatus = syncStatus,
     )

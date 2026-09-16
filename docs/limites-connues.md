@@ -29,6 +29,10 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   Le temps réel (WebSocket) et le nouvel essai toutes les 2 minutes ne fonctionnent que tant que
   l'application est au premier plan ([ADR 0023](adr/0023-synchronisation-periodique-au-premier-plan.md)) :
   une modification refusée en arrière-plan est réessayée au retour dans l'application.
+- **Temps réel actif** : le nouvel essai n'a lieu que toutes les 10 minutes, et les événements ne
+  relisent pas `/api/states`. Une liste créée, renommée, supprimée ou arrêtée dans Home Assistant
+  peut donc n'apparaître qu'au bout de 10 minutes, ou au retour dans l'application, ou en tirant
+  pour actualiser ([ADR 0024](adr/0024-synchronisation-ciblee.md)).
 - **Wi-Fi sans Internet et données mobiles** : si Android bascule alors son réseau par défaut sur
   les données mobiles, l'application l'utilise aussi et un Home Assistant joignable seulement sur le
   réseau local peut ne plus répondre. Non vérifié sur appareil.
@@ -37,7 +41,7 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
 - **Création automatique** : elle ne s'applique qu'aux listes créées après l'activation du
   réglage ; une liste passée en « Ne pas synchroniser » n'est jamais recréée automatiquement.
 - **Mode « Toutes les listes »** : une liste que Home Assistant ne renvoie plus du tout dans
-  `/api/states` (intégration supprimée ou pas encore rechargée) est considérée comme supprimée et
+  `/api/states`, relu à l'instant (intégration supprimée ou pas encore rechargée), est considérée comme supprimée et
   retirée de l'application ; une intégration simplement arrêtée (`unavailable`) ne retire rien. Un
   renommage fait dans Home Assistant remplace un renommage local antérieur. Une liste ignorée ne
   réapparaît qu'en la liant avec « Choisir » ; il n'y a pas d'écran listant les listes ignorées.

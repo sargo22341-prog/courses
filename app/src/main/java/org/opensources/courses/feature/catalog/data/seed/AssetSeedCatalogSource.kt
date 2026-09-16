@@ -8,7 +8,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.opensources.courses.core.common.IoDispatcher
-import org.opensources.courses.feature.catalog.domain.SeedCatalog
+import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.SeedCatalogSource
 import org.opensources.courses.feature.language.domain.AppLanguage
 import javax.inject.Inject
@@ -24,14 +24,22 @@ class AssetSeedCatalogSource
         private val json: Json,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : SeedCatalogSource {
+        override val version: Int = VERSION
+
         @OptIn(ExperimentalSerializationApi::class)
-        override suspend fun load(language: AppLanguage): SeedCatalog =
+        override suspend fun load(language: AppLanguage): List<CatalogImportProduct> =
             withContext(ioDispatcher) {
                 val seed = context.assets.open(ASSET_PATH).use { json.decodeFromStream(SeedCatalogDto.serializer(), it) }
-                SeedCatalog(seed.version, SeedCatalogMapper.map(seed, language))
+                SeedCatalogMapper.map(seed, language)
             }
 
-        private companion object {
+        companion object {
+            /**
+             * `version` of the asset, known without decoding it: the file is only read when it must
+             * be imported. Increase both together (guarded by a test).
+             */
+            const val VERSION = 3
+
             const val ASSET_PATH = "catalog/seed.json"
         }
     }

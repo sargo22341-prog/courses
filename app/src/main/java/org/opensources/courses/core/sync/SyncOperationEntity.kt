@@ -25,7 +25,6 @@ data class SyncOperationEntity(
     val remoteEntryId: String?,
     val createdAt: Long,
     val attemptCount: Int = 0,
-    val lastError: String? = null,
 )
 
 data class SyncOperation(

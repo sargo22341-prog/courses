@@ -22,7 +22,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opensources.courses.testing.FrenchCoursesTheme
-import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
@@ -40,7 +39,7 @@ class ShoppingScreenTest {
         name: String,
         checked: Boolean = false,
         quantity: Double = 1.0,
-    ) = ShoppingItem("id-$name", "list", name, quantity, null, checked, null, 0, 0, SyncStatus.LOCAL_ONLY)
+    ) = ShoppingItem("id-$name", "list", name, quantity, null, checked, null)
 
     private val state =
         ShoppingUiState(

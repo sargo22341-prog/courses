@@ -29,6 +29,7 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  *   seed and OpenFoodFacts imports.
  * - 3: `shopping_lists.importedFromRemote` and `remoteName` (lists imported from Home Assistant),
  *   table `ha_ignored_lists`. Existing lists are not imported ones.
+ * - 4: columns never read are dropped ([CoursesDatabaseMigrations.FROM_3_TO_4]).
  */
 @Database(
     entities = [
@@ -41,7 +42,7 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
         HaTrackedListEntity::class,
         HaIgnoredListEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )

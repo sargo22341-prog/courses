@@ -39,6 +39,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.opensources.courses.R
 import org.opensources.courses.core.designsystem.component.BackTopBar
+import org.opensources.courses.core.designsystem.component.ConfirmDialog
 import org.opensources.courses.feature.lists.domain.ShoppingList
 
 private sealed interface ListsDialog {
@@ -137,8 +138,10 @@ fun ListsRoute(
                 onDismiss = { dialog = null },
             )
         is ListsDialog.Delete ->
-            DeleteListDialog(
-                listName = current.list.name,
+            ConfirmDialog(
+                title = stringResource(R.string.lists_delete_title, current.list.name),
+                text = stringResource(R.string.lists_delete_body),
+                confirmLabel = stringResource(R.string.action_delete),
                 onConfirm = {
                     dialog = null
                     viewModel.delete(current.list.id)

@@ -28,6 +28,9 @@ class FakeSyncOperationDao : SyncOperationDao {
 
     val all: List<SyncOperationEntity> get() = rows.sortedBy { it.id }
 
+    /** Collectors currently observing the count. */
+    val countObservers: Int get() = count.subscriptionCount.value
+
     /** Number of queries that read the queue, whatever their filter. */
     var reads = 0
         private set
@@ -51,11 +54,8 @@ class FakeSyncOperationDao : SyncOperationDao {
         publish()
     }
 
-    override suspend fun markFailed(
-        ids: List<Long>,
-        error: String,
-    ) {
-        rows.replaceAll { if (it.id in ids) it.copy(attemptCount = it.attemptCount + 1, lastError = error) else it }
+    override suspend fun markFailed(ids: List<Long>) {
+        rows.replaceAll { if (it.id in ids) it.copy(attemptCount = it.attemptCount + 1) else it }
     }
 
     override suspend fun countForItem(itemLocalId: String): Int {

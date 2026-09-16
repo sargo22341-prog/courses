@@ -70,7 +70,7 @@ class OfflineScenarioTest {
                 listOf(SyncOperationType.CREATE_ITEM, SyncOperationType.CREATE_ITEM, SyncOperationType.CHECK_ITEM),
                 repositories.queue.pending().map { it.type },
             )
-            assertEquals(setOf(SyncStatus.PENDING), repositories.items.getItems(list.id).map { it.syncStatus }.toSet())
+            assertEquals(setOf(SyncStatus.PENDING), repositories.database.shoppingItemDao().getActiveForList(list.id).map { it.syncStatus }.toSet())
             repositories.database.close()
         }
 

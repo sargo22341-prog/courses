@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.Flow
 interface CatalogDao {
     @Query(
         """
-        SELECT p.*, COALESCE(u.useCount, 0) AS useCount, u.lastUsedAt AS lastUsedAt
+        SELECT p.id, p.name, p.normalizedName, p.category, p.source, p.baseScore,
+               COALESCE(u.useCount, 0) AS useCount, u.lastUsedAt AS lastUsedAt
         FROM catalog_products p
         LEFT JOIN product_usage u ON u.productId = p.id
         WHERE p.normalizedName LIKE '%' || :query || '%'
@@ -26,7 +27,8 @@ interface CatalogDao {
 
     @Query(
         """
-        SELECT p.*, COALESCE(u.useCount, 0) AS useCount, u.lastUsedAt AS lastUsedAt
+        SELECT p.id, p.name, p.normalizedName, p.category, p.source, p.baseScore,
+               COALESCE(u.useCount, 0) AS useCount, u.lastUsedAt AS lastUsedAt
         FROM catalog_products p
         LEFT JOIN product_usage u ON u.productId = p.id
         WHERE p.normalizedName LIKE :initial || '%' OR p.normalizedName LIKE '% ' || :initial || '%'
@@ -39,8 +41,8 @@ interface CatalogDao {
         limit: Int,
     ): List<ProductCandidateRow>
 
-    @Query("SELECT * FROM catalog_aliases WHERE productId IN (:productIds)")
-    suspend fun aliasesFor(productIds: List<String>): List<CatalogAliasEntity>
+    @Query("SELECT productId, normalizedAlias FROM catalog_aliases WHERE productId IN (:productIds)")
+    suspend fun aliasesFor(productIds: List<String>): List<ProductAliasRow>
 
     @Query(
         """

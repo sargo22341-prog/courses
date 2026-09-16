@@ -84,14 +84,23 @@ class ShoppingItemRepositoryImpl
 
         override suspend fun deletePurchased(listId: String): Int =
             transactions.inTransaction {
+                // A list kept on this phone only has nothing to send: one statement is enough.
+                if (!isSynchronized(listId)) return@inTransaction itemDao.deleteChecked(listId)
                 val purchased = itemDao.getActiveForList(listId).filter { it.isChecked }
-                purchased.forEach { deleteInTransaction(it.localId) }
+                purchased.forEach { delete(it, synchronized = true) }
                 purchased.size
             }
 
         private suspend fun deleteInTransaction(itemId: String) {
             val item = itemDao.getById(itemId) ?: return
-            if (isSynchronized(item.listLocalId) && item.remoteId != null) {
+            delete(item, isSynchronized(item.listLocalId))
+        }
+
+        private suspend fun delete(
+            item: ShoppingItemEntity,
+            synchronized: Boolean,
+        ) {
+            if (synchronized && item.remoteId != null) {
                 itemDao.update(item.copy(isDeleted = true, updatedAt = clock.millis(), syncStatus = SyncStatus.PENDING))
                 queue.enqueue(
                     SyncOperationType.DELETE_ITEM,
@@ -102,7 +111,7 @@ class ShoppingItemRepositoryImpl
             } else {
                 // Never reached Home Assistant: a pending CREATE_ITEM is dropped by the engine
                 // because the item no longer exists.
-                itemDao.delete(itemId)
+                itemDao.delete(item.localId)
             }
         }
 
@@ -119,7 +128,6 @@ class ShoppingItemRepositoryImpl
                 itemDao.update(
                     changed.copy(
                         updatedAt = clock.millis(),
-                        version = current.version + 1,
                         syncStatus = if (synchronized) SyncStatus.PENDING else SyncStatus.LOCAL_ONLY,
                     ),
                 )

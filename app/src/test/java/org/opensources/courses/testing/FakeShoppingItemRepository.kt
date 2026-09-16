@@ -3,7 +3,6 @@ package org.opensources.courses.testing
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.feature.shopping.domain.NewShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItemRepository
@@ -20,7 +19,7 @@ class FakeShoppingItemRepository : ShoppingItemRepository {
 
     override suspend fun addItem(item: NewShoppingItem): ShoppingItem {
         val created =
-            ShoppingItem("item${nextId++}", item.listId, item.name, item.quantity, item.unit, false, item.catalogProductId, 0, 0, SyncStatus.LOCAL_ONLY)
+            ShoppingItem("item${nextId++}", item.listId, item.name, item.quantity, item.unit, false, item.catalogProductId)
         state.value = state.value + created
         return created
     }

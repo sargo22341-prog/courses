@@ -1,8 +1,8 @@
 package org.opensources.courses.feature.homeassistant.data.sync
 
+import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
-import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import org.opensources.courses.feature.homeassistant.domain.ConflictResolver
 import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
 import org.opensources.courses.feature.homeassistant.domain.ItemDescriptionCodec
@@ -24,25 +24,22 @@ class HaItemReconciler(
         remoteItems: List<HaTodoItem>,
     ) {
         val locals = store.items(listLocalId)
-        val claimed = locals.mapNotNull { it.remoteId }.toMutableSet()
+        val unclaimed = UnclaimedRemoteItems(remoteItems, locals.mapNotNull { it.remoteId })
         locals.filter { it.remoteId == null && !it.isDeleted }.forEach { local ->
-            val key = TextNormalizer.normalize(local.name)
-            remoteItems.firstOrNull { it.uid !in claimed && TextNormalizer.normalize(it.summary) == key }?.let { match ->
-                claimed += match.uid
-                store.setItemRemoteId(local.localId, match.uid)
-            }
+            unclaimed.claim(local.name)?.let { match -> store.setItemRemoteId(local.localId, match.uid) }
         }
     }
 
     /**
-     * Pending items are read once for the whole list; the store checks again, item by item and
-     * inside its transaction, that nothing was queued since.
+     * The whole list is applied in one transaction, so the screen is updated once. Pending items are
+     * read once for the whole list; the store still checks, item by item, that nothing was queued
+     * since.
      */
     suspend fun reconcile(
         listLocalId: String,
         remoteItems: List<HaTodoItem>,
         supportsDescription: Boolean,
-    ) {
+    ) = store.inTransaction {
         val locals = store.items(listLocalId)
         val pendingItemIds = queue.pendingItemIds(listLocalId)
         val remoteByUid = remoteItems.associateBy { it.uid }
@@ -51,7 +48,8 @@ class HaItemReconciler(
             val remote = remoteByUid[remoteId]?.toRemoteState(local, supportsDescription)
             val state = local.toLocalState(hasPendingChanges = local.localId in pendingItemIds)
             when (ConflictResolver.resolve(state, remote, compareQuantity = supportsDescription)) {
-                ItemResolution.IN_SYNC -> store.markItemSynced(local.localId)
+                // Most items are already in sync: nothing to write for them.
+                ItemResolution.IN_SYNC -> if (local.syncStatus != SyncStatus.SYNCED) store.markItemSynced(local.localId)
                 ItemResolution.KEEP_LOCAL -> Unit
                 ItemResolution.APPLY_REMOTE ->
                     remote?.let { store.applyRemoteItem(local.localId, it.summary, it.quantity, it.unit, it.completed) }

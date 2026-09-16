@@ -70,15 +70,18 @@ class CatalogSyncManager
         /** Increases after every import that replaced products, bundled or downloaded. */
         val revision: StateFlow<Int> = mutableRevision.asStateFlow()
 
-        /** Imports the bundled catalog when its version or the app language changed; returns whether it did. */
+        /**
+         * Imports the bundled catalog when its version or the app language changed; returns whether it
+         * did. The bundled file is only read in that case, not at every start.
+         */
         suspend fun importSeedIfNeeded(): Boolean =
             seedMutex.withLock {
                 val language = languages.language.value
-                val bundled = seed.load(language)
+                val version = seed.version
                 val imported = stateStore.seedImport()
-                if (imported.version >= bundled.version && imported.language == language) return@withLock false
-                repository.replaceSeedCatalog("seed-${bundled.version}-${language.tag}", bundled.products)
-                stateStore.markSeedImported(bundled.version, language)
+                if (imported.version >= version && imported.language == language) return@withLock false
+                repository.replaceSeedCatalog("seed-$version-${language.tag}", seed.load(language))
+                stateStore.markSeedImported(version, language)
                 mutableRevision.update { it + 1 }
                 true
             }

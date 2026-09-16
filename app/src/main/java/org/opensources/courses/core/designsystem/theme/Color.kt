@@ -4,7 +4,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 
 /**
  * Light: calm, warm paper-like surfaces, a muted clay accent and almost no borders.
@@ -81,8 +80,11 @@ internal val DarkColors =
         onErrorContainer = Color(0xFFF9DEDC),
     )
 
-/** True for the dark palette, including a preview of it shown inside the light theme. */
-val ColorScheme.isDark: Boolean get() = background.luminance() < DARK_BACKGROUND_LUMINANCE
+/**
+ * True for the dark palette, including a preview of it shown inside the light theme. The app has two
+ * palettes with distinct backgrounds: comparing them costs nothing, unlike computing a luminance.
+ */
+val ColorScheme.isDark: Boolean get() = background == DarkColors.background
 
 /**
  * Amber of the "offline" state: Material 3 has no warning role, and the error red would be too
@@ -93,5 +95,3 @@ val ColorScheme.offline: Color get() = if (isDark) OfflineDark else OfflineLight
 
 private val OfflineLight = Color(0xFFB86E14)
 private val OfflineDark = Color(0xFFE0973A)
-
-private const val DARK_BACKGROUND_LUMINANCE = 0.5f

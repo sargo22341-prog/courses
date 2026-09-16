@@ -16,16 +16,18 @@ class SuggestionRankerTest {
         query: String,
         vararg candidates: ProductCandidate,
         limit: Int = 10,
-    ): List<String> = ranker.rank(TextNormalizer.normalize(query), candidates.toList(), now, limit).map { it.product.name }
+    ): List<String> = ranker.rank(searchQuery(query), candidates.toList(), now, limit).map { it.product.name }
+
+    private fun searchQuery(text: String) = SearchQuery(TextNormalizer.normalize(text))
 
     @Test
     fun `match kinds are ordered exact, prefix, word prefix, partial, fuzzy`() {
-        assertEquals(MatchKind.EXACT, ranker.matchKind("lait", "lait"))
-        assertEquals(MatchKind.PREFIX, ranker.matchKind("lai", "lait entier"))
-        assertEquals(MatchKind.WORD_PREFIX, ranker.matchKind("tom", "sauce tomate"))
-        assertEquals(MatchKind.CONTAINS, ranker.matchKind("tom", "atomes"))
-        assertEquals(MatchKind.FUZZY, ranker.matchKind("tomatte", "tomates"))
-        assertNull(ranker.matchKind("xyz", "lait"))
+        assertEquals(MatchKind.EXACT, ranker.matchKind(searchQuery("lait"), "lait"))
+        assertEquals(MatchKind.PREFIX, ranker.matchKind(searchQuery("lai"), "lait entier"))
+        assertEquals(MatchKind.WORD_PREFIX, ranker.matchKind(searchQuery("tom"), "sauce tomate"))
+        assertEquals(MatchKind.CONTAINS, ranker.matchKind(searchQuery("tom"), "atomes"))
+        assertEquals(MatchKind.FUZZY, ranker.matchKind(searchQuery("tomatte"), "tomates"))
+        assertNull(ranker.matchKind(searchQuery("xyz"), "lait"))
     }
 
     @Test
@@ -86,5 +88,18 @@ class SuggestionRankerTest {
         val names = rankNames("lai", product("Lait"), product("Laitue"), product("Pain"), limit = 1)
         assertEquals(listOf("Lait"), names)
         assertTrue(rankNames("zzz", product("Lait")).isEmpty())
+    }
+
+    @Test
+    fun `ties on score and length are ordered alphabetically, ignoring case`() {
+        assertEquals(listOf("Poire", "pomme", "Porto"), rankNames("po", product("Porto"), product("pomme"), product("Poire")))
+    }
+
+    @Test
+    fun `the stored normalized forms are the ones compared`() {
+        // The candidate is matched on what the catalog stored, never on its display name again.
+        val stored = product("Lait").copy(normalizedName = "leche")
+        assertEquals(listOf("Lait"), rankNames("lech", stored))
+        assertTrue(rankNames("lait", stored).isEmpty())
     }
 }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
+import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.data.sync.SyncItemRef
@@ -45,7 +46,7 @@ class FakeHaConfigRepository(
     override suspend fun forgetConnection() {
         forgotten = true
         storedCredentials = null
-        config.value = HomeAssistantConfig.Default
+        config.value = HomeAssistantConfig.Default.copy(tokenVersion = config.value.tokenVersion)
     }
 
     override suspend fun setEnabled(enabled: Boolean) {
@@ -69,13 +70,13 @@ class FakeHaConfigRepository(
 
 /** Live updates driven by the test: [changes] emissions reach the collectors. */
 class FakeHaLiveUpdates : HaLiveUpdates {
-    val changes = MutableSharedFlow<Unit>()
+    val changes = MutableSharedFlow<RemoteChange>()
     var observedEntityIds: Set<String>? = null
 
     override fun observeItemChanges(
         credentials: HaCredentials,
         entityIds: Set<String>,
-    ): Flow<Unit> = changes.onStart { observedEntityIds = entityIds }
+    ): Flow<RemoteChange> = changes.onStart { observedEntityIds = entityIds }
 }
 
 /** Same contract as the Room store, including "never overwrite an item with pending operations". */
@@ -90,6 +91,15 @@ class FakeSyncLocalStore(
     val ignored = mutableSetOf<String>()
     val removedLists = mutableSetOf<String>()
     private var nextId = 1
+
+    /** Number of transactions opened. */
+    var transactions = 0
+        private set
+
+    override suspend fun <T> inTransaction(block: suspend () -> T): T {
+        transactions++
+        return block()
+    }
 
     override suspend fun synchronizedLists(): List<SyncListRef> = lists.values.toList()
 
@@ -146,7 +156,6 @@ class FakeSyncLocalStore(
         listLocalId: String,
         entityId: String,
         configEntryId: String?,
-        name: String,
     ) {
         lists[listLocalId] = lists.getValue(listLocalId).copy(remoteId = entityId)
         tracked += entityId
@@ -187,7 +196,12 @@ class FakeSyncLocalStore(
         restoreDeletedItem(itemLocalId)
     }
 
-    override suspend fun markItemSynced(itemLocalId: String) = Unit
+    /** Items marked synchronised, in order. */
+    val markedSynced = mutableListOf<String>()
+
+    override suspend fun markItemSynced(itemLocalId: String) {
+        markedSynced += itemLocalId
+    }
 
     override suspend fun removeRemotelyDeletedItem(itemLocalId: String) {
         if (!queue.hasPendingForItem(itemLocalId)) items.remove(itemLocalId)

@@ -11,8 +11,14 @@ import java.io.File
 
 /** Reads the real bundled asset: a missing translation or an invalid section would make the whole seed import fail. */
 class SeedCatalogMapperTest {
-    private val seed = Json.decodeFromString(SeedCatalogDto.serializer(), File("src/main/assets/catalog/seed.json").readText())
+    private val seed = Json.decodeFromString(SeedCatalogDto.serializer(), File("src/main/assets/${AssetSeedCatalogSource.ASSET_PATH}").readText())
     private val byLanguage = AppLanguage.entries.associateWith { SeedCatalogMapper.map(seed, it) }
+
+    @Test
+    fun `the version known without reading the file is the version of the file`() {
+        // Otherwise a changed catalog would never be imported, or be imported at every start.
+        assertEquals(seed.version, AssetSeedCatalogSource.VERSION)
+    }
 
     @Test
     fun `every text exists in every language`() {

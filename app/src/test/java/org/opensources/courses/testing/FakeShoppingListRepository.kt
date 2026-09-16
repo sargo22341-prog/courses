@@ -19,7 +19,7 @@ class FakeShoppingListRepository : ShoppingListRepository {
     override fun observeDefaultList(): Flow<ShoppingList?> = lists.map { all -> all.firstOrNull { it.isDefault } }
 
     override suspend fun createList(name: String): ShoppingList {
-        val created = ShoppingList("list${nextId++}", name, isDefault = lists.value.none { it.isDefault }, null, false, SyncStatus.LOCAL_ONLY)
+        val created = ShoppingList("list${nextId++}", name, isDefault = lists.value.none { it.isDefault }, null, SyncStatus.LOCAL_ONLY)
         lists.value = lists.value + created
         return created
     }

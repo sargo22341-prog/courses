@@ -76,7 +76,12 @@ class HaConfigRepositoryImpl
 
         override suspend fun forgetConnection() {
             // Settings first: once disabled, nothing reads the token any more.
-            dataStore.edit { it.clear() }
+            dataStore.edit { preferences ->
+                // Kept: a token saved later is another token, even for the same address.
+                val tokenVersion = preferences[TOKEN_VERSION]
+                preferences.clear()
+                tokenVersion?.let { preferences[TOKEN_VERSION] = it }
+            }
             secrets.remove(TOKEN_SECRET)
         }
 

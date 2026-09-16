@@ -11,6 +11,12 @@ enum class MatchKind(
     FUZZY(0),
 }
 
+/** A candidate that matches the query, with its [score]. */
+class ScoredCandidate(
+    val candidate: ProductCandidate,
+    val score: Int,
+)
+
 /**
  * Orders catalog candidates for the autocomplete.
  *
@@ -21,35 +27,39 @@ enum class MatchKind(
  * - recency: +150 when used in the last 3 days, +100 within 14 days, +40 within 60 days;
  * - catalog base score (curated products first, generic before specific): +10 per point.
  * Ties are broken by shorter name, then alphabetically, which keeps results deterministic.
+ *
+ * Candidates carry their names already normalized: the ranking runs at each keystroke over up to
+ * thousands of them, and never normalizes a text itself.
  */
 class SuggestionRanker(
     private val fuzzyMatcher: FuzzyMatcher = FuzzyMatcher(),
 ) {
     fun matchKind(
-        normalizedQuery: String,
+        query: SearchQuery,
         normalizedText: String,
     ): MatchKind? {
-        if (normalizedQuery.isEmpty() || normalizedText.isEmpty()) return null
+        if (query.text.isEmpty() || normalizedText.isEmpty()) return null
+        if (normalizedText == query.text) return MatchKind.EXACT
+        if (normalizedText.startsWith(query.text)) return MatchKind.PREFIX
+        val textWords = TextNormalizer.words(normalizedText)
         return when {
-            normalizedText == normalizedQuery -> MatchKind.EXACT
-            normalizedText.startsWith(normalizedQuery) -> MatchKind.PREFIX
-            isWordPrefix(normalizedQuery, normalizedText) -> MatchKind.WORD_PREFIX
-            normalizedText.contains(normalizedQuery) -> MatchKind.CONTAINS
-            fuzzyMatcher.matches(normalizedQuery, normalizedText) -> MatchKind.FUZZY
+            isWordPrefix(query, textWords) -> MatchKind.WORD_PREFIX
+            normalizedText.contains(query.text) -> MatchKind.CONTAINS
+            fuzzyMatcher.matches(query, textWords) -> MatchKind.FUZZY
             else -> null
         }
     }
 
-    /** Score of [candidate] for [normalizedQuery], or null when it does not match at all. */
+    /** Score of [candidate] for [query], or null when it does not match at all. */
     fun score(
-        normalizedQuery: String,
+        query: SearchQuery,
         candidate: ProductCandidate,
         nowMillis: Long,
     ): Int? {
-        val nameMatch = matchKind(normalizedQuery, TextNormalizer.normalize(candidate.product.name))
+        val nameMatch = matchKind(query, candidate.normalizedName)
         val aliasMatch =
-            candidate.aliases
-                .mapNotNull { matchKind(normalizedQuery, TextNormalizer.normalize(it)) }
+            candidate.normalizedAliases
+                .mapNotNull { matchKind(query, it) }
                 .minByOrNull { it.ordinal }
         val best = listOfNotNull(nameMatch, aliasMatch).minByOrNull { it.ordinal } ?: return null
         val aliasOnlyPenalty = if (nameMatch == null || nameMatch.ordinal > best.ordinal) ALIAS_PENALTY else 0
@@ -57,29 +67,35 @@ class SuggestionRanker(
             recencyBonus(candidate.lastUsedAt, nowMillis) + candidate.baseScore * BASE_SCORE_WEIGHT
     }
 
+    /** The candidates that match [query], each with its score. */
+    fun scored(
+        query: SearchQuery,
+        candidates: List<ProductCandidate>,
+        nowMillis: Long,
+    ): List<ScoredCandidate> = candidates.mapNotNull { candidate -> score(query, candidate, nowMillis)?.let { ScoredCandidate(candidate, it) } }
+
+    /** The [limit] best of [scored], one per normalized name. */
+    fun best(
+        scored: List<ScoredCandidate>,
+        limit: Int,
+    ): List<ProductCandidate> =
+        scored
+            .sortedWith(RANKING_ORDER)
+            .distinctBy { it.candidate.normalizedName }
+            .take(limit)
+            .map { it.candidate }
+
     fun rank(
-        normalizedQuery: String,
+        query: SearchQuery,
         candidates: List<ProductCandidate>,
         nowMillis: Long,
         limit: Int,
-    ): List<ProductCandidate> =
-        candidates
-            .mapNotNull { candidate -> score(normalizedQuery, candidate, nowMillis)?.let { candidate to it } }
-            .sortedWith(
-                compareByDescending<Pair<ProductCandidate, Int>> { it.second }
-                    .thenBy { it.first.product.name.length }
-                    .thenBy { it.first.product.name.lowercase() },
-            ).distinctBy { TextNormalizer.normalize(it.first.product.name) }
-            .take(limit)
-            .map { it.first }
+    ): List<ProductCandidate> = best(scored(query, candidates, nowMillis), limit)
 
     private fun isWordPrefix(
-        query: String,
-        text: String,
-    ): Boolean {
-        val textWords = TextNormalizer.words(text)
-        return TextNormalizer.words(query).all { queryWord -> textWords.any { it.startsWith(queryWord) } }
-    }
+        query: SearchQuery,
+        textWords: List<String>,
+    ): Boolean = query.words.all { queryWord -> textWords.any { it.startsWith(queryWord) } }
 
     private fun usageBonus(useCount: Int): Int = useCount.coerceIn(0, MAX_COUNTED_USES) * USAGE_WEIGHT
 
@@ -103,5 +119,11 @@ class SuggestionRanker(
         const val BASE_SCORE_WEIGHT = 10
         const val ALIAS_PENALTY = 50
         const val MILLIS_PER_DAY = 86_400_000L
+
+        // Compares without allocating: sorting thousands of candidates must not lower-case their names.
+        val RANKING_ORDER =
+            compareByDescending<ScoredCandidate> { it.score }
+                .thenBy { it.candidate.product.name.length }
+                .thenBy(String.CASE_INSENSITIVE_ORDER) { it.candidate.product.name }
     }
 }

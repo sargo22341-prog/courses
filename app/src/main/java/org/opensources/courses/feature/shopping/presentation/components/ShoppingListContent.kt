@@ -20,32 +20,46 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
+import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
-import org.opensources.courses.feature.shopping.presentation.ShoppingUiState
+import java.util.Locale
 
+/**
+ * Takes only what the list shows, not the whole screen state: a change of the sync state or of the
+ * suggestions leaves these parameters unchanged, and the list is not recomposed.
+ *
+ * @param toBuySections [toBuy] grouped by shop section, or null to show them as they come.
+ */
 @Composable
 fun ShoppingListContent(
-    state: ShoppingUiState,
+    isLoading: Boolean,
+    toBuy: List<ShoppingItem>,
+    toBuySections: List<ItemSection>?,
+    purchased: List<ShoppingItem>,
+    hidePurchased: Boolean,
     onToggleItem: (ShoppingItem) -> Unit,
     onDeleteItem: (ShoppingItem) -> Unit,
     onEditItem: (ShoppingItem) -> Unit,
     onRequestDeletePurchased: () -> Unit,
 ) {
-    if (state.isLoading) return
-    if (state.toBuy.isEmpty() && state.purchased.isEmpty()) {
+    if (isLoading) return
+    if (toBuy.isEmpty() && purchased.isEmpty()) {
         EmptyState()
         return
     }
+    // Read once for every row.
+    val locale = LocalConfiguration.current.locales[0]
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (state.toBuy.isEmpty()) {
+        if (toBuy.isEmpty()) {
             item(key = "all_purchased") {
                 Text(
                     text = stringResource(R.string.shopping_all_purchased),
@@ -56,32 +70,32 @@ fun ShoppingListContent(
                 )
             }
         }
-        val sections = state.toBuySections
-        if (sections == null) {
-            itemRows(state.toBuy, onToggleItem, onDeleteItem, onEditItem)
+        if (toBuySections == null) {
+            itemRows(toBuy, locale, onToggleItem, onDeleteItem, onEditItem)
         } else {
-            sections.forEach { section ->
+            toBuySections.forEach { section ->
                 item(key = "category_${section.category.name}", contentType = CATEGORY_HEADER) {
                     CategoryHeader(section.category, Modifier.animateItem())
                 }
-                itemRows(section.items, onToggleItem, onDeleteItem, onEditItem)
+                itemRows(section.items, locale, onToggleItem, onDeleteItem, onEditItem)
             }
         }
-        if (state.purchased.isNotEmpty() && !state.hidePurchased) {
+        if (purchased.isNotEmpty() && !hidePurchased) {
             item(key = "purchased_header") { PurchasedHeader(onRequestDeletePurchased, Modifier.animateItem()) }
-            itemRows(state.purchased, onToggleItem, onDeleteItem, onEditItem)
+            itemRows(purchased, locale, onToggleItem, onDeleteItem, onEditItem)
         }
     }
 }
 
 private fun LazyListScope.itemRows(
     items: List<ShoppingItem>,
+    locale: Locale,
     onToggleItem: (ShoppingItem) -> Unit,
     onDeleteItem: (ShoppingItem) -> Unit,
     onEditItem: (ShoppingItem) -> Unit,
 ) {
-    items(items, key = { it.id }) { item ->
-        ShoppingItemRow(item, onToggleItem, onDeleteItem, onEditItem, Modifier.animateItem())
+    items(items, key = { it.id }, contentType = { ITEM_ROW }) { item ->
+        ShoppingItemRow(item, locale, onToggleItem, onDeleteItem, onEditItem, Modifier.animateItem())
     }
 }
 
@@ -128,3 +142,4 @@ private fun EmptyState() {
 }
 
 private const val CATEGORY_HEADER = "category_header"
+private const val ITEM_ROW = "item_row"

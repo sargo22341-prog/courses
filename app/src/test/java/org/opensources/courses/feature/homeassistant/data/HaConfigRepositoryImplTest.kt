@@ -74,9 +74,20 @@ class HaConfigRepositoryImplTest {
 
             repository.forgetConnection()
 
-            assertEquals(HomeAssistantConfig.Default, repository.config.first())
+            assertEquals(HomeAssistantConfig.Default.copy(tokenVersion = 1), repository.config.first())
             assertNull(repository.credentials())
             assertNull(repository.credentialsFor("https://ha.nas.home", typedToken = ""))
             assertTrue(secrets.values.isEmpty())
+        }
+
+    @Test
+    fun `a token saved after forgetting the connection is a new token version`() =
+        runTest {
+            repository.saveConnection("https://ha.nas.home", "secret-token")
+            repository.forgetConnection()
+
+            repository.saveConnection("https://ha.nas.home", "other-token")
+
+            assertEquals(2, repository.config.first().tokenVersion)
         }
 }

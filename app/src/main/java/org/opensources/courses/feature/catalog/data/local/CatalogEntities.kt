@@ -1,6 +1,5 @@
 package org.opensources.courses.feature.catalog.data.local
 
-import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -24,8 +23,6 @@ data class CatalogProductEntity(
     val name: String,
     val normalizedName: String,
     val category: String?,
-    val brand: String?,
-    val parentId: String?,
     val source: CatalogSource,
     val baseScore: Int,
     val catalogVersion: String?,
@@ -62,10 +59,21 @@ data class ProductUsageEntity(
     val lastUsedAt: Long,
 )
 
+/** What the autocomplete ranking reads of a product and of its usage, and nothing more. */
 data class ProductCandidateRow(
-    @Embedded val product: CatalogProductEntity,
+    val id: String,
+    val name: String,
+    val normalizedName: String,
+    val category: String?,
+    val source: CatalogSource,
+    val baseScore: Int,
     val useCount: Int,
     val lastUsedAt: Long?,
+)
+
+data class ProductAliasRow(
+    val productId: String,
+    val normalizedAlias: String,
 )
 
 data class ProductCategoryRow(
@@ -92,7 +100,5 @@ fun CatalogProductEntity.toDomain(): CatalogProduct =
         id = id,
         name = name,
         category = category,
-        brand = brand,
-        parentId = parentId,
         source = source,
     )

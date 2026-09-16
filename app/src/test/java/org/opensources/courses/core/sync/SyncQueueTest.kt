@@ -34,8 +34,8 @@ class SyncQueueTest {
             queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")
             val id = queue.pending().single().id
 
-            queue.fail(listOf(id), "UNREACHABLE")
-            queue.fail(listOf(id), "UNREACHABLE")
+            queue.fail(listOf(id))
+            queue.fail(listOf(id))
 
             assertEquals(2, queue.pending().single().attemptCount)
             assertTrue(queue.hasPendingForItem("a"))
@@ -59,10 +59,10 @@ class SyncQueueTest {
             queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")
             val id = queue.pending().single().id
 
-            repeat(SyncQueue.MAX_ATTEMPTS - 2) { queue.fail(listOf(id), "REJECTED") }
+            repeat(SyncQueue.MAX_ATTEMPTS - 2) { queue.fail(listOf(id)) }
             assertFalse(queue.pending().single().isLastAttempt)
 
-            queue.fail(listOf(id), "REJECTED")
+            queue.fail(listOf(id))
             assertTrue(queue.pending().single().isLastAttempt)
         }
 

@@ -21,9 +21,16 @@ data class ShoppingUiState(
     /** Deleted but still undoable: already left out of [toBuy], [toBuySections] and [purchased]. */
     val pendingDeletion: ShoppingItem? = null,
 ) {
+    /** The suggestion that is exactly [query], case, accents and punctuation aside. */
+    fun exactSuggestion(query: String): ProductSuggestion? = suggestionNamed(TextNormalizer.normalize(query))
+
     /** "+ Ajouter …" is offered unless a suggestion is exactly what was typed. */
     fun offersCustomItem(query: String): Boolean {
         val normalized = TextNormalizer.normalize(query)
-        return normalized.isNotEmpty() && suggestions.none { TextNormalizer.normalize(it.name) == normalized }
+        return normalized.isNotEmpty() && suggestionNamed(normalized) == null
     }
+
+    // Suggestions carry their normalized name: only the typed text is normalized here.
+    private fun suggestionNamed(normalizedName: String): ProductSuggestion? =
+        if (normalizedName.isEmpty()) null else suggestions.firstOrNull { it.normalizedName == normalizedName }
 }

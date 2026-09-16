@@ -1,6 +1,9 @@
 package org.opensources.courses.feature.shopping.domain
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -11,11 +14,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.opensources.courses.core.model.SyncStatus
+import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.language.domain.AppLanguage
 import org.opensources.courses.testing.FakeAppLanguageRepository
 import org.opensources.courses.testing.FakeCatalogRepository
+import java.util.concurrent.Executors
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupItemsByCategoryUseCaseTest {
@@ -27,13 +31,13 @@ class GroupItemsByCategoryUseCaseTest {
             categories["pains"] = GroceryCategory.BAKERY
         }
     private val languages = FakeAppLanguageRepository(AppLanguage.FRENCH)
-    private val group = GroupItemsByCategoryUseCase(catalog, languages)
+    private val group = GroupItemsByCategoryUseCase(catalog, languages, Dispatchers.Unconfined)
 
     private fun item(
         name: String,
         catalogProductId: String? = null,
         checked: Boolean = false,
-    ) = ShoppingItem("id-$name", "list", name, 1.0, null, checked, catalogProductId, 0, 0, SyncStatus.LOCAL_ONLY)
+    ) = ShoppingItem("id-$name", "list", name, 1.0, null, checked, catalogProductId)
 
     private suspend fun sections(vararg items: ShoppingItem): List<ItemSection> = group(flowOf(items.toList())).first().sections
 
@@ -112,6 +116,43 @@ class GroupItemsByCategoryUseCaseTest {
             assertEquals(queriesAtStart, catalog.categoryQueries)
             assertTrue(emitted.last().items.first().isChecked)
             assertEquals(listOf("Pain"), emitted.last().sections.withoutChecked().flatMap { section -> section.items.map { it.name } })
+        }
+
+    @Test
+    fun `a renamed item is sorted under its new name`() =
+        runTest {
+            val items = MutableStateFlow(listOf(item("Lait")))
+            val emitted = mutableListOf<CategorizedItems>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { group(items).toList(emitted) }
+
+            items.value = listOf(item("Pain").copy(id = "id-Lait"))
+
+            assertEquals(listOf(GroceryCategory.BAKERY), emitted.last().sections.map { it.category })
+        }
+
+    @Test
+    fun `items are sorted on the dispatcher given for CPU work`() =
+        runTest {
+            var sortingThread: Thread? = null
+            val executor = Executors.newSingleThreadExecutor { Thread(it).also { thread -> sortingThread = thread } }
+            try {
+                var queriedOn: Thread? = null
+                val recording =
+                    object : CatalogRepository by catalog {
+                        override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> {
+                            queriedOn = Thread.currentThread()
+                            return catalog.observeCategories(normalizedNames)
+                        }
+                    }
+                val sorting = GroupItemsByCategoryUseCase(recording, languages, executor.asCoroutineDispatcher())
+
+                val sections = sorting(flowOf(listOf(item("Lait")))).first().sections
+
+                assertEquals(listOf(GroceryCategory.DAIRY_EGGS), sections.map { it.category })
+                assertEquals(sortingThread, queriedOn)
+            } finally {
+                executor.shutdown()
+            }
         }
 
     @Test

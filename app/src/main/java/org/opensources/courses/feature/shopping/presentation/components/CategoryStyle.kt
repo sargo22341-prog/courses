@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import org.opensources.courses.R
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
+import java.util.EnumMap
 
 /**
  * Name, pictogram and accent of a shop section. Accents are fixed per category, like the
@@ -17,7 +18,12 @@ internal class CategoryStyle(
     val accent: Color,
 )
 
-internal fun GroceryCategory.style(): CategoryStyle =
+/** Built once: every section header asks for its style at each composition. */
+private val styles = EnumMap(GroceryCategory.entries.associateWith { it.createStyle() })
+
+internal fun GroceryCategory.style(): CategoryStyle = styles.getValue(this)
+
+private fun GroceryCategory.createStyle(): CategoryStyle =
     when (this) {
         GroceryCategory.FRUITS_VEGETABLES -> CategoryStyle(R.string.category_fruits_vegetables, R.string.category_icon_fruits_vegetables, Color(0xFF3F7A2A))
         GroceryCategory.BAKERY -> CategoryStyle(R.string.category_bakery, R.string.category_icon_bakery, Color(0xFF8A5A1C))

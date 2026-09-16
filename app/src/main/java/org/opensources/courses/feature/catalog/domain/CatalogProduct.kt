@@ -12,31 +12,34 @@ enum class CatalogSource {
     CUSTOM,
 }
 
-/**
- * @property parentId more generic product this one is a variant of (`Lait entier` → `Lait`).
- */
 data class CatalogProduct(
     val id: String,
     val name: String,
     val category: String?,
-    val brand: String?,
-    val parentId: String?,
     val source: CatalogSource,
 )
 
-/** A product that may match a query, with everything the ranking needs. */
+/**
+ * A product that may match a query, with everything the ranking needs.
+ *
+ * @property normalizedName [TextNormalizer] form of the product name, as stored with it.
+ * @property normalizedAliases [TextNormalizer] forms of its aliases, as stored with them.
+ */
 data class ProductCandidate(
     val product: CatalogProduct,
-    val aliases: List<String>,
+    val normalizedName: String,
+    val normalizedAliases: List<String>,
     val baseScore: Int,
     val useCount: Int,
     val lastUsedAt: Long?,
 )
 
+/** @property normalizedName [TextNormalizer] form of [name], to recognise the suggestion matching a typed text. */
 data class ProductSuggestion(
     val productId: String,
     val name: String,
     val category: String?,
+    val normalizedName: String = TextNormalizer.normalize(name),
 )
 
 /** A stored product, as much as linking a list item to it needs. */
@@ -56,7 +59,6 @@ data class CatalogImportProduct(
     val id: String,
     val name: String,
     val category: String?,
-    val parentId: String?,
     val baseScore: Int,
     val aliases: List<String> = emptyList(),
     val groceryCategory: GroceryCategory? = null,

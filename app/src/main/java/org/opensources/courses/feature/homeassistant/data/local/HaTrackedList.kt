@@ -15,8 +15,6 @@ import androidx.room.Query
 data class HaTrackedListEntity(
     @PrimaryKey val entityId: String,
     val configEntryId: String?,
-    val name: String,
-    val createdAt: Long,
 )
 
 @Dao

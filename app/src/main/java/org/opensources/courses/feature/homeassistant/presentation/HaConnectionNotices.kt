@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
+import org.opensources.courses.core.designsystem.component.ConfirmDialog
 
 /**
  * Plain HTTP is allowed on purpose (docs/adr/0018-confiance-aux-certificats-utilisateur.md), but the
@@ -48,19 +48,15 @@ fun ForgetConnectionButton(onForget: () -> Unit) {
         Text(stringResource(R.string.ha_forget))
     }
     if (confirming) {
-        AlertDialog(
-            onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.ha_forget_confirm_title)) },
-            text = { Text(stringResource(R.string.ha_forget_confirm_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirming = false
-                        onForget()
-                    },
-                ) { Text(stringResource(R.string.ha_forget_confirm)) }
+        ConfirmDialog(
+            title = stringResource(R.string.ha_forget_confirm_title),
+            text = stringResource(R.string.ha_forget_confirm_body),
+            confirmLabel = stringResource(R.string.ha_forget_confirm),
+            onConfirm = {
+                confirming = false
+                onForget()
             },
-            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            onDismiss = { confirming = false },
         )
     }
 }

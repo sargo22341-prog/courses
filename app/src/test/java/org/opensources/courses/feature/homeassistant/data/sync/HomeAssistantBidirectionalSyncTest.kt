@@ -8,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.core.sync.SyncFailure
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncOutcome
@@ -131,15 +132,15 @@ class HomeAssistantBidirectionalSyncTest {
     @Test
     fun `live updates follow the linked lists`() =
         runTest {
-            var received = 0
-            backgroundScope.launch { engine.remoteChanges.collect { received++ } }
+            val received = mutableListOf<RemoteChange>()
+            backgroundScope.launch { engine.remoteChanges.collect { received += it } }
             runCurrent()
 
-            liveUpdates.changes.emit(Unit)
+            liveUpdates.changes.emit(RemoteChange.ItemsChanged(setOf(ENTITY)))
             runCurrent()
 
             assertEquals(setOf(ENTITY), liveUpdates.observedEntityIds)
-            assertEquals(1, received)
+            assertEquals(listOf(RemoteChange.ItemsChanged(setOf(ENTITY))), received)
         }
 
     private companion object {

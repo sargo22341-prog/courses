@@ -3,7 +3,6 @@ package org.opensources.courses.feature.shopping.presentation.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +25,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -38,12 +36,14 @@ import kotlinx.coroutines.flow.filter
 import org.opensources.courses.R
 import org.opensources.courses.feature.shopping.domain.QuantityFormatter
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
+import java.util.Locale
 
-/** Tap: check/uncheck. Long press: edit. Swipe left: delete. */
+/** Tap: check/uncheck. Long press: edit. Swipe left: delete. [locale] writes the quantity. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShoppingItemRow(
     item: ShoppingItem,
+    locale: Locale,
     onToggle: (ShoppingItem) -> Unit,
     onDelete: (ShoppingItem) -> Unit,
     onEdit: (ShoppingItem) -> Unit,
@@ -97,7 +97,7 @@ fun ShoppingItemRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = QuantityFormatter.format(item.quantity, item.unit, LocalConfiguration.current.locales[0]),
+                    text = QuantityFormatter.format(item.quantity, item.unit, locale),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -116,8 +116,6 @@ private fun DeleteBackground() {
                 .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterEnd,
     ) {
-        Row(horizontalArrangement = Arrangement.End) {
-            Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
-        }
+        Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
     }
 }

@@ -8,7 +8,6 @@ data class ShoppingList(
     val name: String,
     val isDefault: Boolean,
     val remoteId: String?,
-    val createdByApp: Boolean,
     val syncStatus: SyncStatus,
     val importedFromRemote: Boolean = false,
 ) {

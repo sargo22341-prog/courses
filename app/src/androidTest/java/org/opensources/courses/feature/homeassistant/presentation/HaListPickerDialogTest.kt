@@ -22,7 +22,7 @@ class HaListPickerDialogTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private val list = ShoppingList("l1", "Courses", isDefault = true, remoteId = null, createdByApp = false, syncStatus = SyncStatus.LOCAL_ONLY)
+    private val list = ShoppingList("l1", "Courses", isDefault = true, remoteId = null, syncStatus = SyncStatus.LOCAL_ONLY)
 
     @Test
     fun firstSetupOffersToCreateOrLinkEachExistingList() {

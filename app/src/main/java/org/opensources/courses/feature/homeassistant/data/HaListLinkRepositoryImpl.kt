@@ -41,7 +41,7 @@ class HaListLinkRepositoryImpl
                 writer.stopIgnoring(entityId)
                 val tracked = trackedDao.getByEntityId(entityId)
                 val sameRemote = list.remoteId == entityId
-                resetItems(listId)
+                writer.detachItems(listId, SyncStatus.PENDING)
                 listDao.update(
                     list.copy(
                         remoteId = entityId,
@@ -62,7 +62,7 @@ class HaListLinkRepositoryImpl
                 val list = listDao.getById(listId) ?: return@inTransaction
                 // The Home Assistant list it leaves must not come back as an imported copy.
                 list.remoteId?.let { writer.ignore(it) }
-                resetItems(listId)
+                writer.detachItems(listId, SyncStatus.PENDING)
                 listDao.update(
                     list.copy(
                         remoteId = null,
@@ -97,18 +97,6 @@ class HaListLinkRepositoryImpl
                 listDao.getAll().filter { it.remoteId != null || it.syncStatus != SyncStatus.LOCAL_ONLY }.forEach { writer.unlink(it) }
                 // Also the deletions of lists already gone from this phone.
                 queue.clear()
-            }
-        }
-
-        /** Forgets previous remote ids and pending operations; tombstones are purged. */
-        private suspend fun resetItems(listId: String) {
-            queue.clearList(listId)
-            itemDao.getAllForList(listId).forEach { item ->
-                if (item.isDeleted) {
-                    itemDao.delete(item.localId)
-                } else {
-                    itemDao.update(item.copy(remoteId = null, syncStatus = SyncStatus.PENDING))
-                }
             }
         }
 

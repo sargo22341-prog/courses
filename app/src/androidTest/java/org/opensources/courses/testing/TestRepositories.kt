@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import org.opensources.courses.core.database.CoursesDatabase
 import org.opensources.courses.core.database.RoomTransactionRunner
+import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
+import org.opensources.courses.core.sync.SyncRequest
 import org.opensources.courses.feature.catalog.data.CatalogRepositoryImpl
 import org.opensources.courses.feature.homeassistant.data.HaListLinkRepositoryImpl
 import org.opensources.courses.feature.homeassistant.data.HaLocalListWriter
@@ -53,9 +55,9 @@ class FakeRemoteSyncEngine(
 
     override val isAutoSyncEnabled: Flow<Boolean> = flowOf(false)
 
-    override val remoteChanges: Flow<Unit> = emptyFlow()
+    override val remoteChanges: Flow<RemoteChange> = emptyFlow()
 
     override suspend fun synchronizesNewLists(): Boolean = newListsSynchronized
 
-    override suspend fun synchronize(): SyncOutcome = SyncOutcome.Skipped
+    override suspend fun synchronize(request: SyncRequest): SyncOutcome = SyncOutcome.Skipped
 }

@@ -36,7 +36,6 @@ fun ShoppingListEntity.toDomain(): ShoppingList =
         name = name,
         isDefault = isDefault,
         remoteId = remoteId,
-        createdByApp = createdByApp,
         syncStatus = syncStatus,
         importedFromRemote = importedFromRemote,
     )

@@ -104,9 +104,10 @@ Aucun fichier source ne dépasse 600 lignes.
 ## Base Room
 
 - `CoursesDatabase` est la **seule source de vérité** de l'interface.
-- Schéma exporté dans `app/schemas`, version 3, par `AutoMigration`
-  (2 : `catalog_products.groceryCategory` ; 3 : `shopping_lists.importedFromRemote`,
-  `shopping_lists.remoteName` et table `ha_ignored_lists`).
+- Schéma exporté dans `app/schemas`, version 4 (2 et 3 par `AutoMigration` :
+  `catalog_products.groceryCategory` ; `shopping_lists.importedFromRemote`,
+  `shopping_lists.remoteName` et table `ha_ignored_lists`. 4 par `CoursesDatabaseMigrations` :
+  suppression sur place des colonnes jamais lues).
 - Toute évolution du schéma incrémente la version et fournit une migration testée contre
   `app/schemas` (`CoursesDatabaseMigrationTest`). Jamais de migration destructive
   ([ADR 0020](adr/0020-migrations-room-sans-perte.md)).

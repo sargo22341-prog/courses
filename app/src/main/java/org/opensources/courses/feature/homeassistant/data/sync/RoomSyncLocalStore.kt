@@ -33,6 +33,8 @@ class RoomSyncLocalStore
         private val transactions: TransactionRunner,
         private val clock: Clock,
     ) : SyncLocalStore {
+        override suspend fun <T> inTransaction(block: suspend () -> T): T = transactions.inTransaction(block)
+
         override suspend fun synchronizedLists(): List<SyncListRef> =
             listDao.getSynchronized().map { SyncListRef(it.localId, it.name, it.remoteId, it.importedFromRemote, it.remoteName) }
 
@@ -41,19 +43,18 @@ class RoomSyncLocalStore
 
         override suspend fun items(listLocalId: String): List<SyncItemRef> =
             itemDao.getAllForList(listLocalId).map {
-                SyncItemRef(it.localId, it.listLocalId, it.name, it.quantity, it.unit, it.isChecked, it.remoteId, it.isDeleted)
+                SyncItemRef(it.localId, it.listLocalId, it.name, it.quantity, it.unit, it.isChecked, it.remoteId, it.isDeleted, it.syncStatus)
             }
 
         override suspend fun setListRemote(
             listLocalId: String,
             entityId: String,
             configEntryId: String?,
-            name: String,
         ) {
             transactions.inTransaction {
                 val list = listDao.getById(listLocalId) ?: return@inTransaction
                 listDao.update(list.copy(remoteId = entityId, remoteEntryId = configEntryId, createdByApp = true, syncStatus = SyncStatus.SYNCED))
-                trackedDao.upsert(HaTrackedListEntity(entityId, configEntryId, name, clock.millis()))
+                trackedDao.upsert(HaTrackedListEntity(entityId, configEntryId))
             }
         }
 

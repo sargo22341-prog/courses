@@ -30,6 +30,10 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
     /** Number of `get_items` calls. */
     var itemReads = 0
         private set
+
+    /** Number of times the lists were read (`/api/states`). */
+    var listReads = 0
+        private set
     private var nextUid = 1
 
     fun addRemote(
@@ -54,6 +58,7 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
 
     override suspend fun getTodoLists(credentials: HaCredentials): List<HaTodoList> {
         check()
+        listReads++
         return lists.values.toList()
     }
 

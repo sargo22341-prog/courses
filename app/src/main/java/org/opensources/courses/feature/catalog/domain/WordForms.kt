@@ -51,7 +51,7 @@ internal sealed interface WordForms {
             when {
                 !word.canBePlural() || word.endsWith("ss") -> word
                 word.endsWith("ies") -> word.dropLast(3) + "y"
-                listOf("oes", "ches", "shes", "sses", "xes", "zes").any(word::endsWith) -> word.dropLast(2)
+                ES_PLURAL_ENDINGS.any(word::endsWith) -> word.dropLast(2)
                 word.endsWith("s") -> word.dropLast(1)
                 else -> word
             }
@@ -59,11 +59,15 @@ internal sealed interface WordForms {
         override fun plurals(word: String) =
             when {
                 word.endsWith("y") && word.length > 1 && word[word.length - 2] !in "aeiou" -> listOf(word.dropLast(1) + "ies")
-                word.endsWith("ss") || listOf("x", "z", "ch", "sh").any(word::endsWith) -> listOf(word + "es")
+                word.endsWith("ss") || ES_SINGULAR_ENDINGS.any(word::endsWith) -> listOf(word + "es")
                 word.endsWith("s") -> listOf(word)
                 word.endsWith("o") -> listOf(word + "es", word + "s")
                 else -> listOf(word + "s")
             }
+
+        // Built once: these checks run for every word of every item each time a list is sorted.
+        private val ES_PLURAL_ENDINGS = listOf("oes", "ches", "shes", "sses", "xes", "zes")
+        private val ES_SINGULAR_ENDINGS = listOf("x", "z", "ch", "sh")
     }
 
     /** Tomaten → tomate, Brote → Brot, Eier → Ei (umlauts are already gone: Äpfel is "apfel"). */
@@ -135,7 +139,7 @@ internal sealed interface WordForms {
                 !word.canBePlural() -> word
                 word.endsWith("oes") || word.endsWith("aes") -> word.dropLast(3) + "ao"
                 word.endsWith("ns") -> word.dropLast(2) + "m"
-                listOf("ais", "eis", "ois", "uis").any(word::endsWith) -> word.dropLast(2) + "l"
+                L_PLURAL_ENDINGS.any(word::endsWith) -> word.dropLast(2) + "l"
                 word.endsWith("res") || word.endsWith("zes") -> word.dropLast(2)
                 word.endsWith("s") -> word.dropLast(1)
                 else -> word
@@ -145,10 +149,13 @@ internal sealed interface WordForms {
             when {
                 word.endsWith("ao") -> listOf(word.dropLast(2) + "oes", word.dropLast(2) + "aes", word + "s")
                 word.endsWith("m") -> listOf(word.dropLast(1) + "ns")
-                listOf("al", "el", "ol", "ul").any(word::endsWith) -> listOf(word.dropLast(1) + "is")
+                L_SINGULAR_ENDINGS.any(word::endsWith) -> listOf(word.dropLast(1) + "is")
                 word.last() in "rz" -> listOf(word + "es")
                 word.endsWith("s") -> listOf(word)
                 else -> listOf(word + "s")
             }
+
+        private val L_PLURAL_ENDINGS = listOf("ais", "eis", "ois", "uis")
+        private val L_SINGULAR_ENDINGS = listOf("al", "el", "ol", "ul")
     }
 }

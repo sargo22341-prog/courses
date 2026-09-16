@@ -22,6 +22,7 @@ Historique :
 | 1 | schéma initial |
 | 2 | `catalog_products.groceryCategory` (rayons) |
 | 3 | `shopping_lists.importedFromRemote`, `shopping_lists.remoteName`, table `ha_ignored_lists` |
+| 4 | colonnes jamais lues supprimées sur place (`ALTER TABLE … DROP COLUMN`) : `catalog_products.brand` et `parentId`, `shopping_items.version`, `sync_operations.lastError`, `ha_tracked_lists.name` et `createdAt` |
 
 ## Conséquences
 

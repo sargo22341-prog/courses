@@ -53,7 +53,7 @@ class RoomRepositoriesTest {
                 listOf(SyncOperationType.CREATE_ITEM, SyncOperationType.CHECK_ITEM, SyncOperationType.UNCHECK_ITEM, SyncOperationType.UPDATE_ITEM),
                 repositories.queue.pending().map { it.type },
             )
-            val stored = repositories.items.getItems(list.id).single()
+            val stored = repositories.database.shoppingItemDao().getActiveForList(list.id).single()
             assertEquals(SyncStatus.PENDING, stored.syncStatus)
             assertEquals(2.0, stored.quantity, 0.0)
         }
@@ -67,7 +67,7 @@ class RoomRepositoriesTest {
             repositories.items.addItem(NewShoppingItem(list.id, "Merguez"))
 
             assertEquals(SyncStatus.PENDING, list.syncStatus)
-            assertTrue(list.createdByApp)
+            assertEquals(true, repositories.database.shoppingListDao().getById(list.id)?.createdByApp)
             assertEquals(listOf(SyncOperationType.CREATE_LIST, SyncOperationType.CREATE_ITEM), repositories.queue.pending().map { it.type })
         }
 
@@ -116,8 +116,8 @@ class RoomRepositoriesTest {
     @Test
     fun catalogSearchUsesNamesAliasesAndKeepsUsageAcrossImports() =
         runTest {
-            val milk = CatalogImportProduct("en:milks", "Laits", "Produits laitiers", null, 3, aliases = listOf("lolo"))
-            repositories.catalog.replaceRemoteCatalog("v1", listOf(milk, CatalogImportProduct("en:breads", "Pains", null, null, 3)))
+            val milk = CatalogImportProduct("en:milks", "Laits", "Produits laitiers", 3, aliases = listOf("lolo"))
+            repositories.catalog.replaceRemoteCatalog("v1", listOf(milk, CatalogImportProduct("en:breads", "Pains", null, 3)))
             repositories.catalog.recordUsage("en:milks")
 
             assertEquals(listOf("Laits"), repositories.catalog.findCandidates("lai", 10).map { it.product.name })
@@ -138,13 +138,13 @@ class RoomRepositoriesTest {
             repositories.catalog.replaceRemoteCatalog(
                 "W/\"etag\"",
                 listOf(
-                    CatalogImportProduct("en:milks", "Milks", null, null, 3),
-                    CatalogImportProduct("en:tomato-and-vermicelli-soups", "Tomato and vermicelli soups", null, null, 3),
+                    CatalogImportProduct("en:milks", "Milks", null, 3),
+                    CatalogImportProduct("en:tomato-and-vermicelli-soups", "Tomato and vermicelli soups", null, 3),
                 ),
             )
             repositories.catalog.recordUsage("en:milks")
 
-            repositories.catalog.replaceRemoteCatalog("W/\"etag\"", listOf(CatalogImportProduct("en:milks", "Laits", null, null, 3)))
+            repositories.catalog.replaceRemoteCatalog("W/\"etag\"", listOf(CatalogImportProduct("en:milks", "Laits", null, 3)))
 
             assertTrue(repositories.catalog.findCandidates("tomato", 10).isEmpty())
             val milk = repositories.catalog.findCandidates("lait", 10).single()
@@ -169,14 +169,14 @@ class RoomRepositoriesTest {
             repositories.catalog.replaceRemoteCatalog(
                 "v1",
                 listOf(
-                    CatalogImportProduct("en:tomatoes", "Tomates", null, null, 3, groceryCategory = GroceryCategory.FRUITS_VEGETABLES),
-                    CatalogImportProduct("en:milk", "Lait", null, null, 3, groceryCategory = GroceryCategory.DRINKS),
-                    CatalogImportProduct("en:food-additives", "Additifs", null, null, 3),
+                    CatalogImportProduct("en:tomatoes", "Tomates", null, 3, groceryCategory = GroceryCategory.FRUITS_VEGETABLES),
+                    CatalogImportProduct("en:milk", "Lait", null, 3, groceryCategory = GroceryCategory.DRINKS),
+                    CatalogImportProduct("en:food-additives", "Additifs", null, 3),
                 ),
             )
             repositories.catalog.replaceSeedCatalog(
                 "seed-3-fr",
-                listOf(CatalogImportProduct("seed:lait", "Lait", "Produits laitiers", null, 8, groceryCategory = GroceryCategory.DAIRY_EGGS)),
+                listOf(CatalogImportProduct("seed:lait", "Lait", "Produits laitiers", 8, groceryCategory = GroceryCategory.DAIRY_EGGS)),
             )
             // Typed by hand before any match existed: a custom product has no section of its own.
             repositories.catalog.getOrCreateCustomProduct("Tomate")

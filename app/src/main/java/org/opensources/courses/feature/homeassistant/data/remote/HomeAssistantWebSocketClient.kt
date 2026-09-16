@@ -1,5 +1,6 @@
 package org.opensources.courses.feature.homeassistant.data.remote
 
+import dagger.Lazy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -13,16 +14,18 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
@@ -33,29 +36,31 @@ import javax.inject.Inject
 /**
  * Live to-do changes through the Home Assistant WebSocket API (`todo/item/subscribe`).
  *
- * An event only signals that something changed: the synchronisation engine then reads and merges
- * the lists as usual, so there is a single merge path. The token travels only in the `auth`
- * message. A lost connection is reopened after a growing delay (5 s up to 5 min); a refused token
- * is never tried again.
+ * An event only tells which list changed: the synchronisation engine then reads and merges that list
+ * as usual, so there is a single merge path. Each event carries the id of its subscription, hence of
+ * its list. The token travels only in the `auth` message. A lost connection is reopened after a
+ * growing delay (5 s up to 5 min); a refused token is never tried again.
  */
 class HomeAssistantWebSocketClient
     @Inject
     constructor(
-        client: OkHttpClient,
+        client: Lazy<OkHttpClient>,
         private val json: Json,
     ) : HaLiveUpdates {
-        // No read timeout on an idle connection; pings detect a dead one.
-        private val socketClient =
+        // Built on first use, not at start. No read timeout on an idle connection; pings detect a dead one.
+        private val socketClient by lazy {
             client
+                .get()
                 .newBuilder()
                 .readTimeout(0, TimeUnit.MILLISECONDS)
                 .pingInterval(PING_INTERVAL_SECONDS, TimeUnit.SECONDS)
                 .build()
+        }
 
         override fun observeItemChanges(
             credentials: HaCredentials,
             entityIds: Set<String>,
-        ): Flow<Unit> =
+        ): Flow<RemoteChange> =
             flow {
                 var failures = 0
                 while (true) {
@@ -71,9 +76,10 @@ class HomeAssistantWebSocketClient
                     if (!lost) {
                         // Retrying cannot help (refused token, invalid address): the synchronisation
                         // asked here reports it, and the connection is opened again once they change.
-                        emit(Unit)
+                        emit(RemoteChange.Refused)
                         return@flow
                     }
+                    emit(RemoteChange.Disconnected)
                     delay(retryDelayMillis(failures++))
                 }
             }
@@ -81,19 +87,22 @@ class HomeAssistantWebSocketClient
         private fun connect(
             credentials: HaCredentials,
             entityIds: Set<String>,
-        ): Flow<Unit> =
-            callbackFlow {
+        ): Flow<RemoteChange> {
+            val entityBySubscription = entityIds.withIndex().associate { (index, entityId) -> index + FIRST_SUBSCRIPTION_ID to entityId }
+            // Every event is kept, since each names a list to synchronise; they are few and handled at once.
+            return callbackFlow {
                 val listener =
                     object : WebSocketListener() {
                         override fun onMessage(
                             webSocket: WebSocket,
                             text: String,
                         ) {
-                            when (parse(text)?.get("type")?.jsonPrimitive?.contentOrNull) {
+                            val message = parse(text) ?: return
+                            when (message.string("type")) {
                                 "auth_required" -> webSocket.send(authMessage(credentials.token))
-                                "auth_ok" -> entityIds.forEachIndexed { index, entityId -> webSocket.send(subscribeMessage(index + 1, entityId)) }
+                                "auth_ok" -> entityBySubscription.forEach { (id, entityId) -> webSocket.send(subscribeMessage(id, entityId)) }
                                 "auth_invalid" -> close(HomeAssistantException(HaErrorKind.UNAUTHORIZED))
-                                "event" -> trySend(Unit)
+                                "event" -> trySend(RemoteChange.ItemsChanged(changedLists(message, entityBySubscription)))
                             }
                         }
 
@@ -121,7 +130,17 @@ class HomeAssistantWebSocketClient
                     }
                 val socket = socketClient.newWebSocket(request, listener)
                 awaitClose { socket.close(NORMAL_CLOSURE, null) }
-            }.buffer(Channel.CONFLATED)
+            }.buffer(Channel.UNLIMITED)
+        }
+
+        /** The list of the event's subscription; every list when the event does not tell. */
+        private fun changedLists(
+            event: JsonObject,
+            entityBySubscription: Map<Int, String>,
+        ): Set<String> {
+            val entityId = (event["id"] as? JsonPrimitive)?.intOrNull?.let(entityBySubscription::get)
+            return if (entityId != null) setOf(entityId) else entityBySubscription.values.toSet()
+        }
 
         /** A frame that is not a JSON object cannot announce a to-do change: it is ignored. */
         private fun parse(text: String): JsonObject? =
@@ -132,6 +151,8 @@ class HomeAssistantWebSocketClient
             } catch (_: IllegalArgumentException) {
                 null
             }
+
+        private fun JsonObject.string(key: String): String? = (get(key) as? JsonPrimitive)?.contentOrNull
 
         private fun authMessage(token: String): String =
             buildJsonObject {
@@ -154,6 +175,7 @@ class HomeAssistantWebSocketClient
         private companion object {
             const val WEBSOCKET_PATH = "/api/websocket"
             const val NORMAL_CLOSURE = 1000
+            const val FIRST_SUBSCRIPTION_ID = 1
             const val PING_INTERVAL_SECONDS = 30L
             const val FIRST_RETRY_MILLIS = 5_000L
             const val MAX_RETRY_MILLIS = 5 * 60 * 1_000L

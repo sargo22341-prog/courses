@@ -42,7 +42,7 @@ class ItemCatalogLinkRoomTest {
         repositories.database.close()
     }
 
-    private fun seedMilk(name: String) = CatalogImportProduct("seed:lait", name, null, null, 8, groceryCategory = GroceryCategory.DAIRY_EGGS)
+    private fun seedMilk(name: String) = CatalogImportProduct("seed:lait", name, null, 8, groceryCategory = GroceryCategory.DAIRY_EGGS)
 
     @Test
     fun replacingTheCatalogInAnotherLanguageKeepsListItemsAndTheirProducts() =

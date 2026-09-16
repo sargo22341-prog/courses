@@ -3,7 +3,6 @@ package org.opensources.courses.feature.homeassistant.data.remote
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -32,7 +31,6 @@ class HomeAssistantClient
     @Inject
     constructor(
         private val api: HomeAssistantApi,
-        private val json: Json,
     ) : HomeAssistantGateway {
         override suspend fun testConnection(credentials: HaCredentials) {
             call { api.apiStatus(credentials.url("/api/"), credentials.bearer()) }
@@ -58,14 +56,13 @@ class HomeAssistantClient
         ): List<HaTodoItem> {
             val response =
                 call {
-                    api.callService(
+                    api.getItems(
                         credentials.url("/api/services/todo/get_items?return_response"),
                         credentials.bearer(),
                         buildJsonObject { put("entity_id", entityId) },
                     )
                 }
-            val decoded = call { json.decodeFromJsonElement(ServiceResponseDto.serializer(), response) }
-            return decoded.serviceResponse[entityId]?.items.orEmpty().map {
+            return response.serviceResponse[entityId]?.items.orEmpty().map {
                 HaTodoItem(it.uid, it.summary, it.status == TodoItemDto.STATUS_COMPLETED, it.description, it.completed?.let(::epochMillis))
             }
         }

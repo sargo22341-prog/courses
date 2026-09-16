@@ -35,9 +35,20 @@ UI → ViewModel → Repository ──┬─ écrit l'article
 - au retour du réseau ;
 - à chaque nouvelle opération en attente ;
 - toutes les 2 minutes, **seulement au premier plan** : en arrière-plan, rien ne réveille la radio
-  périodiquement ([ADR 0023](adr/0023-synchronisation-periodique-au-premier-plan.md)) ;
+  périodiquement ([ADR 0023](adr/0023-synchronisation-periodique-au-premier-plan.md)). Tant que la
+  connexion temps réel fonctionne, toutes les 10 minutes seulement ;
 - sur « Synchroniser maintenant » et « tirer pour actualiser » ;
 - à chaque changement annoncé par le WebSocket de Home Assistant (au premier plan).
+
+Les demandes faites pendant l'attente de 1,5 s sont fusionnées en une seule `SyncRequest`, qui dit
+s'il faut relire les listes de Home Assistant et lesquelles synchroniser
+([ADR 0024](adr/0024-synchronisation-ciblee.md)) :
+
+| Déclencheur | Listes Home Assistant (`/api/states`) | Listes synchronisées |
+| --- | --- | --- |
+| Démarrage, premier plan, retour du réseau, nouvel essai périodique, action de l'utilisateur | relues | toutes |
+| Nouvelle opération en attente | reprises de la dernière synchronisation réussie | toutes |
+| Événement WebSocket | reprises de la dernière synchronisation réussie | celle de l'événement |
 
 Pas de WorkManager : la file est persistée, elle part au prochain de ces déclencheurs
 ([ADR 0004](adr/0004-pas-de-workmanager.md)).
@@ -48,9 +59,15 @@ bien qu'un Wi-Fi domestique privé d'Internet laisse Home Assistant local joigna
 
 ## Comment synchroniser : `HomeAssistantSyncEngine`
 
-Les listes Home Assistant sont lues d'abord, ce qui vérifie aussi le token avant que quoi que ce
-soit compte comme refusé. La file est lue **une seule fois** par synchronisation ; les opérations
-ajoutées pendant ce temps partent à la suivante, que leur insertion déclenche de toute façon.
+La file est lue **une seule fois** par synchronisation ; les opérations ajoutées pendant ce temps
+partent à la suivante, que leur insertion déclenche de toute façon. Les listes Home Assistant sont
+lues ensuite, ce qui vérifie aussi le token avant que quoi que ce soit compte comme refusé.
+
+Quand la demande ne l'exige pas, les listes lues par la dernière synchronisation réussie sont
+reprises (`RemoteListsCache`, en mémoire, même adresse et même token), sauf si une opération de
+liste est en attente ou si une liste liée n'y figure pas. La première requête est alors la lecture
+des articles, qui vérifie le token tout autant. Des listes reprises n'importent ni ne retirent
+jamais de liste.
 
 Liste par liste :
 
@@ -62,13 +79,15 @@ Liste par liste :
    localement partent : nom et quantité après une modification, état coché après une coche. Une
    création envoie tout ;
 4. appliquer la liste distante selon la [stratégie de conflit](conflits.md), après l'avoir relue
-   si quelque chose a été envoyé (sinon la première lecture suffit).
+   si quelque chose a été envoyé (sinon la première lecture suffit). Toute la liste est appliquée
+   dans **une seule transaction** Room (l'écran n'est mis à jour qu'une fois) ; les articles déjà
+   synchronisés et identiques des deux côtés ne sont pas réécrits.
 
 ## Confirmation et échecs
 
 - Une opération n'est retirée de la file **qu'après confirmation** de Home Assistant.
 - Refus (requête rejetée, élément introuvable, réponse inattendue) : elle reste, avec son nombre
-  de tentatives et l'erreur. Un refus ne concerne que son article : les autres partent quand même.
+  de tentatives. Un refus ne concerne que son article : les autres partent quand même.
 - **Abandon** : une opération refusée `SyncQueue.MAX_ATTEMPTS` fois (10) n'est plus envoyée
   ([ADR 0022](adr/0022-abandon-des-operations-refusees.md)). Dans la même transaction, l'article
   est remis en cohérence : une suppression refusée est annulée (l'article réapparaît), un article

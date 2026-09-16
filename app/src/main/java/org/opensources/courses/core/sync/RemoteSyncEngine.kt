@@ -14,15 +14,15 @@ interface RemoteSyncEngine {
     val isAutoSyncEnabled: Flow<Boolean>
 
     /**
-     * Emits when the remote reports a change, while collected (the app is in the foreground). An
-     * emission only asks for a synchronisation; it never fails.
+     * What the remote reports live, while collected (the app is in the foreground). An emission only
+     * asks for a synchronisation or tells whether changes are followed live; it never fails.
      */
-    val remoteChanges: Flow<Unit>
+    val remoteChanges: Flow<RemoteChange>
 
     /** True when a list created now must be synchronised from the start (created remotely at the next sync). */
     suspend fun synchronizesNewLists(): Boolean
 
-    suspend fun synchronize(): SyncOutcome
+    suspend fun synchronize(request: SyncRequest = SyncRequest.Full): SyncOutcome
 }
 
 sealed interface SyncOutcome {

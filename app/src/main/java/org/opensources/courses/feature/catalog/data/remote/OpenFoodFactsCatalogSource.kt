@@ -45,9 +45,10 @@ class OpenFoodFactsCatalogSource
                         response.errorBody()?.close()
                         throw CatalogDownloadException("HTTP ${response.code()}")
                     }
-                    val entries = body.use { json.decodeFromStream(serializer, it.byteStream()) }
+                    val taxonomy = taxonomyJson(json, language)
+                    val entries = body.use { taxonomy.decodeFromStream(serializer, it.byteStream()) }
                     val version = response.headers()["ETag"] ?: response.headers()["Last-Modified"] ?: UNKNOWN_VERSION
-                    RemoteCatalogResult.Updated(version, TaxonomyCatalogMapper(language).map(entries))
+                    RemoteCatalogResult.Updated(version, TaxonomyCatalogMapper.map(entries))
                 } catch (exception: IOException) {
                     throw CatalogDownloadException("Network error", exception)
                 } catch (exception: SerializationException) {

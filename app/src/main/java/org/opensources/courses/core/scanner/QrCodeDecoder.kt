@@ -22,16 +22,24 @@ class QrCodeDecoder {
             DecodeHintType.TRY_HARDER to true,
             DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
         )
+    private var looksForInvertedCode = false
 
-    /** Text of the QR code found in the [width]×[height] luminance frame, or null. */
+    /**
+     * Text of the QR code found in the [width]×[height] luminance frame, or null.
+     *
+     * Only the centred square is searched: it holds the frame the scanner shows, whatever the
+     * orientation, and leaves out the rest of a wide frame. Light-on-dark codes, shown by some screens
+     * and themes, are looked for in every other frame only: most frames hold no code at all.
+     */
     fun decode(
         luminance: ByteArray,
         width: Int,
         height: Int,
     ): String? {
-        val source = PlanarYUVLuminanceSource(luminance, width, height, 0, 0, width, height, false)
-        // Some screens and themes display light-on-dark codes.
-        return decode(source) ?: decode(source.invert())
+        val side = minOf(width, height)
+        val source = PlanarYUVLuminanceSource(luminance, width, height, (width - side) / 2, (height - side) / 2, side, side, false)
+        looksForInvertedCode = !looksForInvertedCode
+        return decode(source) ?: if (looksForInvertedCode) decode(source.invert()) else null
     }
 
     private fun decode(source: LuminanceSource): String? =
@@ -45,20 +53,19 @@ class QrCodeDecoder {
 }
 
 /**
- * Copies the Y (luminance) plane of a YUV_420_888 frame into a tight width×height array.
+ * Copies the Y (luminance) plane of a YUV_420_888 frame into [target], a tight width×height array.
  * Camera buffers may pad each row: [rowStride] can be larger than [width].
  */
-fun yPlaneToLuminance(
+fun copyLuminance(
     buffer: ByteBuffer,
     rowStride: Int,
     width: Int,
     height: Int,
-): ByteArray {
+    target: ByteArray,
+) {
     val source = buffer.duplicate()
-    val luminance = ByteArray(width * height)
     for (row in 0 until height) {
         source.position(row * rowStride)
-        source.get(luminance, row * width, width)
+        source.get(target, row * width, width)
     }
-    return luminance
 }

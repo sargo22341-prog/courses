@@ -46,17 +46,15 @@ object SeedCatalogMapper {
                 val groceryCategory = GroceryCategory.valueOf(category.category)
                 val categoryName = category.name.getValue(language.tag)
                 category.products.flatMap { product ->
-                    val parentId = idFor(product.name)
                     val aliases = product.aliases[language.tag].orEmpty()
                     listOf(
-                        CatalogImportProduct(parentId, product.name.getValue(language.tag), categoryName, null, PRODUCT_SCORE, aliases, groceryCategory),
+                        CatalogImportProduct(idFor(product.name), product.name.getValue(language.tag), categoryName, PRODUCT_SCORE, aliases, groceryCategory),
                     ) +
                         product.variants.map { variant ->
                             CatalogImportProduct(
                                 idFor(variant),
                                 variant.getValue(language.tag),
                                 categoryName,
-                                parentId,
                                 VARIANT_SCORE,
                                 groceryCategory = groceryCategory,
                             )

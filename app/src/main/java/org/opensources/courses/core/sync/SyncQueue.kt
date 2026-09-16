@@ -48,14 +48,11 @@ class SyncQueue
         }
 
         /**
-         * Keeps the operations for a later retry and records why they failed. Only refusals are
-         * recorded: while the remote cannot be reached nothing is attempted, so nothing is counted.
+         * Keeps the operations for a later retry and counts the refusal. Only refusals are counted:
+         * while the remote cannot be reached nothing is attempted.
          */
-        suspend fun fail(
-            ids: List<Long>,
-            error: String,
-        ) {
-            if (ids.isNotEmpty()) dao.markFailed(ids, error)
+        suspend fun fail(ids: List<Long>) {
+            if (ids.isNotEmpty()) dao.markFailed(ids)
         }
 
         suspend fun hasPendingForItem(itemLocalId: String): Boolean = dao.countForItem(itemLocalId) > 0

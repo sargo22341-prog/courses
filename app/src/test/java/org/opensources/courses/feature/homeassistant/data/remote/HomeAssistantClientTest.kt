@@ -1,12 +1,11 @@
 package org.opensources.courses.feature.homeassistant.data.remote
 
+import dagger.Lazy
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -15,11 +14,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import org.opensources.courses.feature.homeassistant.data.HomeAssistantDataModule
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 class HomeAssistantClientTest {
     private val server = MockWebServer()
@@ -30,15 +28,7 @@ class HomeAssistantClientTest {
     @Before
     fun setUp() {
         server.start()
-        val api =
-            Retrofit
-                .Builder()
-                .baseUrl("http://localhost/")
-                .client(OkHttpClient())
-                .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-                .build()
-                .create(HomeAssistantApi::class.java)
-        client = HomeAssistantClient(api, json)
+        client = HomeAssistantClient(HomeAssistantDataModule.homeAssistantApi(Lazy { OkHttpClient() }, json))
         credentials = HaCredentials(server.url("/").toString().trimEnd('/'), "secret-token")
     }
 
@@ -144,6 +134,29 @@ class HomeAssistantClientTest {
 
             assertFalse(client.getTodoLists(credentials).single().isAvailable)
             assertEquals(1789308625772L, client.getItems(credentials, "todo.courses").single().completedAt)
+        }
+
+    @Test
+    fun `the answer of a service that changes items is not read`() =
+        runTest {
+            respond("not the JSON of the changed entities")
+
+            client.addItem(credentials, "todo.courses", "Lait", description = null)
+
+            assertEquals("/api/services/todo/add_item", server.takeRequest().url.encodedPath)
+        }
+
+    @Test
+    fun `the HTTP client is built at the first request, not with the API`() =
+        runTest {
+            var built = false
+            val api = HomeAssistantDataModule.homeAssistantApi(Lazy { OkHttpClient().also { built = true } }, json)
+            assertFalse(built)
+            respond("""{"message":"API running."}""")
+
+            HomeAssistantClient(api).testConnection(credentials)
+
+            assertTrue(built)
         }
 
     @Test
@@ -257,7 +270,7 @@ class HomeAssistantClientTest {
     fun `Retrofit refusing a method is not blamed on the address`() =
         runTest {
             // What a release build did when R8 had removed ApiStatusDto: "Adresse invalide" for a valid address.
-            val client = HomeAssistantClient(ConverterlessApi(), json)
+            val client = HomeAssistantClient(ConverterlessApi())
 
             assertErrorKind(HaErrorKind.PROTOCOL) { client.testConnection(credentials) }
         }
@@ -275,11 +288,17 @@ class HomeAssistantClientTest {
             authorization: String,
         ): List<EntityStateDto> = refuse()
 
+        override suspend fun getItems(
+            url: String,
+            authorization: String,
+            body: JsonObject,
+        ): ServiceResponseDto = refuse()
+
         override suspend fun callService(
             url: String,
             authorization: String,
             body: JsonObject,
-        ): JsonElement = refuse()
+        ): Unit = refuse()
 
         override suspend fun configFlow(
             url: String,
@@ -290,7 +309,7 @@ class HomeAssistantClientTest {
         override suspend fun deleteConfigEntry(
             url: String,
             authorization: String,
-        ): JsonElement = refuse()
+        ): Unit = refuse()
     }
 
     private suspend fun assertErrorKind(

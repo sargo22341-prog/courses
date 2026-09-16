@@ -3,7 +3,6 @@ package org.opensources.courses.feature.homeassistant.data.sync
 import org.opensources.courses.core.sync.SyncOperation
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
-import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import org.opensources.courses.feature.homeassistant.domain.ConflictResolver
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
@@ -83,7 +82,7 @@ class HaItemPusher(
             val ids = operations.map { it.id }
             when {
                 operations.none { it.isLastAttempt } -> {
-                    queue.fail(ids, exception.kind.name)
+                    queue.fail(ids)
                     tally.retried++
                 }
                 item == null -> {
@@ -181,18 +180,15 @@ class HaItemPusher(
         awaitingUid: List<Pair<SyncItemRef, List<SyncOperation>>>,
         tally: SyncTally,
     ) {
-        val remoteItems = gateway.getItems(credentials, remoteList.entityId).asReversed()
-        val claimed = store.items(listLocalId).mapNotNull { it.remoteId }.toMutableSet()
+        val unclaimed = UnclaimedRemoteItems(gateway.getItems(credentials, remoteList.entityId).asReversed(), store.items(listLocalId).mapNotNull { it.remoteId })
         for ((item, operations) in awaitingUid) {
             val ids = operations.map { it.id }
-            val key = TextNormalizer.normalize(item.name)
-            val match = remoteItems.firstOrNull { it.uid !in claimed && TextNormalizer.normalize(it.summary) == key }
+            val match = unclaimed.claim(item.name)
             if (match == null) {
                 store.purgeItem(item.localId)
                 queue.complete(ids)
                 continue
             }
-            claimed += match.uid
             // Linked before its state is sent: whatever happens next, it is never created twice.
             store.setItemRemoteId(item.localId, match.uid)
             refusable(item, operations, tally) {

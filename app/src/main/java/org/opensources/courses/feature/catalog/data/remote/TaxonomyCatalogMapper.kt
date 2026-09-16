@@ -2,13 +2,13 @@ package org.opensources.courses.feature.catalog.data.remote
 
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
-import org.opensources.courses.feature.language.domain.AppLanguage
 
 /**
- * Cleans the OpenFoodFacts categories taxonomy into shopping-list products named in [language].
+ * Cleans the OpenFoodFacts categories taxonomy into shopping-list products, named in the language
+ * the entries were read in ([taxonomyJson]).
  *
- * The raw file holds ~15 000 categories in many languages. Kept entries must:
- * - have a name in [language];
+ * The raw file holds ~15 000 categories. Kept entries must:
+ * - have a name in that language;
  * - not be a protected designation (AOP/IGP wines, cheeses…) or tied to an origin
  *   (`Miels du Jura`): too specific to be typed in a shopping list;
  * - be short (≤ 4 words, ≤ 40 characters) and contain no digit (`Laits 2ème âge`).
@@ -17,15 +17,22 @@ import org.opensources.courses.feature.language.domain.AppLanguage
  * section comes from [OpenFoodFactsGroceryCategories]. Ids are the taxonomy ids (`en:milks`), the
  * same in every language.
  */
-class TaxonomyCatalogMapper(
-    language: AppLanguage,
-) {
-    private val tag = language.tag
+object TaxonomyCatalogMapper {
+    /**
+     * Version of the data [map] produces, exposed as the catalog format version: increase it
+     * whenever [map] extracts new data so older imports are downloaded again. 1: shop sections.
+     */
+    const val FORMAT_VERSION = 1
+
+    private const val MAX_WORDS = 4
+    private const val MAX_NAME_LENGTH = 40
+    private const val MAX_DEPTH = 15
+    private const val MAX_BASE_SCORE = 5
 
     fun map(entries: Map<String, TaxonomyEntryDto>): List<CatalogImportProduct> {
         val byName = LinkedHashMap<String, CatalogImportProduct>()
         for ((id, entry) in entries) {
-            val name = entry.name[tag]?.trim() ?: continue
+            val name = entry.name.text?.trim() ?: continue
             if (!isUseful(entry, name)) continue
             val ancestors = ancestorsOf(id, entries)
             val product =
@@ -33,7 +40,6 @@ class TaxonomyCatalogMapper(
                     id = id,
                     name = name.replaceFirstChar { it.uppercaseChar() },
                     category = categoryName(ancestors, entries),
-                    parentId = entry.parents.firstOrNull { entries[it]?.name?.containsKey(tag) == true },
                     baseScore = (MAX_BASE_SCORE - ancestors.size).coerceAtLeast(0),
                     groceryCategory = OpenFoodFactsGroceryCategories.categoryOf(listOf(id) + ancestors),
                 )
@@ -48,8 +54,8 @@ class TaxonomyCatalogMapper(
         entry: TaxonomyEntryDto,
         name: String,
     ): Boolean =
-        entry.protectedNameType == null &&
-            entry.origins == null &&
+        !entry.isProtectedName &&
+            !entry.hasOrigins &&
             name.length <= MAX_NAME_LENGTH &&
             name.none { it.isDigit() } &&
             name.split(' ').count { it.isNotBlank() } <= MAX_WORDS
@@ -74,19 +80,6 @@ class TaxonomyCatalogMapper(
         entries: Map<String, TaxonomyEntryDto>,
     ): String? {
         val shelf = if (ancestors.size >= 2) ancestors[ancestors.size - 2] else ancestors.lastOrNull()
-        return shelf?.let { entries[it]?.name?.get(tag) }
-    }
-
-    companion object {
-        /**
-         * Version of the data [map] produces, exposed as the catalog format version: increase it
-         * whenever [map] extracts new data so older imports are downloaded again. 1: shop sections.
-         */
-        const val FORMAT_VERSION = 1
-
-        private const val MAX_WORDS = 4
-        private const val MAX_NAME_LENGTH = 40
-        private const val MAX_DEPTH = 15
-        private const val MAX_BASE_SCORE = 5
+        return shelf?.let { entries[it]?.name?.text }
     }
 }

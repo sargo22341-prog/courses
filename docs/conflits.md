@@ -43,7 +43,7 @@ coché plus tard. La comparaison des dates suppose que les horloges du télépho
 
 - Les écritures issues du distant revérifient **dans leur transaction** l'absence d'opération
   locale en attente.
-- Chaque article porte `localId`, `remoteId`, `updatedAt`, `version` et `syncStatus`.
+- Chaque article porte `localId`, `remoteId`, `updatedAt` et `syncStatus`.
 - Modifier cette stratégie impose de mettre à jour `ConflictResolver`, `ConflictResolverTest`,
   cette page et l'ADR.
 - **Seule exception** : une modification locale que Home Assistant a **refusée 10 fois** est

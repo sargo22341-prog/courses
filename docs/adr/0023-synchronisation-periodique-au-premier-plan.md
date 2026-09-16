@@ -1,6 +1,7 @@
 # ADR 0023 — Synchronisation périodique au premier plan seulement
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; la cadence au premier plan est précisée par
+  [ADR 0024](0024-synchronisation-ciblee.md) (10 minutes quand le temps réel fonctionne)
 - **Voir aussi** : [Synchronisation](../synchronisation.md#quand-synchroniser--synccoordinator), [ADR 0004](0004-pas-de-workmanager.md), [ADR 0017](0017-temps-reel-websocket-okhttp.md)
 
 ## Contexte

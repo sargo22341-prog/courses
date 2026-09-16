@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.opensources.courses.core.common.ApplicationScope
@@ -69,13 +71,18 @@ class ShoppingViewModel
         var query by mutableStateOf("")
             private set
 
-        private val currentList: Flow<ShoppingList?> =
+        /**
+         * Shared by the screen and the additions: adding an item reads the list shown instead of
+         * querying Room again. Forgotten once nobody observes it, so it is never read stale.
+         */
+        private val currentList: SharedFlow<ShoppingList?> =
             if (requestedListId == null) {
                 lists.observeDefaultList()
             } else {
                 // A list deleted meanwhile falls back to the default list.
                 lists.observeList(requestedListId).flatMapLatest { list -> if (list != null) flowOf(list) else lists.observeDefaultList() }
             }.distinctUntilChanged()
+                .shareIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0), replay = 1)
 
         private val groupByCategory: Flow<Boolean> = preferences.preferences.map { it.groupByCategory }.distinctUntilChanged()
 
@@ -85,13 +92,13 @@ class ShoppingViewModel
          */
         private val listContent: Flow<ListContent> =
             currentList.flatMapLatest { list ->
-                if (list == null) return@flatMapLatest flowOf(ListContent(null, emptyList(), toBuySections = null))
+                if (list == null) return@flatMapLatest flowOf(ListContent.of(null, emptyList(), toBuySections = null))
                 val listItems = items.observeItems(list.id)
                 groupByCategory.flatMapLatest { grouped ->
                     if (grouped) {
-                        groupItemsByCategory(listItems).map { ListContent(list, it.items, it.sections.withoutChecked()) }
+                        groupItemsByCategory(listItems).map { ListContent.of(list, it.items, it.sections.withoutChecked()) }
                     } else {
-                        listItems.map { ListContent(list, it, toBuySections = null) }
+                        listItems.map { ListContent.of(list, it, toBuySections = null) }
                     }
                 }
             }
@@ -107,26 +114,31 @@ class ShoppingViewModel
         /** Hidden at once, deleted only once it can no longer be undone. */
         private val pendingDeletion = MutableStateFlow<ShoppingItem?>(null)
 
+        /**
+         * Computed only when the items or the pending deletion change: the lists keep their identity
+         * when the sync state or the suggestions change, so the list on screen is not recomposed.
+         */
+        private val shownContent: Flow<ListContent> = combine(listContent, pendingDeletion) { content, deleted -> content.without(deleted) }
+
         val uiState: StateFlow<ShoppingUiState> =
             combine(
-                listContent,
+                shownContent,
                 preferences.preferences,
                 suggestions,
                 syncCoordinator.snapshot,
-                combine(refreshing, pendingDeletion, ::Pair),
-            ) { content, prefs, found, sync, (isRefreshing, deleted) ->
-                val shown = content.without(deleted)
+                refreshing,
+            ) { shown, prefs, found, sync, isRefreshing ->
                 ShoppingUiState(
                     isLoading = shown.list == null,
                     listName = shown.list?.name.orEmpty(),
-                    toBuy = shown.items.filterNot { it.isChecked },
+                    toBuy = shown.toBuy,
                     toBuySections = shown.toBuySections,
-                    purchased = shown.items.filter { it.isChecked },
+                    purchased = shown.purchased,
                     hidePurchased = prefs.hidePurchased,
                     suggestions = found,
                     sync = sync,
                     isRefreshing = isRefreshing,
-                    pendingDeletion = deleted,
+                    pendingDeletion = shown.pendingDeletion,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ShoppingUiState())
 
@@ -142,9 +154,8 @@ class ShoppingViewModel
 
         /** Keyboard "done": the exact suggestion when there is one, otherwise the typed text. */
         fun onSubmitQuery() {
-            val normalized = TextNormalizer.normalize(query)
-            if (normalized.isEmpty()) return
-            val exact = uiState.value.suggestions.firstOrNull { TextNormalizer.normalize(it.name) == normalized }
+            if (TextNormalizer.normalize(query).isEmpty()) return
+            val exact = uiState.value.exactSuggestion(query)
             add(exact?.name ?: query, exact?.productId)
         }
 
@@ -227,23 +238,40 @@ class ShoppingViewModel
 
         private suspend fun currentListId(): String? = currentList.first()?.id
 
+        /** [pendingDeletion] is already left out of the items and the sections. */
         private data class ListContent(
             val list: ShoppingList?,
-            val items: List<ShoppingItem>,
+            val toBuy: List<ShoppingItem>,
+            val purchased: List<ShoppingItem>,
             val toBuySections: List<ItemSection>?,
+            val pendingDeletion: ShoppingItem? = null,
         ) {
             fun without(deleted: ShoppingItem?): ListContent =
                 if (deleted == null) {
                     this
                 } else {
                     copy(
-                        items = items.filterNot { it.id == deleted.id },
+                        toBuy = toBuy.filterNot { it.id == deleted.id },
+                        purchased = purchased.filterNot { it.id == deleted.id },
                         toBuySections =
                             toBuySections
                                 ?.map { section -> section.copy(items = section.items.filterNot { it.id == deleted.id }) }
                                 ?.filter { it.items.isNotEmpty() },
+                        pendingDeletion = deleted,
                     )
                 }
+
+            companion object {
+                /** Items to buy and items bought, split once for every later emission that keeps them. */
+                fun of(
+                    list: ShoppingList?,
+                    items: List<ShoppingItem>,
+                    toBuySections: List<ItemSection>?,
+                ): ListContent {
+                    val (purchased, toBuy) = items.partition { it.isChecked }
+                    return ListContent(list, toBuy, purchased, toBuySections)
+                }
+            }
         }
 
         private companion object {

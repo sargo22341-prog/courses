@@ -39,7 +39,7 @@ class LocalNetworkConnectionTest {
             assumeTrue("No $URL_ARGUMENT instrumentation argument", url != null)
             val expectReachable = arguments.getString(EXPECT_ARGUMENT, "true").toBoolean()
             val json = NetworkModule.json()
-            val client = HomeAssistantClient(HomeAssistantDataModule.homeAssistantApi(NetworkModule.okHttpClient(), json), json)
+            val client = HomeAssistantClient(HomeAssistantDataModule.homeAssistantApi({ NetworkModule.okHttpClient() }, json))
             val credentials = HaCredentials(url!!, TEST_TOKEN)
 
             try {

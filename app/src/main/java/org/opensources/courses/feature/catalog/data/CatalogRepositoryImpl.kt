@@ -48,8 +48,6 @@ class CatalogRepositoryImpl
                         name = name,
                         normalizedName = normalized,
                         category = null,
-                        brand = null,
-                        parentId = null,
                         source = CatalogSource.CUSTOM,
                         baseScore = 0,
                         catalogVersion = null,
@@ -95,12 +93,13 @@ class CatalogRepositoryImpl
 
         private suspend fun List<ProductCandidateRow>.toCandidates(): List<ProductCandidate> {
             if (isEmpty()) return emptyList()
-            val aliases = dao.aliasesFor(map { it.product.id }).groupBy({ it.productId }, { it.alias })
+            val aliases = dao.aliasesFor(map { it.id }).groupBy({ it.productId }, { it.normalizedAlias })
             return map { row ->
                 ProductCandidate(
-                    product = row.product.toDomain(),
-                    aliases = aliases[row.product.id].orEmpty(),
-                    baseScore = row.product.baseScore,
+                    product = CatalogProduct(row.id, row.name, row.category, row.source),
+                    normalizedName = row.normalizedName,
+                    normalizedAliases = aliases[row.id].orEmpty(),
+                    baseScore = row.baseScore,
                     useCount = row.useCount,
                     lastUsedAt = row.lastUsedAt,
                 )
@@ -121,31 +120,30 @@ class CatalogRepositoryImpl
             version: String,
             products: List<CatalogImportProduct>,
         ) {
+            // Normalized before the transaction: thousands of products must not hold the database meanwhile.
+            val entities =
+                products.map {
+                    CatalogProductEntity(
+                        id = it.id,
+                        name = it.name,
+                        normalizedName = TextNormalizer.normalize(it.name),
+                        category = it.category,
+                        source = source,
+                        baseScore = it.baseScore,
+                        catalogVersion = version,
+                        groceryCategory = it.groceryCategory,
+                    )
+                }
+            val aliases =
+                products.flatMap { product ->
+                    product.aliases.map { CatalogAliasEntity(productId = product.id, alias = it, normalizedAlias = TextNormalizer.normalize(it)) }
+                }
             transactions.inTransaction {
                 dao.deleteAliasesForSource(source.name)
                 dao.markSourceOutdated(source.name)
-                dao.upsertProducts(
-                    products.map {
-                        CatalogProductEntity(
-                            id = it.id,
-                            name = it.name,
-                            normalizedName = TextNormalizer.normalize(it.name),
-                            category = it.category,
-                            brand = null,
-                            parentId = it.parentId,
-                            source = source,
-                            baseScore = it.baseScore,
-                            catalogVersion = version,
-                            groceryCategory = it.groceryCategory,
-                        )
-                    },
-                )
+                dao.upsertProducts(entities)
                 dao.deleteOutdated(source.name, version)
-                dao.insertAliases(
-                    products.flatMap { product ->
-                        product.aliases.map { CatalogAliasEntity(productId = product.id, alias = it, normalizedAlias = TextNormalizer.normalize(it)) }
-                    },
-                )
+                dao.insertAliases(aliases)
             }
         }
 

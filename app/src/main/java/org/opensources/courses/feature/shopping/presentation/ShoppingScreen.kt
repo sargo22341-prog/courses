@@ -26,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,10 +59,11 @@ fun ShoppingRoute(
     viewModel: ShoppingViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ShoppingScreen(
-        state = state,
-        query = viewModel.query,
-        actions =
+    val currentOnOpenLists by rememberUpdatedState(onOpenLists)
+    val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
+    // Created once: new callbacks at each keystroke would recompose the whole screen, bars included.
+    val actions =
+        remember(viewModel) {
             ShoppingActions(
                 onQueryChange = viewModel::onQueryChange,
                 onSubmitQuery = viewModel::onSubmitQuery,
@@ -75,16 +77,18 @@ fun ShoppingRoute(
                 onToggleHidePurchased = viewModel::onToggleHidePurchased,
                 onDeletePurchased = viewModel::onDeletePurchased,
                 onRefresh = viewModel::onRefresh,
-                onOpenLists = onOpenLists,
-                onOpenSettings = onOpenSettings,
-            ),
-    )
+                onOpenLists = { currentOnOpenLists() },
+                onOpenSettings = { currentOnOpenSettings() },
+            )
+        }
+    ShoppingScreen(state = state, query = viewModel.query, actions = actions)
 }
 
 /**
  * [onDeletePurchased] deletes: it is only called once the user confirmed. [onDeleteItem] only hides
  * the item, until [onUndoDeletion] or [onDeletionConfirmed].
  */
+@Immutable
 class ShoppingActions(
     val onQueryChange: (String) -> Unit = {},
     val onSubmitQuery: () -> Unit = {},
@@ -162,14 +166,18 @@ fun ShoppingScreen(
                 SuggestionsPanel(
                     query = query,
                     suggestions = state.suggestions,
-                    offersCustomItem = state.offersCustomItem(query),
+                    offersCustomItem = remember(query, state.suggestions) { state.offersCustomItem(query) },
                     onSuggestionSelected = actions.onSuggestionSelected,
                     onAddCustomItem = actions.onAddCustomItem,
                 )
             } else {
                 RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
                     ShoppingListContent(
-                        state = state,
+                        isLoading = state.isLoading,
+                        toBuy = state.toBuy,
+                        toBuySections = state.toBuySections,
+                        purchased = state.purchased,
+                        hidePurchased = state.hidePurchased,
                         onToggleItem = actions.onToggleItem,
                         onDeleteItem = actions.onDeleteItem,
                         onEditItem = { editedItemId = it.id },
@@ -235,7 +243,8 @@ private fun EditItemDialogHost(
     actions: ShoppingActions,
     onClose: () -> Unit,
 ) {
-    val editedItem = (state.toBuy + state.purchased).firstOrNull { it.id == editedItemId }
+    // Looked up only while a dialog is open.
+    val editedItem = editedItemId?.let { id -> state.toBuy.find { it.id == id } ?: state.purchased.find { it.id == id } }
     if (editedItem != null) {
         EditItemDialog(
             item = editedItem,

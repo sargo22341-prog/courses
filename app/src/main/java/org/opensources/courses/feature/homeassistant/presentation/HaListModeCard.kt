@@ -3,10 +3,8 @@ package org.opensources.courses.feature.homeassistant.presentation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +15,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
+import org.opensources.courses.core.designsystem.component.ConfirmDialog
 import org.opensources.courses.core.designsystem.component.RadioRow
 import org.opensources.courses.core.designsystem.component.SettingsCard
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
@@ -43,19 +42,15 @@ fun HaListModeCard(
         }
     }
     if (confirming) {
-        AlertDialog(
-            onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.ha_mode_app_confirm_title)) },
-            text = { Text(LocalResources.current.getQuantityString(R.plurals.ha_mode_app_confirm_body, importedListCount, importedListCount)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirming = false
-                        onModeChange(HaListMode.APP_CREATED_ONLY)
-                    },
-                ) { Text(stringResource(R.string.ha_mode_app_confirm)) }
+        ConfirmDialog(
+            title = stringResource(R.string.ha_mode_app_confirm_title),
+            text = LocalResources.current.getQuantityString(R.plurals.ha_mode_app_confirm_body, importedListCount, importedListCount),
+            confirmLabel = stringResource(R.string.ha_mode_app_confirm),
+            onConfirm = {
+                confirming = false
+                onModeChange(HaListMode.APP_CREATED_ONLY)
             },
-            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            onDismiss = { confirming = false },
         )
     }
 }

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Binds
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -60,17 +61,20 @@ abstract class HomeAssistantDataModule {
         @Provides
         @Singleton
         fun homeAssistantApi(
-            client: OkHttpClient,
+            client: Lazy<OkHttpClient>,
             json: Json,
-        ): HomeAssistantApi =
-            Retrofit
+        ): HomeAssistantApi {
+            // Built at the first request: many starts send none (no Home Assistant, or offline).
+            val homeAssistantClient by lazy { client.get().newBuilder().readTimeout(HA_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS).build() }
+            return Retrofit
                 .Builder()
                 // Placeholder only: every call passes the user's absolute URL.
                 .baseUrl("http://localhost/")
-                .client(client.newBuilder().readTimeout(HA_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS).build())
+                .callFactory { request -> homeAssistantClient.newCall(request) }
                 .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
                 .build()
                 .create(HomeAssistantApi::class.java)
+        }
 
         @Provides
         @Singleton

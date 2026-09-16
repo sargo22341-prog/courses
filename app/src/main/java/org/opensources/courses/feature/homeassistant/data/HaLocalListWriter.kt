@@ -25,14 +25,7 @@ class HaLocalListWriter
     ) {
         /** Stops synchronising the list; it stays on this phone with its items. */
         suspend fun unlink(list: ShoppingListEntity) {
-            queue.clearList(list.localId)
-            itemDao.getAllForList(list.localId).forEach { item ->
-                if (item.isDeleted) {
-                    itemDao.delete(item.localId)
-                } else {
-                    itemDao.update(item.copy(remoteId = null, syncStatus = SyncStatus.LOCAL_ONLY))
-                }
-            }
+            detachItems(list.localId, SyncStatus.LOCAL_ONLY)
             listDao.update(
                 list.copy(
                     remoteId = null,
@@ -70,8 +63,21 @@ class HaLocalListWriter
             }
         }
 
-        suspend fun hasPendingItemChanges(listLocalId: String): Boolean =
-            queue.pending().any { it.listLocalId == listLocalId && it.type.isItemOperation }
+        /**
+         * The list's items forget their Home Assistant uid and take [status]; nothing queued for the
+         * list is sent any more, and local deletions waiting to be sent are dropped.
+         */
+        suspend fun detachItems(
+            listLocalId: String,
+            status: SyncStatus,
+        ) {
+            queue.clearList(listLocalId)
+            itemDao.deleteTombstones(listLocalId)
+            itemDao.detachFromRemote(listLocalId, status)
+        }
+
+        // Only item operations name an item.
+        suspend fun hasPendingItemChanges(listLocalId: String): Boolean = queue.pendingItemIds(listLocalId).isNotEmpty()
 
         /** The user parted with this Home Assistant list: the "all lists" mode must not bring it back. */
         suspend fun ignore(entityId: String) = ignoredDao.upsert(HaIgnoredListEntity(entityId, clock.millis()))

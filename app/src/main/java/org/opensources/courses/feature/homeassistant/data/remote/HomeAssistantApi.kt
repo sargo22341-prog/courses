@@ -1,6 +1,5 @@
 package org.opensources.courses.feature.homeassistant.data.remote
 
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -26,12 +25,21 @@ interface HomeAssistantApi {
         @Header("Authorization") authorization: String,
     ): List<EntityStateDto>
 
+    /** `todo.get_items` called with `?return_response`. */
+    @POST
+    suspend fun getItems(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body body: JsonObject,
+    ): ServiceResponseDto
+
+    /** A service whose answer (the entities it changed) is not needed: it is not decoded. */
     @POST
     suspend fun callService(
         @Url url: String,
         @Header("Authorization") authorization: String,
         @Body body: JsonObject,
-    ): JsonElement
+    )
 
     @POST
     suspend fun configFlow(
@@ -44,5 +52,5 @@ interface HomeAssistantApi {
     suspend fun deleteConfigEntry(
         @Url url: String,
         @Header("Authorization") authorization: String,
-    ): JsonElement
+    )
 }

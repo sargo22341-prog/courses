@@ -19,11 +19,8 @@ interface SyncOperationDao {
     @Query("DELETE FROM sync_operations WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
 
-    @Query("UPDATE sync_operations SET attemptCount = attemptCount + 1, lastError = :error WHERE id IN (:ids)")
-    suspend fun markFailed(
-        ids: List<Long>,
-        error: String,
-    )
+    @Query("UPDATE sync_operations SET attemptCount = attemptCount + 1 WHERE id IN (:ids)")
+    suspend fun markFailed(ids: List<Long>)
 
     @Query("SELECT COUNT(*) FROM sync_operations WHERE itemLocalId = :itemLocalId")
     suspend fun countForItem(itemLocalId: String): Int

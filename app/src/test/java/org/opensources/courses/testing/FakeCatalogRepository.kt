@@ -23,8 +23,9 @@ fun product(
     source: CatalogSource = CatalogSource.SEED,
 ): ProductCandidate =
     ProductCandidate(
-        product = CatalogProduct(id, name, category, null, null, source),
-        aliases = aliases,
+        product = CatalogProduct(id, name, category, source),
+        normalizedName = TextNormalizer.normalize(name),
+        normalizedAliases = aliases.map(TextNormalizer::normalize),
         baseScore = baseScore,
         useCount = useCount,
         lastUsedAt = lastUsedAt,
@@ -54,7 +55,7 @@ class FakeCatalogRepository(
     ): List<ProductCandidate> =
         candidates
             .filter { candidate ->
-                (listOf(candidate.product.name) + candidate.aliases).any { TextNormalizer.normalize(it).contains(normalizedQuery) }
+                (listOf(candidate.normalizedName) + candidate.normalizedAliases).any { it.contains(normalizedQuery) }
             }.take(limit)
 
     override suspend fun findFuzzyCandidates(
@@ -63,15 +64,15 @@ class FakeCatalogRepository(
     ): List<ProductCandidate> {
         val initial = normalizedQuery.take(1)
         return candidates
-            .filter { candidate -> TextNormalizer.words(TextNormalizer.normalize(candidate.product.name)).any { it.startsWith(initial) } }
+            .filter { candidate -> TextNormalizer.words(candidate.normalizedName).any { it.startsWith(initial) } }
             .take(limit)
     }
 
     override suspend fun getOrCreateCustomProduct(name: String): CatalogProduct {
         val normalized = TextNormalizer.normalize(name)
-        candidates.firstOrNull { TextNormalizer.normalize(it.product.name) == normalized }?.let { return it.product }
-        val created = CatalogProduct("custom:$normalized", name, null, null, null, CatalogSource.CUSTOM)
-        candidates += ProductCandidate(created, emptyList(), 0, 0, null)
+        candidates.firstOrNull { it.normalizedName == normalized }?.let { return it.product }
+        val created = CatalogProduct("custom:$normalized", name, null, CatalogSource.CUSTOM)
+        candidates += ProductCandidate(created, normalized, emptyList(), 0, 0, null)
         count.value = candidates.size
         return created
     }
@@ -117,5 +118,5 @@ class FakeCatalogRepository(
         return flowOf(categoriesById.filterKeys { it in ids })
     }
 
-    private fun refs() = candidates.map { CatalogProductRef(it.product.id, TextNormalizer.normalize(it.product.name), it.product.source) }
+    private fun refs() = candidates.map { CatalogProductRef(it.product.id, it.normalizedName, it.product.source) }
 }

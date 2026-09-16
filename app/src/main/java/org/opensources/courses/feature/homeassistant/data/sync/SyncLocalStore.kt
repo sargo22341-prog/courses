@@ -1,6 +1,7 @@
 package org.opensources.courses.feature.homeassistant.data.sync
 
 import kotlinx.coroutines.flow.Flow
+import org.opensources.courses.core.model.SyncStatus
 
 /**
  * @property importedFromRemote added by the "all lists" mode: its name follows Home Assistant.
@@ -14,6 +15,7 @@ data class SyncListRef(
     val remoteName: String? = null,
 )
 
+/** @property syncStatus as stored; [SyncStatus.PENDING] when not known, which never skips a write. */
 data class SyncItemRef(
     val localId: String,
     val listLocalId: String,
@@ -23,6 +25,7 @@ data class SyncItemRef(
     val isChecked: Boolean,
     val remoteId: String?,
     val isDeleted: Boolean,
+    val syncStatus: SyncStatus = SyncStatus.PENDING,
 )
 
 /**
@@ -31,6 +34,9 @@ data class SyncItemRef(
  * synchronisation is running is never overwritten.
  */
 interface SyncLocalStore {
+    /** Runs [block], and the calls it makes to this store, in a single transaction. */
+    suspend fun <T> inTransaction(block: suspend () -> T): T
+
     suspend fun synchronizedLists(): List<SyncListRef>
 
     /** Entity ids of the Home Assistant lists linked to a local list. */
@@ -43,7 +49,6 @@ interface SyncLocalStore {
         listLocalId: String,
         entityId: String,
         configEntryId: String?,
-        name: String,
     )
 
     suspend fun markListSynced(listLocalId: String)

@@ -22,7 +22,11 @@ object DatabaseModule {
     @Singleton
     fun database(
         @ApplicationContext context: Context,
-    ): CoursesDatabase = Room.databaseBuilder(context, CoursesDatabase::class.java, CoursesDatabase.NAME).build()
+    ): CoursesDatabase =
+        Room
+            .databaseBuilder(context, CoursesDatabase::class.java, CoursesDatabase.NAME)
+            .addMigrations(*CoursesDatabaseMigrations.ALL)
+            .build()
 
     @Provides
     fun transactionRunner(database: CoursesDatabase): TransactionRunner = RoomTransactionRunner(database)

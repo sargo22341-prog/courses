@@ -13,8 +13,9 @@ enum class HaListMode {
  * when off, the user links it by hand.
  * @property listsSetupDone the user was already asked what to do with the lists that existed before
  * Home Assistant was set up.
- * @property tokenVersion changes whenever a token is saved, so what was opened with the previous one
- * is opened again; the token itself never leaves the [HaConfigRepository].
+ * @property tokenVersion changes whenever a token is saved and never goes back, not even when the
+ * connection is forgotten, so what was opened or read with the previous token is opened or read
+ * again; the token itself never leaves the [HaConfigRepository].
  */
 data class HomeAssistantConfig(
     val enabled: Boolean,

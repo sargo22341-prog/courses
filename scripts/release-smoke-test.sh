@@ -18,7 +18,8 @@ signed="$(mktemp -d)/courses-release-smoke.apk"
 "$build_tools/apksigner" sign --ks "$keystore" --ks-pass pass:android \
   --ks-key-alias androiddebugkey --key-pass pass:android --out "$signed" "$unsigned"
 
-adb install -r "$signed"
+# Installation classique : l'installation incrementale n'a pas rendu l'activite disponible sur la CI.
+adb install -r --no-incremental "$signed"
 adb logcat -c
 adb shell am start -W -n "$package/.MainActivity"
 sleep 10

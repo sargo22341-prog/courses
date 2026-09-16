@@ -76,15 +76,16 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
 
 - Le workflow GitHub Actions n'a pas encore été exécuté sur GitHub : SDK Android 37 sur le runner,
   push sur `main` protégée et publication de la release restent à valider au premier push.
-- Le job émulateur a été vérifié localement avec la même image (`google_apis` x86_64 r6) et le même
-  émulateur (37.1.11) que la CI. Sur GitHub, une installation y a échoué dans le système
-  (`NullPointerException` dans `StorageManagerService`, non reproduite en local) :
-  `scripts/instrumented-tests.sh` attend le gestionnaire de paquets et retente l'installation.
-  Il bloque la release s'il échoue.
-- `connectedDebugAndroidTest` (AGP 9.4) peut réussir sans exécuter de test si l'installation
-  échoue ; la CI ne l'utilise plus.
-- Le démarrage de la release ne couvre que le lancement : un problème R8 sur un écran ou un appel
-  Home Assistant n'est détecté que par `RetrofitKeepRulesTest` (règle connue) ou à l'usage.
+- La CI n'exécute ni les tests instrumentés ni le démarrage de l'APK release : sur les runners
+  Linux, l'émulateur Android 17 (`google_apis` x86_64 r6, émulateur 37.1.11, `-gpu
+  swiftshader_indirect`) voit `surfaceflinger` planter en boucle (`Assertion failed:
+  !rcEnc->featureInfo()->hasReadColorBufferDma` dans `mapper.ranchu.so`), ce qui redémarre le
+  système pendant les tests. La même configuration fonctionne sous Windows. Ces vérifications se
+  font à la main sur un appareil ; un problème R8 au démarrage n'est pas bloqué par la CI.
+- `connectedDebugAndroidTest` (AGP 9.4) a affiché `BUILD SUCCESSFUL` sans exécuter de test après
+  une installation échouée : vérifier le nombre de tests exécutés.
+- Un problème R8 sur un écran ou un appel Home Assistant n'est détecté que par
+  `RetrofitKeepRulesTest` (règle connue) ou à l'usage.
 - Un push sur `main` pendant qu'une release compile fait échouer le push de version de cette
   release ; la version sort au push suivant.
 

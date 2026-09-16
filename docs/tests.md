@@ -13,11 +13,9 @@
 .\gradlew.bat :app:compileDebugAndroidTestKotlin
 ```
 
-La CI exécute aussi les tests instrumentés sur un émulateur Android 17 jetable
-(`scripts/instrumented-tests.sh`, avec adb : sur la CI, `connectedDebugAndroidTest` a réussi sans
-exécuter de test après une installation échouée), puis démarre l'APK
-release minifié (`scripts/release-smoke-test.sh`) : un problème R8 qui fait planter l'application
-au démarrage bloque la release. Les tests JVM n'utilisent pas `isReturnDefaultValues` : un appel
+La CI ne lance que les tests JVM et Lint : les tests instrumentés et le démarrage de l'APK release
+minifié (`scripts/release-smoke-test.sh`, sur un émulateur) se lancent à la main avant une release.
+Les tests JVM n'utilisent pas `isReturnDefaultValues` : un appel
 involontaire à `android.jar` échoue au lieu de renvoyer une valeur vide.
 
 - **JVM** (`src/test`) : domaine, règles pures, moteurs de synchronisation, clients réseau contre

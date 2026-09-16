@@ -11,14 +11,9 @@ Le workflow `.github/workflows/ci.yml` :
 - sur **chaque pull request et chaque push** :
   - `assembleDebug`, `testDebugUnitTest`, `lintDebug` et `compileDebugAndroidTestKotlin` (les
     rapports de tests et de Lint sont joints au run en cas d'échec) ;
-  - en parallèle, sur un **émulateur Android 17** (`reactivecircus/android-emulator-runner`,
-    image `google_apis` x86_64, KVM activé, 4 cœurs et 4 Go de RAM : avec les réglages par
-    défaut l'image ne finit pas de démarrer et adb reste « device offline ») :
-    `scripts/instrumented-tests.sh` (migrations Room, hors ligne, Room réel, parcours UI ; échoue
-    si l'installation échoue ou si aucun test ne tourne), puis `scripts/release-smoke-test.sh`,
-    qui signe l'APK release minifié avec la clé de debug, l'installe, le démarre et échoue s'il a
-    planté ;
-- sur **chaque push sur `main`**, si ces deux jobs passent :
+  - pas de tests instrumentés : l'émulateur Android 17 plante sur les runners Linux (voir
+    `limites-connues.md`) ; ils se lancent à la main sur un appareil (`tests.md`) ;
+- sur **chaque push sur `main`**, si ce job passe :
   1. `scripts/bump-version.sh` incrémente le patch de `versionName` et `versionCode` dans
      `app/version.properties` ;
   2. `scripts/release-notes.sh` relève les notes de `RELEASE_NOTES.md` puis vide la liste ;

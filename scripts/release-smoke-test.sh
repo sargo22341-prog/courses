@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demarre l'APK release minifie sur l'appareil connecte (emulateur de la CI) et verifie qu'il
+# Demarre l'APK release minifie sur un emulateur (jamais le telephone personnel) et verifie qu'il
 # tourne encore quelques secondes plus tard : un probleme R8 qui ne se voit qu'a l'execution
 # (classe retiree ou renommee alors qu'elle est atteinte par reflexion) le fait planter au demarrage.
 # Usage : scripts/release-smoke-test.sh   (apres :app:assembleRelease et :app:assembleDebug)
@@ -18,8 +18,7 @@ signed="$(mktemp -d)/courses-release-smoke.apk"
 "$build_tools/apksigner" sign --ks "$keystore" --ks-pass pass:android \
   --ks-key-alias androiddebugkey --key-pass pass:android --out "$signed" "$unsigned"
 
-# Installation classique : l'installation incrementale n'a pas rendu l'activite disponible sur la CI.
-adb install -r --no-incremental "$signed"
+adb install -r "$signed"
 adb logcat -c
 adb shell am start -W -n "$package/.MainActivity"
 sleep 10

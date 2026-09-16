@@ -21,4 +21,4 @@ liste des commits. Détails : [docs/release.md](docs/release.md).
 - Accessibilité : le bouton « Nouvelle liste » est annoncé par les lecteurs d'écran ; les choix du sélecteur de liste Home Assistant font au moins 48 dp.
 - Couleurs : pastille « Hors connexion » plus lisible en thème clair ; message d'annulation aux couleurs de l'application.
 - Réseau : OpenFoodFacts n'est plus jamais appelé en clair, même après une redirection.
-- Qualité : Android Lint et les tests instrumentés (sur émulateur Android 17) sont exécutés par la CI, qui démarre aussi l'APK release avant de le publier.
+- Qualité : Android Lint est exécuté par la CI.

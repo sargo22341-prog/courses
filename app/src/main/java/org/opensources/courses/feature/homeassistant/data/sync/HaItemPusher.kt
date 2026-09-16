@@ -19,9 +19,10 @@ import org.opensources.courses.feature.language.domain.AppLanguageRepository
  * Operations are grouped per item and the item's *current* local state is sent once: five taps on
  * the same checkbox while offline become a single `update_item`. Only the fields changed locally
  * are sent, so a change made meanwhile in Home Assistant to the other fields is kept. An operation
- * is removed from the queue only after Home Assistant accepted the request; on a non-fatal error it
- * stays queued with its attempt count incremented, on a fatal error (server unreachable, token
- * refused) the whole synchronisation stops and everything stays queued.
+ * is removed from the queue only after Home Assistant accepted the request. A refusal only affects
+ * its item: the operations stay queued with their attempt count incremented, and are given up once
+ * Home Assistant refused them [SyncQueue.MAX_ATTEMPTS] times. On a fatal error (server unreachable,
+ * token refused) the whole synchronisation stops and everything stays queued.
  */
 class HaItemPusher(
     private val gateway: HomeAssistantGateway,
@@ -29,24 +30,23 @@ class HaItemPusher(
     private val queue: SyncQueue,
     private val languages: AppLanguageRepository,
 ) {
-    /** Returns the number of items whose operations could not be sent. */
+    /** [operations] are the pending item operations of the list, read at the start of the synchronisation. */
     suspend fun push(
         credentials: HaCredentials,
         remoteList: HaTodoList,
         listLocalId: String,
+        operations: List<SyncOperation>,
         remoteItems: List<HaTodoItem>,
-    ): Int {
-        val operations = queue.pending().filter { it.listLocalId == listLocalId && it.type.isItemOperation }
-        if (operations.isEmpty()) return 0
+        tally: SyncTally,
+    ) {
+        if (operations.isEmpty()) return
         val items = store.items(listLocalId).associateBy { it.localId }
         val remoteByUid = remoteItems.associateBy { it.uid }
-        val awaitingUid = mutableListOf<Pair<SyncItemRef, List<Long>>>()
-        var failures = 0
+        val awaitingUid = mutableListOf<Pair<SyncItemRef, List<SyncOperation>>>()
         for ((itemId, itemOperations) in operations.groupBy { it.itemLocalId }) {
-            val ids = itemOperations.map { it.id }
             val item = itemId?.let(items::get)
             val remote = item?.remoteId?.let(remoteByUid::get)
-            try {
+            refusable(item, itemOperations, tally) {
                 when {
                     item == null -> removeVanishedItem(credentials, remoteList, itemOperations, remoteByUid.keys)
                     item.isDeleted -> pushDeletion(credentials, remoteList, item, remote, itemOperations)
@@ -54,21 +54,48 @@ class HaItemPusher(
                         // New item, or deleted remotely while modified locally: the local change wins.
                         if (item.remoteId != null) store.setItemRemoteId(item.localId, null)
                         gateway.addItem(credentials, remoteList.entityId, item.name, description(item, remoteList))
-                        awaitingUid += item.copy(remoteId = null) to ids
+                        awaitingUid += item.copy(remoteId = null) to itemOperations
                     }
                     else -> {
                         sendChanges(credentials, remoteList, item, remote, itemOperations)
-                        queue.complete(ids)
+                        queue.complete(itemOperations.map { it.id })
                     }
                 }
-            } catch (exception: HomeAssistantException) {
-                if (exception.isFatal) throw exception
-                queue.fail(ids, exception.kind.name)
-                failures++
             }
         }
-        if (awaitingUid.isNotEmpty()) failures += resolveCreatedUids(credentials, remoteList, listLocalId, awaitingUid)
-        return failures
+        if (awaitingUid.isNotEmpty()) resolveCreatedUids(credentials, remoteList, listLocalId, awaitingUid, tally)
+    }
+
+    /**
+     * Runs [send] for one item. A refusal is kept for a later retry, unless it was the last attempt:
+     * the changes are then given up and the item takes the Home Assistant state again.
+     */
+    private suspend fun refusable(
+        item: SyncItemRef?,
+        operations: List<SyncOperation>,
+        tally: SyncTally,
+        send: suspend () -> Unit,
+    ) {
+        try {
+            send()
+        } catch (exception: HomeAssistantException) {
+            if (exception.isFatal) throw exception
+            val ids = operations.map { it.id }
+            when {
+                operations.none { it.isLastAttempt } -> {
+                    queue.fail(ids, exception.kind.name)
+                    tally.retried++
+                }
+                item == null -> {
+                    queue.complete(ids)
+                    tally.abandoned++
+                }
+                else -> {
+                    store.abandonItemChanges(item.localId, ids)
+                    tally.abandoned++
+                }
+            }
+        }
     }
 
     private suspend fun removeVanishedItem(
@@ -142,40 +169,43 @@ class HaItemPusher(
      * `add_item` does not return the new uid: read the list again and take the most recent
      * unclaimed item with the same name. Its checked state is sent afterwards, because an item is
      * always created unchecked.
+     *
+     * Without a match, Home Assistant stored the item under another text. Sending it again would
+     * only add another copy: the local item leaves, and the reconciliation that follows imports the
+     * Home Assistant copy instead.
      */
     private suspend fun resolveCreatedUids(
         credentials: HaCredentials,
         remoteList: HaTodoList,
         listLocalId: String,
-        awaitingUid: List<Pair<SyncItemRef, List<Long>>>,
-    ): Int {
+        awaitingUid: List<Pair<SyncItemRef, List<SyncOperation>>>,
+        tally: SyncTally,
+    ) {
         val remoteItems = gateway.getItems(credentials, remoteList.entityId).asReversed()
         val claimed = store.items(listLocalId).mapNotNull { it.remoteId }.toMutableSet()
-        var failures = 0
-        for ((item, ids) in awaitingUid) {
+        for ((item, operations) in awaitingUid) {
+            val ids = operations.map { it.id }
             val key = TextNormalizer.normalize(item.name)
             val match = remoteItems.firstOrNull { it.uid !in claimed && TextNormalizer.normalize(it.summary) == key }
             if (match == null) {
-                queue.fail(ids, UID_NOT_FOUND)
-                failures++
+                store.purgeItem(item.localId)
+                queue.complete(ids)
                 continue
             }
             claimed += match.uid
+            // Linked before its state is sent: whatever happens next, it is never created twice.
             store.setItemRemoteId(item.localId, match.uid)
-            if (item.isChecked) {
-                gateway.updateItem(credentials, remoteList.entityId, match.uid, null, completed = true, description = null, sendDescription = false)
+            refusable(item, operations, tally) {
+                if (item.isChecked) {
+                    gateway.updateItem(credentials, remoteList.entityId, match.uid, null, completed = true, description = null, sendDescription = false)
+                }
+                queue.complete(ids)
             }
-            queue.complete(ids)
         }
-        return failures
     }
 
     private fun description(
         item: SyncItemRef,
         remoteList: HaTodoList,
     ): String? = if (remoteList.supportsDescription) ItemDescriptionCodec.encode(item.quantity, item.unit, languages.language.value.locale) else null
-
-    private companion object {
-        const val UID_NOT_FOUND = "UID_NOT_FOUND"
-    }
 }

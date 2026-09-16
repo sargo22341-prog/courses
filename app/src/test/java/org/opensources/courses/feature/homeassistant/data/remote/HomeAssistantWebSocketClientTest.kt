@@ -2,6 +2,7 @@ package org.opensources.courses.feature.homeassistant.data.remote
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -84,7 +85,43 @@ class HomeAssistantWebSocketClientTest {
             assertTrue(received.toString(), received.any { it.contains("\"entity_id\":\"todo.courses\"") })
         }
 
+    @Test
+    fun `a refused token is signalled once and never tried again`() =
+        runTest {
+            val refusing =
+                object : WebSocketListener() {
+                    override fun onOpen(
+                        webSocket: WebSocket,
+                        response: Response,
+                    ) {
+                        webSocket.send("""{"type":"auth_required","ha_version":"2026.9.2"}""")
+                    }
+
+                    override fun onMessage(
+                        webSocket: WebSocket,
+                        text: String,
+                    ) {
+                        webSocket.send("""{"type":"auth_invalid","message":"Invalid access token or password"}""")
+                        webSocket.close(NORMAL_CLOSURE, null)
+                    }
+                }
+            // A reconnection would find a second upgrade and succeed: the test would then time out.
+            server.enqueue(MockResponse.Builder().webSocketUpgrade(refusing).build())
+            server.enqueue(MockResponse.Builder().webSocketUpgrade(homeAssistant).build())
+            val client = HomeAssistantWebSocketClient(OkHttpClient(), Json { ignoreUnknownKeys = true })
+            val credentials = HaCredentials(server.url("/").toString().trimEnd('/'), "revoked-token")
+
+            val emitted =
+                withContext(Dispatchers.Default) {
+                    withTimeout(TIMEOUT_MILLIS) { client.observeItemChanges(credentials, setOf("todo.courses")).toList() }
+                }
+
+            assertEquals(listOf(Unit), emitted)
+            assertEquals(1, server.requestCount)
+        }
+
     private companion object {
         const val TIMEOUT_MILLIS = 10_000L
+        const val NORMAL_CLOSURE = 1000
     }
 }

@@ -47,7 +47,10 @@ class SyncQueue
             if (ids.isNotEmpty()) dao.deleteByIds(ids)
         }
 
-        /** Keeps the operations for a later retry and records why they failed. */
+        /**
+         * Keeps the operations for a later retry and records why they failed. Only refusals are
+         * recorded: while the remote cannot be reached nothing is attempted, so nothing is counted.
+         */
         suspend fun fail(
             ids: List<Long>,
             error: String,
@@ -57,7 +60,21 @@ class SyncQueue
 
         suspend fun hasPendingForItem(itemLocalId: String): Boolean = dao.countForItem(itemLocalId) > 0
 
+        /** Items of the list with an operation still waiting: remote data must not overwrite them. */
+        suspend fun pendingItemIds(listLocalId: String): Set<String> = dao.getItemIdsForList(listLocalId).toSet()
+
         suspend fun clearList(listLocalId: String) = dao.deleteForList(listLocalId)
 
+        /** The remote is forgotten: nothing left can be sent anywhere. */
+        suspend fun clear() = dao.deleteAll()
+
         fun observePendingCount(): Flow<Int> = dao.observeCount().distinctUntilChanged()
+
+        companion object {
+            /**
+             * Refusals after which an operation is given up rather than retried forever
+             * (docs/adr/0022-abandon-des-operations-refusees.md).
+             */
+            const val MAX_ATTEMPTS = 10
+        }
     }

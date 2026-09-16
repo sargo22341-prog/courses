@@ -1,6 +1,6 @@
 # ADR 0005 — Last-write-wins, sauf modification locale non synchronisée
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; exception des modifications refusées 10 fois : [ADR 0022](0022-abandon-des-operations-refusees.md)
 - **Voir aussi** : [Stratégie de conflit](../conflits.md)
 
 ## Contexte

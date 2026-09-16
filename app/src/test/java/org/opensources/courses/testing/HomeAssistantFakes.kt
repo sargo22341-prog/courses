@@ -11,17 +11,12 @@ import org.opensources.courses.feature.homeassistant.data.sync.SyncItemRef
 import org.opensources.courses.feature.homeassistant.data.sync.SyncListRef
 import org.opensources.courses.feature.homeassistant.data.sync.SyncLocalStore
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
-import org.opensources.courses.feature.homeassistant.domain.HaCreatedList
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
-import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
-import org.opensources.courses.feature.homeassistant.domain.HaTodoItem
-import org.opensources.courses.feature.homeassistant.domain.HaTodoList
+import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
-import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
-import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 
 class FakeHaConfigRepository(
     var storedCredentials: HaCredentials? = HaCredentials("http://ha.local:8123", "token"),
@@ -35,12 +30,27 @@ class FakeHaConfigRepository(
         typedToken: String,
     ): HaCredentials? = storedCredentials
 
+    var forgotten = false
+
     override suspend fun saveConnection(
         baseUrl: String,
         token: String,
-    ) = Unit
+    ): Boolean {
+        val url = HaUrlNormalizer.normalize(baseUrl) ?: return false
+        if (token.isNotBlank()) storedCredentials = HaCredentials(url, token.trim())
+        config.value = config.value.copy(baseUrl = url, hasToken = config.value.hasToken || token.isNotBlank())
+        return true
+    }
 
-    override suspend fun setEnabled(enabled: Boolean) = Unit
+    override suspend fun forgetConnection() {
+        forgotten = true
+        storedCredentials = null
+        config.value = HomeAssistantConfig.Default
+    }
+
+    override suspend fun setEnabled(enabled: Boolean) {
+        config.value = config.value.copy(enabled = enabled)
+    }
 
     override suspend fun setListMode(mode: HaListMode) {
         config.value = config.value.copy(listMode = mode)
@@ -66,113 +76,6 @@ class FakeHaLiveUpdates : HaLiveUpdates {
         credentials: HaCredentials,
         entityIds: Set<String>,
     ): Flow<Unit> = changes.onStart { observedEntityIds = entityIds }
-}
-
-/** A tiny in-memory Home Assistant with the to-do semantics the engine relies on. */
-class FakeHomeAssistantGateway : HomeAssistantGateway {
-    val lists = mutableMapOf<String, HaTodoList>()
-    val items = mutableMapOf<String, MutableList<HaTodoItem>>()
-    val deletedEntries = mutableListOf<String>()
-    var failure: HaErrorKind? = null
-    var failingUpdates: HaErrorKind? = null
-    var failingDeletions: HaErrorKind? = null
-    private var nextUid = 1
-
-    fun addRemote(
-        entityId: String,
-        summary: String,
-        completed: Boolean = false,
-        description: String? = null,
-        completedAt: Long? = null,
-    ): String {
-        val uid = "uid${nextUid++}"
-        items.getOrPut(entityId) { mutableListOf() } += HaTodoItem(uid, summary, completed, description, completedAt)
-        return uid
-    }
-
-    fun remote(entityId: String): List<HaTodoItem> = items[entityId].orEmpty()
-
-    private fun check() {
-        failure?.let { throw HomeAssistantException(it) }
-    }
-
-    override suspend fun testConnection(credentials: HaCredentials) = check()
-
-    override suspend fun getTodoLists(credentials: HaCredentials): List<HaTodoList> {
-        check()
-        return lists.values.toList()
-    }
-
-    override suspend fun getItems(
-        credentials: HaCredentials,
-        entityId: String,
-    ): List<HaTodoItem> {
-        check()
-        return items[entityId].orEmpty().toList()
-    }
-
-    override suspend fun addItem(
-        credentials: HaCredentials,
-        entityId: String,
-        summary: String,
-        description: String?,
-    ) {
-        check()
-        addRemote(entityId, summary, description = description)
-    }
-
-    override suspend fun updateItem(
-        credentials: HaCredentials,
-        entityId: String,
-        uid: String,
-        summary: String?,
-        completed: Boolean?,
-        description: String?,
-        sendDescription: Boolean,
-    ) {
-        check()
-        failingUpdates?.let { throw HomeAssistantException(it) }
-        val list = items.getValue(entityId)
-        val index = list.indexOfFirst { it.uid == uid }
-        if (index < 0) throw HomeAssistantException(HaErrorKind.REJECTED)
-        val current = list[index]
-        list[index] =
-            current.copy(
-                summary = summary ?: current.summary,
-                completed = completed ?: current.completed,
-                description = if (sendDescription) description else current.description,
-            )
-    }
-
-    override suspend fun removeItem(
-        credentials: HaCredentials,
-        entityId: String,
-        uid: String,
-    ) {
-        check()
-        items[entityId]?.removeAll { it.uid == uid }
-    }
-
-    override suspend fun createList(
-        credentials: HaCredentials,
-        name: String,
-    ): HaCreatedList {
-        check()
-        val unique = HaListNameAllocator.uniqueName(name, lists.values.map { it.name })
-        val entityId = "todo.${unique.lowercase().replace(' ', '_')}"
-        lists[entityId] = HaTodoList(entityId, unique, supportsDescription = true)
-        return HaCreatedList(entityId, "entry-$entityId", unique)
-    }
-
-    override suspend fun deleteList(
-        credentials: HaCredentials,
-        configEntryId: String,
-    ) {
-        check()
-        failingDeletions?.let { throw HomeAssistantException(it) }
-        deletedEntries += configEntryId
-        lists.remove(configEntryId.removePrefix("entry-"))
-    }
 }
 
 /** Same contract as the Room store, including "never overwrite an item with pending operations". */
@@ -274,6 +177,14 @@ class FakeSyncLocalStore(
 
     override suspend fun restoreDeletedItem(itemLocalId: String) {
         items[itemLocalId]?.let { items[itemLocalId] = it.copy(isDeleted = false) }
+    }
+
+    override suspend fun abandonItemChanges(
+        itemLocalId: String,
+        operationIds: List<Long>,
+    ) {
+        queue.complete(operationIds)
+        restoreDeletedItem(itemLocalId)
     }
 
     override suspend fun markItemSynced(itemLocalId: String) = Unit

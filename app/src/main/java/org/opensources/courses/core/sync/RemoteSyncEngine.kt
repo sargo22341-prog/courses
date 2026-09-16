@@ -45,4 +45,7 @@ enum class SyncFailure {
 
     /** A linked remote list exists but cannot be used right now; its changes stay queued. */
     LIST_UNAVAILABLE,
+
+    /** The remote kept refusing some changes: they were given up and will not be sent again. */
+    REJECTED,
 }

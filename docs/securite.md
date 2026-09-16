@@ -20,14 +20,23 @@
   dans l'interface.
 - Les fichiers de configuration Home Assistant sont exclus des sauvegardes cloud et des transferts
   d'appareil.
+- **Oublier la connexion** (Réglages → Home Assistant, connexion dépliée, après confirmation) :
+  efface le token du Keystore et tous les réglages Home Assistant, délie toutes les listes (elles
+  restent sur le téléphone) et vide la file. Rien n'est supprimé dans Home Assistant. Pensé pour un
+  téléphone prêté ou revendu, ou un token révoqué.
 
 ## Trafic réseau
 
 - Le trafic en clair reste autorisé car Home Assistant est souvent joignable en `http://` sur le
-  réseau local ; OpenFoodFacts est toujours appelé en HTTPS.
+  réseau local. Le token circule alors en clair : l'écran Home Assistant **l'indique** sous
+  « Connecté » tant que l'adresse enregistrée commence par `http://`. Une adresse saisie sans
+  schéma reste complétée en `http://` : c'est ce que sert une installation Home Assistant par
+  défaut (port 8123), et essayer `https://` d'abord demanderait un appel réseau à l'enregistrement.
+- **OpenFoodFacts** (`openfoodfacts.org` et ses sous-domaines) : le clair y est **refusé** par un
+  `domain-config`, même après une redirection.
 - **Certificats installés par l'utilisateur** : `network_security_config.xml` fait confiance aux
-  autorités système **et** utilisateur pour tous les domaines (aucun `domain-config` qui les
-  retirerait, [ADR 0018](adr/0018-confiance-aux-certificats-utilisateur.md)). Un Home Assistant en
+  autorités système **et** utilisateur pour tous les domaines : le `domain-config` d'OpenFoodFacts
+  redéclare les deux ([ADR 0018](adr/0018-confiance-aux-certificats-utilisateur.md)). Un Home Assistant en
   `https://ha.nas.home` signé par une autorité privée fonctionne donc dès que cette autorité est
   installée dans Android (Paramètres → Sécurité → Chiffrement et identifiants → Installer un
   certificat → Certificat CA). Le nom du certificat serveur doit correspondre à l'adresse saisie

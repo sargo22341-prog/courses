@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.opensources.courses.core.sync.SyncCoordinator
+import org.opensources.courses.feature.homeassistant.domain.ForgetHomeAssistantUseCase
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
@@ -33,6 +35,7 @@ class HomeAssistantSettingsViewModel
         private val linkRepository: HaListLinkRepository,
         private val listRepository: ShoppingListRepository,
         private val syncCoordinator: SyncCoordinator,
+        private val forgetHomeAssistant: ForgetHomeAssistantUseCase,
     ) : ViewModel() {
         var urlInput by mutableStateOf("")
             private set
@@ -44,6 +47,7 @@ class HomeAssistantSettingsViewModel
         private val remoteLists = MutableStateFlow<RemoteListsState>(RemoteListsState.NotLoaded)
         private val pickerListId = MutableStateFlow<String?>(null)
         private val setupListIds = MutableStateFlow<List<String>>(emptyList())
+        private var listsSetup: Job? = null
 
         val uiState: StateFlow<HaSettingsUiState> =
             combine(
@@ -61,7 +65,7 @@ class HomeAssistantSettingsViewModel
                 if (urlInput.isEmpty()) urlInput = config.baseUrl
                 if (config.enabled && config.isConfigured) loadRemoteLists()
             }
-            viewModelScope.launch { startListsSetup() }
+            listsSetup = viewModelScope.launch { startListsSetup() }
         }
 
         fun onUrlChange(value: String) {
@@ -94,11 +98,30 @@ class HomeAssistantSettingsViewModel
                 return
             }
             viewModelScope.launch {
-                configRepository.saveConnection(url, tokenInput)
+                if (!configRepository.saveConnection(url, tokenInput)) {
+                    connection.value = HaActionStatus.Done(HaMessage.INVALID_URL)
+                    return@launch
+                }
                 urlInput = url
                 tokenInput = ""
                 remoteLists.value = RemoteListsState.NotLoaded
                 connection.value = HaActionStatus.Done(HaMessage.SAVED)
+            }
+        }
+
+        /** The screen asked for confirmation first. The first setup is offered again at the next connection. */
+        fun forgetConnection() {
+            viewModelScope.launch {
+                forgetHomeAssistant()
+                urlInput = ""
+                tokenInput = ""
+                pickerListId.value = null
+                setupListIds.value = emptyList()
+                remoteLists.value = RemoteListsState.NotLoaded
+                sync.value = HaActionStatus.Idle
+                connection.value = HaActionStatus.Done(HaMessage.FORGOTTEN)
+                listsSetup?.cancel()
+                listsSetup = viewModelScope.launch { startListsSetup() }
             }
         }
 

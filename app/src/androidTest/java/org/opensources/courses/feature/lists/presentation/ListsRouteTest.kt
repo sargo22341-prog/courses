@@ -1,0 +1,55 @@
+package org.opensources.courses.feature.lists.presentation
+
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.opensources.courses.testing.FrenchCoursesTheme
+import org.opensources.courses.testing.TestRepositories
+
+@RunWith(AndroidJUnit4::class)
+class ListsRouteTest {
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    private val repositories = TestRepositories.inMemory(InstrumentationRegistry.getInstrumentation().targetContext)
+
+    @After
+    fun close() {
+        repositories.database.close()
+    }
+
+    @Test
+    fun aCreatedListIsOpenedOnce() {
+        val opened = mutableListOf<String>()
+        val viewModel = ListsViewModel(repositories.lists)
+        composeRule.setContent {
+            FrenchCoursesTheme { ListsRoute(onBack = {}, onOpenList = { opened += it }, viewModel = viewModel) }
+        }
+
+        // What TalkBack reads: the button is labelled.
+        composeRule.onNodeWithContentDescription("Nouvelle liste").performClick()
+        composeRule.onNodeWithText("Nom de la liste").performTextInput("BBQ")
+        composeRule.onNodeWithText("Créer").performClick()
+        composeRule.waitUntil(TIMEOUT_MILLIS) { opened.isNotEmpty() }
+        composeRule.waitForIdle()
+
+        val created = runBlocking { repositories.database.shoppingListDao().getAll() }.single { it.name == "BBQ" }
+        assertEquals(listOf(created.localId), opened)
+        assertNull(viewModel.createdListId.value)
+    }
+
+    private companion object {
+        const val TIMEOUT_MILLIS = 5_000L
+    }
+}

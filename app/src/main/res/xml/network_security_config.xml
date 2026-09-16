@@ -2,16 +2,25 @@
 <network-security-config xmlns:tools="http://schemas.android.com/tools">
     <!-- Home Assistant is self-hosted and frequently reached over plain HTTP on the local network
          (http://homeassistant.local:8123). Android cannot express "cleartext only for the host the
-         user typed", so cleartext stays allowed; OpenFoodFacts is always called over HTTPS. -->
+         user typed", so cleartext stays allowed; the Home Assistant screen warns about it. -->
     <base-config
         cleartextTrafficPermitted="true"
         tools:ignore="InsecureBaseConfiguration">
         <trust-anchors>
             <certificates src="system" />
             <!-- Self-hosted instances (https://ha.nas.home) are often signed by a private CA the user
-                 installed in Android settings. No domain-config on purpose: it would replace these
-                 anchors for its domains. Guarded by NetworkSecurityConfigTest. -->
+                 installed in Android settings. A domain-config replaces these anchors for its domains
+                 when it declares its own: every one below declares both again. Guarded by
+                 NetworkSecurityConfigTest. -->
             <certificates src="user" tools:ignore="AcceptsUserCertificates" />
         </trust-anchors>
     </base-config>
+    <!-- OpenFoodFacts is only ever called over HTTPS: cleartext is refused there, even after a redirect. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">openfoodfacts.org</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </domain-config>
 </network-security-config>

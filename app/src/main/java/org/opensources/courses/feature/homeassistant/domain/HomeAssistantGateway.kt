@@ -38,12 +38,16 @@ interface HomeAssistantGateway {
         uid: String,
     )
 
-    /** Creates a Local To-do list (requires an administrator token). */
+    /**
+     * Creates a Local To-do list. Requires an administrator token: a valid token without these
+     * rights is [HaErrorKind.REJECTED].
+     */
     suspend fun createList(
         credentials: HaCredentials,
         name: String,
     ): HaCreatedList
 
+    /** Deletes a list created by the app; same rights as [createList]. */
     suspend fun deleteList(
         credentials: HaCredentials,
         configEntryId: String,

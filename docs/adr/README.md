@@ -37,6 +37,8 @@ décision, ses conséquences et les alternatives écartées.
 | [0019](0019-dto-reseau-conserves-par-r8.md) | DTOs réseau conservés par R8 dans `data.remote` | acceptée |
 | [0020](0020-migrations-room-sans-perte.md) | Schéma Room exporté et migrations sans perte | acceptée |
 | [0021](0021-release-automatique-github-actions.md) | Release signée et montée de version par GitHub Actions | acceptée |
+| [0022](0022-abandon-des-operations-refusees.md) | Abandon des opérations refusées 10 fois | acceptée |
+| [0023](0023-synchronisation-periodique-au-premier-plan.md) | Synchronisation périodique au premier plan seulement | acceptée |
 
 ## Modèle
 

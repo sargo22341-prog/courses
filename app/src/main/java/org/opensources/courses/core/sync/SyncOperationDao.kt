@@ -28,6 +28,12 @@ interface SyncOperationDao {
     @Query("SELECT COUNT(*) FROM sync_operations WHERE itemLocalId = :itemLocalId")
     suspend fun countForItem(itemLocalId: String): Int
 
+    @Query("SELECT DISTINCT itemLocalId FROM sync_operations WHERE listLocalId = :listLocalId AND itemLocalId IS NOT NULL")
+    suspend fun getItemIdsForList(listLocalId: String): List<String>
+
     @Query("DELETE FROM sync_operations WHERE listLocalId = :listLocalId")
     suspend fun deleteForList(listLocalId: String)
+
+    @Query("DELETE FROM sync_operations")
+    suspend fun deleteAll()
 }

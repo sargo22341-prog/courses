@@ -6,7 +6,8 @@ import javax.inject.Inject
 
 /**
  * Adds a product to a list the way a shopper expects:
- * - a product already waiting in the list gets its quantity incremented instead of a duplicate;
+ * - a product already waiting in the list gets its quantity incremented instead of a duplicate, unless
+ *   it has a unit: "500 g" is a measure, not a count, so it is left as it is;
  * - a product already bought is put back to "to buy";
  * - free text becomes a custom catalog product, so it is suggested next time;
  * - every addition feeds the suggestion ranking (usage count and last use).
@@ -35,6 +36,7 @@ class AddItemUseCase
                         items.setChecked(existing.id, checked = false)
                         existing.copy(isChecked = false)
                     }
+                    existing.unit != null -> existing
                     else -> {
                         val quantity = existing.quantity + 1
                         items.updateItem(existing.id, existing.name, quantity, existing.unit)

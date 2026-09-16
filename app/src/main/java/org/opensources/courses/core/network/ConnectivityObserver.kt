@@ -20,7 +20,13 @@ import org.opensources.courses.core.common.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Exposes whether a network able to reach the Internet (or the local network) is available. */
+/**
+ * Exposes whether Android has a default network. A network only becomes the default when it is meant
+ * to carry Internet traffic (`NET_CAPABILITY_INTERNET`), but Internet does not have to answer there:
+ * validation (`NET_CAPABILITY_VALIDATED`) is deliberately not required, so a home Wi-Fi whose Internet
+ * access is down still counts and Home Assistant on the local network is still tried. Whether a
+ * server answers is only known from the request itself.
+ */
 interface ConnectivityObserver {
     val isOnline: StateFlow<Boolean>
 }

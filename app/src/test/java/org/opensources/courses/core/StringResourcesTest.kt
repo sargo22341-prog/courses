@@ -26,8 +26,17 @@ class StringResourcesTest {
         val elements = (0 until root.childNodes.length).map { root.childNodes.item(it) }.filterIsInstance<Element>()
         return elements.associate { element ->
             val key = "${element.tagName}:${element.getAttribute("name")}"
-            key to Text(PLACEHOLDER.findAll(element.textContent).map { it.value }.toList().sorted(), element.getAttribute("translatable") != "false")
+            key to Text(placeholders(element), element.getAttribute("translatable") != "false")
         }
+    }
+
+    /**
+     * Languages do not have the same plural quantities (French also has "many"): a plural is compared
+     * on the placeholders its quantities use, not on how many quantities repeat them.
+     */
+    private fun placeholders(element: Element): List<String> {
+        val found = PLACEHOLDER.findAll(element.textContent).map { it.value }.toList()
+        return if (element.tagName == "plurals") found.distinct().sorted() else found.sorted()
     }
 
     @Test

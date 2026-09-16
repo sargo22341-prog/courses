@@ -155,10 +155,11 @@ UI → ViewModel → Repository → Room → Flow → UI
 
 ```powershell
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
-.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin
+.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin
 ```
 
-- Zéro erreur de compilation, zéro test en échec, aucun nouvel avertissement Kotlin/Compose.
+- Zéro erreur de compilation, zéro test en échec, Lint au vert, aucun nouvel avertissement
+  Kotlin/Compose.
 - Vérifier la limite de 600 lignes sur les fichiers modifiés.
 - Si Room ou le schéma change : migration écrite et testée.
 - Si un comportement documenté change : mettre à jour la page de `docs/` concernée (et

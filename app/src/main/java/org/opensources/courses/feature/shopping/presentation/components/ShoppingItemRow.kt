@@ -21,6 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -31,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.filter
 import org.opensources.courses.R
 import org.opensources.courses.feature.shopping.domain.QuantityFormatter
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
@@ -46,8 +50,15 @@ fun ShoppingItemRow(
     modifier: Modifier = Modifier,
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) onDelete(item)
+    val currentItem by rememberUpdatedState(item)
+    val currentOnDelete by rememberUpdatedState(onDelete)
+    LaunchedEffect(dismissState) {
+        // The state is saved under the item's key: a row shown again after "Annuler" comes back
+        // swiped away. It is put back first, so only a new swipe deletes the item.
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        snapshotFlow { dismissState.currentValue }
+            .filter { it == SwipeToDismissBoxValue.EndToStart }
+            .collect { currentOnDelete(currentItem) }
     }
     val editLabel = stringResource(R.string.shopping_edit_item, item.name)
     val deleteLabel = stringResource(R.string.action_delete)

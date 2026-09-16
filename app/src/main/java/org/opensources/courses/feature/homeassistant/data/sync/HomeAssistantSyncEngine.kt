@@ -25,25 +25,33 @@ import org.opensources.courses.feature.homeassistant.domain.HomeAssistantExcepti
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantGateway
 import org.opensources.courses.feature.language.domain.AppLanguageRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Bidirectional synchronisation with Home Assistant to-do lists.
  *
- * Lists first: deletions of lists removed in the app are sent. In "all lists" mode, every editable
- * Home Assistant list missing from the app is then imported, and a list deleted in Home Assistant
- * leaves the app; in "lists created by the app" mode, lists imported earlier are removed and a list
- * deleted in Home Assistant is only unlinked.
+ * The Home Assistant lists are read first, which also checks the token before anything is counted
+ * as refused. The pending operations are read once: those queued meanwhile leave at the next
+ * synchronisation, which their insertion requests anyway.
+ *
+ * Lists come next: deletions of lists removed in the app are sent. In "all lists" mode, every
+ * editable Home Assistant list missing from the app is then imported, and a list deleted in Home
+ * Assistant leaves the app; in "lists created by the app" mode, lists imported earlier are removed
+ * and a list deleted in Home Assistant is only unlinked.
  *
  * Then, for each synchronised list:
  * 1. create the remote list if a `CREATE_LIST` operation is pending;
  * 2. read remote items and give local items without uid the uid of a same-named remote item;
  * 3. push pending item operations ([HaItemPusher]);
- * 4. read remote items again and apply them ([HaItemReconciler], [ConflictResolver] rules).
+ * 4. apply the remote items ([HaItemReconciler], [ConflictResolver] rules), read again if
+ *    something was pushed.
  *
  * `UPDATE_LIST` (rename) cannot be sent: the Home Assistant REST API offers no way to rename a to-do
  * entity, so the new name stays local. A rename made in Home Assistant renames imported lists.
- * A linked list that is unavailable in Home Assistant is skipped: its changes stay queued.
+ * A linked list that is unavailable in Home Assistant is skipped: its changes stay queued. An
+ * operation refused [SyncQueue.MAX_ATTEMPTS] times is given up (docs/adr/0022-abandon-des-operations-refusees.md).
  */
+@Singleton
 class HomeAssistantSyncEngine
     @Inject
     constructor(
@@ -63,15 +71,19 @@ class HomeAssistantSyncEngine
         override val isAutoSyncEnabled: Flow<Boolean> =
             config.config.map { it.enabled && it.isConfigured && it.autoSync }.distinctUntilChanged()
 
-        /** One live connection following every linked list; it reconnects when the linked lists change. */
+        /**
+         * One live connection following every linked list. It is opened again when the linked lists,
+         * the address or the token change: a connection ended by a refused token resumes once the
+         * user saved another one.
+         */
         @OptIn(ExperimentalCoroutinesApi::class)
         override val remoteChanges: Flow<Unit> =
             combine(config.config, store.observeLinkedEntityIds()) { current, entityIds ->
-                (current.baseUrl to entityIds).takeIf { current.enabled && current.isConfigured && entityIds.isNotEmpty() }
+                LiveTarget(current.baseUrl, current.tokenVersion, entityIds).takeIf { current.enabled && current.isConfigured && entityIds.isNotEmpty() }
             }.distinctUntilChanged()
                 .flatMapLatest { target ->
                     val credentials = target?.let { config.credentials() }
-                    if (target == null || credentials == null) emptyFlow() else liveUpdates.observeItemChanges(credentials, target.second)
+                    if (target == null || credentials == null) emptyFlow() else liveUpdates.observeItemChanges(credentials, target.entityIds)
                 }
 
         override suspend fun synchronizesNewLists(): Boolean = config.config.first().let { it.enabled && it.isConfigured && it.autoCreateLists }
@@ -79,32 +91,30 @@ class HomeAssistantSyncEngine
         override suspend fun synchronize(): SyncOutcome {
             val credentials = config.credentials() ?: return SyncOutcome.Skipped
             val importsAllLists = config.config.first().listMode == HaListMode.ALL_LISTS
+            val tally = SyncTally()
             return try {
                 // Also catches a list imported by a synchronisation that ran while the mode was left.
                 if (!importsAllLists) store.removeImportedLists()
-                var failures = sendListDeletions(credentials)
-                var unavailable = 0
                 val remoteLists = gateway.getTodoLists(credentials).associateBy { it.entityId }
-                if (importsAllLists) importMissingLists(remoteLists.values)
+                val pending = queue.pending()
+                sendListDeletions(credentials, pending.filter { it.type == SyncOperationType.DELETE_LIST }, tally)
+                if (importsAllLists) importMissingLists(remoteLists.values, pending)
+                val pendingByList = pending.groupBy { it.listLocalId }
                 for (list in store.synchronizedLists()) {
                     // Its integration is stopped: nothing can be read, nothing is unlinked or lost.
                     if (list.remoteId?.let(remoteLists::get)?.isAvailable == false) {
-                        unavailable++
+                        tally.unavailable++
                         continue
                     }
-                    failures +=
-                        try {
-                            synchronizeList(credentials, list, remoteLists, importsAllLists)
-                        } catch (exception: HomeAssistantException) {
-                            if (exception.isFatal) throw exception
-                            1
-                        }
+                    try {
+                        synchronizeList(credentials, list, pendingByList[list.localId].orEmpty(), remoteLists, importsAllLists, tally)
+                    } catch (exception: HomeAssistantException) {
+                        // A list that cannot be read is retried as a whole at the next synchronisation.
+                        if (exception.isFatal) throw exception
+                        tally.retried++
+                    }
                 }
-                when {
-                    unavailable > 0 -> SyncOutcome.Failure(SyncFailure.LIST_UNAVAILABLE)
-                    failures > 0 -> SyncOutcome.Failure(SyncFailure.PROTOCOL)
-                    else -> SyncOutcome.Success
-                }
+                tally.outcome()
             } catch (exception: HomeAssistantException) {
                 SyncOutcome.Failure(exception.kind.toSyncFailure())
             }
@@ -112,10 +122,13 @@ class HomeAssistantSyncEngine
 
         /**
          * "All lists" mode: adds the editable Home Assistant lists not linked yet, except those the user
-         * removed or unlinked and those whose deletion is still queued.
+         * removed or unlinked and those whose deletion was queued.
          */
-        private suspend fun importMissingLists(remoteLists: Collection<HaTodoList>) {
-            val deleting = queue.pending().filter { it.type == SyncOperationType.DELETE_LIST }.mapNotNull { it.remoteListId }
+        private suspend fun importMissingLists(
+            remoteLists: Collection<HaTodoList>,
+            pending: List<SyncOperation>,
+        ) {
+            val deleting = pending.filter { it.type == SyncOperationType.DELETE_LIST }.mapNotNull { it.remoteListId }
             val excluded = store.synchronizedLists().mapNotNull { it.remoteId }.toSet() + deleting + store.ignoredEntityIds()
             remoteLists
                 .filter { it.isAvailable && it.isEditable && it.entityId !in excluded }
@@ -125,19 +138,22 @@ class HomeAssistantSyncEngine
         private suspend fun synchronizeList(
             credentials: HaCredentials,
             list: SyncListRef,
+            listOperations: List<SyncOperation>,
             remoteLists: Map<String, HaTodoList>,
             importsAllLists: Boolean,
-        ): Int {
-            val listOperations = queue.pending().filter { it.listLocalId == list.localId }
-            val remoteList = resolveRemoteList(credentials, list, listOperations, remoteLists, importsAllLists) ?: return 0
+            tally: SyncTally,
+        ) {
+            val remoteList = resolveRemoteList(credentials, list, listOperations, remoteLists, importsAllLists, tally) ?: return
             if (list.importedFromRemote && list.remoteName != remoteList.name) store.applyRemoteListName(list.localId, remoteList.name)
             queue.complete(listOperations.filter { it.type == SyncOperationType.UPDATE_LIST }.map { it.id })
+            val itemOperations = listOperations.filter { it.type.isItemOperation }
             val remoteItems = gateway.getItems(credentials, remoteList.entityId)
             reconciler.adoptByName(list.localId, remoteItems)
-            val failures = pusher.push(credentials, remoteList, list.localId, remoteItems)
-            reconciler.reconcile(list.localId, gateway.getItems(credentials, remoteList.entityId), remoteList.supportsDescription)
+            pusher.push(credentials, remoteList, list.localId, itemOperations, remoteItems, tally)
+            // Nothing sent: what was read is still what Home Assistant holds.
+            val latest = if (itemOperations.isEmpty()) remoteItems else gateway.getItems(credentials, remoteList.entityId)
+            reconciler.reconcile(list.localId, latest, remoteList.supportsDescription)
             store.markListSynced(list.localId)
-            return failures
         }
 
         private suspend fun resolveRemoteList(
@@ -146,6 +162,7 @@ class HomeAssistantSyncEngine
             listOperations: List<SyncOperation>,
             remoteLists: Map<String, HaTodoList>,
             importsAllLists: Boolean,
+            tally: SyncTally,
         ): HaTodoList? {
             if (list.remoteId != null) {
                 return remoteLists[list.remoteId] ?: run {
@@ -154,34 +171,55 @@ class HomeAssistantSyncEngine
                 }
             }
             val creation = listOperations.firstOrNull { it.type == SyncOperationType.CREATE_LIST } ?: return null
-            // The remote name may differ (« Courses 2 ») when the name is already taken in Home Assistant.
-            val created = gateway.createList(credentials, list.name)
+            val created =
+                try {
+                    // The remote name may differ (« Courses 2 ») when the name is already taken in Home Assistant.
+                    gateway.createList(credentials, list.name)
+                } catch (exception: HomeAssistantException) {
+                    if (exception.isFatal) throw exception
+                    if (creation.isLastAttempt) {
+                        // Given up: the list stays on this phone, the user can link it by hand.
+                        store.unlinkList(list.localId)
+                        tally.abandoned++
+                    } else {
+                        queue.fail(listOf(creation.id), exception.kind.name)
+                        tally.retried++
+                    }
+                    return null
+                }
             store.setListRemote(list.localId, created.entityId, created.configEntryId, created.name)
             queue.complete(listOf(creation.id))
             return HaTodoList(created.entityId, created.name, supportsDescription = true)
         }
 
-        private suspend fun sendListDeletions(credentials: HaCredentials): Int {
-            var failures = 0
-            queue.pending().filter { it.type == SyncOperationType.DELETE_LIST }.forEach { operation ->
+        private suspend fun sendListDeletions(
+            credentials: HaCredentials,
+            deletions: List<SyncOperation>,
+            tally: SyncTally,
+        ) {
+            for (operation in deletions) {
+                var abandoned = false
                 try {
                     operation.remoteEntryId?.let { gateway.deleteList(credentials, it) }
                 } catch (exception: HomeAssistantException) {
                     if (exception.isFatal) throw exception
                     if (exception.kind != HaErrorKind.NOT_FOUND) {
-                        queue.fail(listOf(operation.id), exception.kind.name)
-                        failures++
-                        return@forEach
+                        if (!operation.isLastAttempt) {
+                            queue.fail(listOf(operation.id), exception.kind.name)
+                            tally.retried++
+                            continue
+                        }
+                        abandoned = true
+                        tally.abandoned++
                     }
                 }
                 operation.remoteListId?.let { entityId ->
                     store.forgetTrackedList(entityId)
-                    // Created elsewhere, so not deleted remotely: the "all lists" mode must not bring it back.
-                    if (operation.remoteEntryId == null) store.ignoreList(entityId)
+                    // Not deleted remotely (created elsewhere, or refused): the "all lists" mode must not bring it back.
+                    if (operation.remoteEntryId == null || abandoned) store.ignoreList(entityId)
                 }
                 queue.complete(listOf(operation.id))
             }
-            return failures
         }
 
         private fun HaErrorKind.toSyncFailure(): SyncFailure =
@@ -190,4 +228,11 @@ class HomeAssistantSyncEngine
                 HaErrorKind.UNAUTHORIZED -> SyncFailure.UNAUTHORIZED
                 HaErrorKind.NOT_FOUND, HaErrorKind.REJECTED, HaErrorKind.PROTOCOL -> SyncFailure.PROTOCOL
             }
+
+        /** What the live connection depends on; the token itself is read again when it is opened. */
+        private data class LiveTarget(
+            val baseUrl: String,
+            val tokenVersion: Int,
+            val entityIds: Set<String>,
+        )
     }

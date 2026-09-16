@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class HaConfigRepositoryImpl
                     autoSync = preferences[AUTO_SYNC] ?: true,
                     autoCreateLists = preferences[AUTO_CREATE_LISTS] ?: true,
                     listsSetupDone = preferences[LISTS_SETUP_DONE] ?: false,
+                    tokenVersion = preferences[TOKEN_VERSION] ?: 0,
                 )
             }
 
@@ -58,14 +60,24 @@ class HaConfigRepositoryImpl
         override suspend fun saveConnection(
             baseUrl: String,
             token: String,
-        ) {
-            val url = HaUrlNormalizer.normalize(baseUrl).orEmpty()
+        ): Boolean {
+            val url = HaUrlNormalizer.normalize(baseUrl) ?: return false
             val cleanToken = token.trim()
             if (cleanToken.isNotEmpty()) secrets.write(TOKEN_SECRET, cleanToken)
             dataStore.edit { preferences ->
                 preferences[BASE_URL] = url
-                if (cleanToken.isNotEmpty()) preferences[HAS_TOKEN] = true
+                if (cleanToken.isNotEmpty()) {
+                    preferences[HAS_TOKEN] = true
+                    preferences[TOKEN_VERSION] = (preferences[TOKEN_VERSION] ?: 0) + 1
+                }
             }
+            return true
+        }
+
+        override suspend fun forgetConnection() {
+            // Settings first: once disabled, nothing reads the token any more.
+            dataStore.edit { it.clear() }
+            secrets.remove(TOKEN_SECRET)
         }
 
         override suspend fun setEnabled(enabled: Boolean) {
@@ -97,5 +109,6 @@ class HaConfigRepositoryImpl
             val AUTO_SYNC = booleanPreferencesKey("auto_sync")
             val AUTO_CREATE_LISTS = booleanPreferencesKey("auto_create_lists")
             val LISTS_SETUP_DONE = booleanPreferencesKey("lists_setup_done")
+            val TOKEN_VERSION = intPreferencesKey("token_version")
         }
     }

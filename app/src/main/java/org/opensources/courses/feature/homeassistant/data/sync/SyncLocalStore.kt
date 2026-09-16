@@ -93,6 +93,16 @@ interface SyncLocalStore {
     /** Cancels a local deletion: the item was modified in Home Assistant meanwhile. */
     suspend fun restoreDeletedItem(itemLocalId: String)
 
+    /**
+     * Home Assistant kept refusing the changes of the item: [operationIds] leave the queue and, in the
+     * same transaction, a refused deletion is cancelled. A linked item then takes the Home Assistant
+     * state at the reconciliation; an item never created there stays on this phone only.
+     */
+    suspend fun abandonItemChanges(
+        itemLocalId: String,
+        operationIds: List<Long>,
+    )
+
     suspend fun markItemSynced(itemLocalId: String)
 
     suspend fun removeRemotelyDeletedItem(itemLocalId: String)

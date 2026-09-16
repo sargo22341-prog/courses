@@ -34,17 +34,22 @@ class HaItemReconciler(
         }
     }
 
+    /**
+     * Pending items are read once for the whole list; the store checks again, item by item and
+     * inside its transaction, that nothing was queued since.
+     */
     suspend fun reconcile(
         listLocalId: String,
         remoteItems: List<HaTodoItem>,
         supportsDescription: Boolean,
     ) {
         val locals = store.items(listLocalId)
+        val pendingItemIds = queue.pendingItemIds(listLocalId)
         val remoteByUid = remoteItems.associateBy { it.uid }
         for (local in locals) {
             val remoteId = local.remoteId ?: continue
             val remote = remoteByUid[remoteId]?.toRemoteState(local, supportsDescription)
-            val state = local.toLocalState(hasPendingChanges = queue.hasPendingForItem(local.localId))
+            val state = local.toLocalState(hasPendingChanges = local.localId in pendingItemIds)
             when (ConflictResolver.resolve(state, remote, compareQuantity = supportsDescription)) {
                 ItemResolution.IN_SYNC -> store.markItemSynced(local.localId)
                 ItemResolution.KEEP_LOCAL -> Unit

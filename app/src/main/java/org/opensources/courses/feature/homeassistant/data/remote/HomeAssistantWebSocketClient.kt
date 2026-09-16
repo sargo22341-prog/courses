@@ -35,7 +35,8 @@ import javax.inject.Inject
  *
  * An event only signals that something changed: the synchronisation engine then reads and merges
  * the lists as usual, so there is a single merge path. The token travels only in the `auth`
- * message. A lost connection is reopened after a growing delay (5 s up to 5 min).
+ * message. A lost connection is reopened after a growing delay (5 s up to 5 min); a refused token
+ * is never tried again.
  */
 class HomeAssistantWebSocketClient
     @Inject
@@ -58,11 +59,21 @@ class HomeAssistantWebSocketClient
             flow {
                 var failures = 0
                 while (true) {
+                    var lost = true
                     emitAll(
                         connect(credentials, entityIds)
                             .onEach { failures = 0 }
-                            .catch { cause -> if (cause !is HomeAssistantException) throw cause },
+                            .catch { cause ->
+                                if (cause !is HomeAssistantException) throw cause
+                                lost = cause.kind == HaErrorKind.UNREACHABLE
+                            },
                     )
+                    if (!lost) {
+                        // Retrying cannot help (refused token, invalid address): the synchronisation
+                        // asked here reports it, and the connection is opened again once they change.
+                        emit(Unit)
+                        return@flow
+                    }
                     delay(retryDelayMillis(failures++))
                 }
             }

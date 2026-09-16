@@ -34,14 +34,23 @@ UI → ViewModel → Repository ──┬─ écrit l'article
 - au démarrage et à chaque retour au premier plan ;
 - au retour du réseau ;
 - à chaque nouvelle opération en attente ;
-- toutes les 2 minutes tant que l'application tourne ;
+- toutes les 2 minutes, **seulement au premier plan** : en arrière-plan, rien ne réveille la radio
+  périodiquement ([ADR 0023](adr/0023-synchronisation-periodique-au-premier-plan.md)) ;
 - sur « Synchroniser maintenant » et « tirer pour actualiser » ;
-- à chaque changement annoncé par le WebSocket de Home Assistant.
+- à chaque changement annoncé par le WebSocket de Home Assistant (au premier plan).
 
 Pas de WorkManager : la file est persistée, elle part au prochain de ces déclencheurs
 ([ADR 0004](adr/0004-pas-de-workmanager.md)).
 
+« En ligne » signifie qu'Android a un réseau par défaut ; qu'Internet y réponde n'est pas exigé, si
+bien qu'un Wi-Fi domestique privé d'Internet laisse Home Assistant local joignable
+([Hors ligne](hors-ligne.md#indicateurs)).
+
 ## Comment synchroniser : `HomeAssistantSyncEngine`
+
+Les listes Home Assistant sont lues d'abord, ce qui vérifie aussi le token avant que quoi que ce
+soit compte comme refusé. La file est lue **une seule fois** par synchronisation ; les opérations
+ajoutées pendant ce temps partent à la suivante, que leur insertion déclenche de toute façon.
 
 Liste par liste :
 
@@ -52,14 +61,27 @@ Liste par liste :
    fois, [ADR 0009](adr/0009-operations-regroupees-par-article.md)). Seuls les champs modifiés
    localement partent : nom et quantité après une modification, état coché après une coche. Une
    création envoie tout ;
-4. relire la liste distante et appliquer les changements selon la
-   [stratégie de conflit](conflits.md).
+4. appliquer la liste distante selon la [stratégie de conflit](conflits.md), après l'avoir relue
+   si quelque chose a été envoyé (sinon la première lecture suffit).
 
 ## Confirmation et échecs
 
 - Une opération n'est retirée de la file **qu'après confirmation** de Home Assistant.
-- Échec non fatal : elle reste, avec son nombre de tentatives et l'erreur.
-- Serveur injoignable ou token refusé : la synchronisation s'arrête, tout reste en file, nouvel
-  essai plus tard.
+- Refus (requête rejetée, élément introuvable, réponse inattendue) : elle reste, avec son nombre
+  de tentatives et l'erreur. Un refus ne concerne que son article : les autres partent quand même.
+- **Abandon** : une opération refusée `SyncQueue.MAX_ATTEMPTS` fois (10) n'est plus envoyée
+  ([ADR 0022](adr/0022-abandon-des-operations-refusees.md)). Dans la même transaction, l'article
+  est remis en cohérence : une suppression refusée est annulée (l'article réapparaît), un article
+  lié reprend l'état de Home Assistant, un article jamais accepté reste sur le téléphone seulement,
+  une liste jamais créée est déliée, une liste dont la suppression est refusée n'est plus importée.
+  La synchronisation l'indique une fois (« Modifications refusées »).
+- **Texte modifié par Home Assistant** à la création d'un article (l'identifiant n'est pas
+  retrouvé par nom) : l'article n'est pas renvoyé, ce qui créerait un doublon ; la copie de Home
+  Assistant le remplace localement à la réconciliation qui suit.
+- Serveur injoignable ou token refusé : la synchronisation s'arrête, tout reste en file sans que
+  la tentative compte, nouvel essai plus tard.
+- Un token valide mais **non administrateur** ne peut pas créer ni supprimer de liste : Home
+  Assistant répond 401, ce qui n'est traité comme « token refusé » que si `/api/` le refuse aussi ;
+  sinon seule la demande est refusée.
 - Les méthodes qui appliquent des données distantes revérifient **dans leur transaction**
   qu'aucune opération locale n'a été ajoutée pendant la synchronisation.

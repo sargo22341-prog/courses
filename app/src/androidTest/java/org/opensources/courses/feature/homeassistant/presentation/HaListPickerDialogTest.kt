@@ -1,9 +1,11 @@
 package org.opensources.courses.feature.homeassistant.presentation
 
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -66,5 +68,18 @@ class HaListPickerDialogTest {
         composeRule.onNodeWithText("Mon agenda").performClick()
 
         assertNull(linked)
+    }
+
+    @Test
+    fun everyChoiceIsLargeEnoughToTap() {
+        val state = HaSettingsUiState(lists = listOf(list), remoteLists = RemoteListsState.Loaded(emptyList()), pickerListId = list.id)
+        composeRule.setContent {
+            FrenchCoursesTheme {
+                HaListPickerDialog(list, state, onLink = {}, onCreate = {}, onUnlink = {}, onDismiss = {})
+            }
+        }
+
+        composeRule.onNodeWithText("Ne pas synchroniser").assertHeightIsAtLeast(48.dp)
+        composeRule.onNodeWithText("Créer « Courses » dans Home Assistant").assertHeightIsAtLeast(48.dp)
     }
 }

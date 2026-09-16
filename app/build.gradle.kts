@@ -64,8 +64,12 @@ android {
         }
     }
 
-    testOptions {
-        unitTests.isReturnDefaultValues = true
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+        // Dependency updates are reviewed with `dependencyUpdates`: a library released upstream
+        // must not break an unchanged build.
+        disable += listOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
     }
 }
 

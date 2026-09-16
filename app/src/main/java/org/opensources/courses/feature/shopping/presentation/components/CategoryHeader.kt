@@ -17,13 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.opensources.courses.core.designsystem.theme.isDark
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 
 /** Section title in the list: tinted pictogram, name in the section colour and a thin rule. */
@@ -35,7 +35,7 @@ fun CategoryHeader(
     val style = category.style()
     val background = MaterialTheme.colorScheme.background
     // Accents are dark tones made for the light theme; lightened, they stay readable on the dark one.
-    val accent = if (background.luminance() < DARK_BACKGROUND_LUMINANCE) lerp(style.accent, Color.White, DARK_THEME_LIGHTENING) else style.accent
+    val accent = if (MaterialTheme.colorScheme.isDark) lerp(style.accent, Color.White, DARK_THEME_LIGHTENING) else style.accent
     Row(
         modifier = modifier.fillMaxWidth().padding(start = 4.dp, top = 16.dp, bottom = 2.dp).semantics(mergeDescendants = true) { heading() },
         verticalAlignment = Alignment.CenterVertically,
@@ -53,7 +53,6 @@ fun CategoryHeader(
     }
 }
 
-private const val DARK_BACKGROUND_LUMINANCE = 0.5f
 private const val DARK_THEME_LIGHTENING = 0.45f
 private const val BADGE_TINT = 0.2f
 private const val RULE_ALPHA = 0.35f

@@ -15,6 +15,7 @@ enum class HaMessage(
     val isError: Boolean,
 ) {
     SAVED(R.string.ha_saved, false),
+    FORGOTTEN(R.string.ha_forgotten, false),
     TOKEN_SCANNED(R.string.ha_token_scanned, false),
     INVALID_TOKEN_QR(R.string.ha_error_invalid_token_qr, true),
     SCANNER_UNAVAILABLE(R.string.ha_error_scanner_unavailable, true),
@@ -32,6 +33,7 @@ enum class HaMessage(
     PROTOCOL(R.string.ha_error_protocol, true),
     SYNC_RETRY(R.string.sync_error_protocol, true),
     LIST_UNAVAILABLE(R.string.sync_error_list_unavailable, true),
+    SYNC_REJECTED(R.string.sync_error_rejected, true),
     ;
 
     companion object {
@@ -56,6 +58,7 @@ enum class HaMessage(
                         SyncFailure.UNAUTHORIZED -> UNAUTHORIZED
                         SyncFailure.PROTOCOL -> SYNC_RETRY
                         SyncFailure.LIST_UNAVAILABLE -> LIST_UNAVAILABLE
+                        SyncFailure.REJECTED -> SYNC_REJECTED
                     }
             }
     }

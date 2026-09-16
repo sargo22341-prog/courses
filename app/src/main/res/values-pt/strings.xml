@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Ações comuns -->
     <string name="action_save">Guardar</string>
     <string name="action_cancel">Cancelar</string>
@@ -9,6 +9,7 @@
     <string name="action_back">Voltar</string>
     <string name="action_clear">Limpar</string>
     <string name="action_close">Fechar</string>
+    <string name="action_undo">Anular</string>
     <string name="open_app_settings">Abrir as definições da aplicação</string>
 
     <!-- Leitor de código QR -->
@@ -37,6 +38,7 @@
     <plurals name="shopping_purchased_count">
         <item quantity="one">%d artigo comprado</item>
         <item quantity="other">%d artigos comprados</item>
+        <item quantity="many">%d de artigos comprados</item>
     </plurals>
     <string name="shopping_hide_purchased">Ocultar os artigos comprados</string>
     <string name="shopping_show_purchased">Mostrar os artigos comprados</string>
@@ -49,7 +51,7 @@
     <string name="shopping_edit_quantity">Quantidade</string>
     <string name="shopping_edit_unit">Unidade (opcional)</string>
     <string name="shopping_edit_item">Editar %1$s</string>
-    <string name="shopping_no_suggestion">Nenhum produto encontrado</string>
+    <string name="shopping_item_deleted">«%1$s» eliminado</string>
 
     <!-- Categorias (secções) -->
     <string name="category_fruits_vegetables">Frutas e legumes</string>
@@ -73,12 +75,13 @@
     <plurals name="sync_pending">
         <item quantity="one">%d alteração pendente</item>
         <item quantity="other">%d alterações pendentes</item>
+        <item quantity="many">%d de alterações pendentes</item>
     </plurals>
-    <string name="sync_error_unreachable">Não é possível contactar o Home Assistant.\nA sua lista local continua disponível.</string>
-    <string name="sync_error_unauthorized">O Home Assistant recusou o token de acesso.\nVerifique-o nas definições.</string>
     <string name="sync_error_protocol">Sincronização impossível.\nAs alterações serão repetidas automaticamente.</string>
     <string name="sync_error_list_unavailable">Uma lista associada está indisponível no Home Assistant.\nEscolha outra lista ou reative a sua integração. A sua lista local continua disponível.</string>
     <string name="sync_list_unavailable">Lista do Home Assistant indisponível</string>
+    <string name="sync_changes_rejected">Alterações recusadas</string>
+    <string name="sync_error_rejected">O Home Assistant recusou várias vezes algumas alterações: já não serão enviadas. As suas listas continuam disponíveis neste telemóvel.</string>
 
     <!-- Listas -->
     <string name="lists_title">As minhas listas</string>
@@ -115,6 +118,7 @@
     <plurals name="catalog_products">
         <item quantity="one">%d produto disponível sem ligação</item>
         <item quantity="other">%d produtos disponíveis sem ligação</item>
+        <item quantity="many">%d de produtos disponíveis sem ligação</item>
     </plurals>
     <string name="catalog_language_pending">O catálogo será transferido no idioma escolhido assim que houver ligação à Internet. O catálogo base já está traduzido.</string>
     <string name="catalog_sync_now">↻ Sincronizar agora</string>
@@ -137,6 +141,12 @@
     <string name="ha_url">Endereço do Home Assistant</string>
     <string name="ha_token">Token de acesso de longa duração</string>
     <string name="ha_token_saved">Token guardado — deixe vazio para o manter</string>
+    <string name="ha_cleartext_warning">Este endereço usa http://: o token circula sem encriptação e qualquer pessoa na mesma rede pode lê-lo. Prefira https:// se o seu Home Assistant o permitir.</string>
+    <string name="ha_forget">Esquecer a ligação</string>
+    <string name="ha_forget_confirm_title">Esquecer a ligação?</string>
+    <string name="ha_forget_confirm_body">O endereço e o token do Home Assistant são apagados deste telemóvel e a sincronização para. As suas listas ficam neste telemóvel, sem ligação; nada é eliminado no Home Assistant.</string>
+    <string name="ha_forget_confirm">Esquecer</string>
+    <string name="ha_forgotten">Ligação esquecida. As suas listas ficam neste telemóvel.</string>
     <string name="ha_scan_token">Ler o código QR do token</string>
     <string name="ha_scan_token_hint">No Home Assistant: Perfil → Segurança → Tokens de acesso de longa duração → Criar token → Gerar um código QR.</string>
     <string name="ha_token_scanned">✓ Token lido. Guarde para o manter.</string>
@@ -166,13 +176,15 @@
     <plurals name="ha_mode_app_confirm_body">
         <item quantity="one">%d lista importada do Home Assistant será eliminada deste telemóvel. Continua no Home Assistant.</item>
         <item quantity="other">%d listas importadas do Home Assistant serão eliminadas deste telemóvel. Continuam no Home Assistant.</item>
+        <item quantity="many">%d de listas importadas do Home Assistant serão eliminadas deste telemóvel. Continuam no Home Assistant.</item>
     </plurals>
     <string name="ha_mode_app_confirm">Retirar</string>
     <string name="ha_lists_section">Listas sincronizadas</string>
     <string name="ha_auto_create_lists">Criar automaticamente as novas listas</string>
     <string name="ha_auto_create_on">Cada lista criada na aplicação também é criada no Home Assistant. Se o nome já existir lá, é acrescentado um número («Compras 2»).</string>
     <string name="ha_auto_create_off">As novas listas ficam neste telemóvel: associe-as com «Escolher».</string>
-    <string name="ha_setup_intro">Esta lista já existe neste telemóvel. Crie-a no Home Assistant, associe-a a uma lista existente ou mantenha-a só aqui.</string>
+    <!-- « associe-a a uma lista »: pronoun then preposition, not a repeated word. -->
+    <string name="ha_setup_intro" tools:ignore="Typos">Esta lista já existe neste telemóvel. Crie-a no Home Assistant, associe-a a uma lista existente ou mantenha-a só aqui.</string>
     <string name="ha_setup_later">Mais tarde</string>
     <string name="ha_list_not_synced">Não sincronizada</string>
     <string name="ha_list_pending_creation">Criação no Home Assistant pendente</string>

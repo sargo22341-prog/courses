@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -21,11 +22,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.opensources.courses.core.common.ApplicationScope
 import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.catalog.domain.SearchSuggestionsUseCase
@@ -40,6 +43,7 @@ import org.opensources.courses.feature.shopping.domain.GroupItemsByCategoryUseCa
 import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItemRepository
+import org.opensources.courses.feature.shopping.domain.withoutChecked
 import org.opensources.courses.navigation.ShoppingDestination
 import javax.inject.Inject
 
@@ -57,6 +61,7 @@ class ShoppingViewModel
         private val preferences: AppPreferencesRepository,
         private val languages: AppLanguageRepository,
         private val syncCoordinator: SyncCoordinator,
+        @ApplicationScope private val applicationScope: CoroutineScope,
     ) : ViewModel() {
         private val requestedListId: String? = savedStateHandle.toRoute<ShoppingDestination>().listId
 
@@ -70,24 +75,26 @@ class ShoppingViewModel
             } else {
                 // A list deleted meanwhile falls back to the default list.
                 lists.observeList(requestedListId).flatMapLatest { list -> if (list != null) flowOf(list) else lists.observeDefaultList() }
-            }
+            }.distinctUntilChanged()
 
-        private val listWithItems: Flow<Pair<ShoppingList?, List<ShoppingItem>>> =
-            currentList.flatMapLatest { list ->
-                if (list == null) flowOf(null to emptyList()) else items.observeItems(list.id).map { list to it }
-            }
+        private val groupByCategory: Flow<Boolean> = preferences.preferences.map { it.groupByCategory }.distinctUntilChanged()
 
-        /** Sections are computed from the same emission as the items, so both never disagree on screen. */
+        /**
+         * Sections are computed from the same emission as the items, so both never disagree on screen.
+         * Checked items are sorted too: checking one then changes no catalog query.
+         */
         private val listContent: Flow<ListContent> =
-            combine(listWithItems, preferences.preferences.map { it.groupByCategory }.distinctUntilChanged(), ::Pair)
-                .flatMapLatest { (listAndItems, grouped) ->
-                    val (list, all) = listAndItems
+            currentList.flatMapLatest { list ->
+                if (list == null) return@flatMapLatest flowOf(ListContent(null, emptyList(), toBuySections = null))
+                val listItems = items.observeItems(list.id)
+                groupByCategory.flatMapLatest { grouped ->
                     if (grouped) {
-                        groupItemsByCategory(all.filterNot { it.isChecked }).map { ListContent(list, all, it) }
+                        groupItemsByCategory(listItems).map { ListContent(list, it.items, it.sections.withoutChecked()) }
                     } else {
-                        flowOf(ListContent(list, all, toBuySections = null))
+                        listItems.map { ListContent(list, it, toBuySections = null) }
                     }
                 }
+            }
 
         private val suggestions: Flow<List<ProductSuggestion>> =
             snapshotFlow { query }
@@ -97,18 +104,29 @@ class ShoppingViewModel
 
         private val refreshing = MutableStateFlow(false)
 
+        /** Hidden at once, deleted only once it can no longer be undone. */
+        private val pendingDeletion = MutableStateFlow<ShoppingItem?>(null)
+
         val uiState: StateFlow<ShoppingUiState> =
-            combine(listContent, preferences.preferences, suggestions, syncCoordinator.snapshot, refreshing) { content, prefs, found, sync, isRefreshing ->
+            combine(
+                listContent,
+                preferences.preferences,
+                suggestions,
+                syncCoordinator.snapshot,
+                combine(refreshing, pendingDeletion, ::Pair),
+            ) { content, prefs, found, sync, (isRefreshing, deleted) ->
+                val shown = content.without(deleted)
                 ShoppingUiState(
-                    isLoading = content.list == null,
-                    listName = content.list?.name.orEmpty(),
-                    toBuy = content.items.filterNot { it.isChecked },
-                    toBuySections = content.toBuySections,
-                    purchased = content.items.filter { it.isChecked },
+                    isLoading = shown.list == null,
+                    listName = shown.list?.name.orEmpty(),
+                    toBuy = shown.items.filterNot { it.isChecked },
+                    toBuySections = shown.toBuySections,
+                    purchased = shown.items.filter { it.isChecked },
                     hidePurchased = prefs.hidePurchased,
                     suggestions = found,
                     sync = sync,
                     isRefreshing = isRefreshing,
+                    pendingDeletion = deleted,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ShoppingUiState())
 
@@ -136,8 +154,22 @@ class ShoppingViewModel
             viewModelScope.launch { items.setChecked(item.id, !item.isChecked) }
         }
 
+        /**
+         * The item disappears at once and can be brought back ([onUndoDeletion]) until
+         * [onDeletionConfirmed]; deleting another one meanwhile confirms the previous deletion.
+         */
         fun onDeleteItem(item: ShoppingItem) {
-            viewModelScope.launch { items.deleteItem(item.id) }
+            val previous = pendingDeletion.getAndUpdate { item }
+            if (previous != null && previous.id != item.id) delete(previous)
+        }
+
+        fun onUndoDeletion() {
+            pendingDeletion.value = null
+        }
+
+        /** The undo offer for [item] ended without being used. */
+        fun onDeletionConfirmed(item: ShoppingItem) {
+            if (pendingDeletion.compareAndSet(item, null)) delete(item)
         }
 
         fun onSaveItem(
@@ -183,13 +215,36 @@ class ShoppingViewModel
             }
         }
 
+        /** Leaving the screen for good ends the undo offer: the deletion is done. */
+        override fun onCleared() {
+            pendingDeletion.value?.let(::delete)
+        }
+
+        // Outlives the screen, which may be closing (onCleared).
+        private fun delete(item: ShoppingItem) {
+            applicationScope.launch { items.deleteItem(item.id) }
+        }
+
         private suspend fun currentListId(): String? = currentList.first()?.id
 
         private data class ListContent(
             val list: ShoppingList?,
             val items: List<ShoppingItem>,
             val toBuySections: List<ItemSection>?,
-        )
+        ) {
+            fun without(deleted: ShoppingItem?): ListContent =
+                if (deleted == null) {
+                    this
+                } else {
+                    copy(
+                        items = items.filterNot { it.id == deleted.id },
+                        toBuySections =
+                            toBuySections
+                                ?.map { section -> section.copy(items = section.items.filterNot { it.id == deleted.id }) }
+                                ?.filter { it.items.isNotEmpty() },
+                    )
+                }
+        }
 
         private companion object {
             const val SEARCH_DEBOUNCE_MILLIS = 60L

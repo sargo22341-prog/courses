@@ -30,11 +30,12 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 ## Vérifications avant de terminer une tâche
 
 ```powershell
-.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin
+.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin
 ```
 
-Zéro erreur, zéro test en échec, aucun nouvel avertissement Kotlin ou Compose, aucun fichier
-source de plus de 600 lignes. Détail des suites : [Tests](tests.md).
+Zéro erreur, zéro test en échec, Lint au vert (ses avertissements sont des erreurs, sauf les
+annonces de nouvelles versions de dépendances, vues avec `dependencyUpdates`), aucun nouvel
+avertissement Kotlin ou Compose, aucun fichier source de plus de 600 lignes. Détail des suites : [Tests](tests.md).
 
 ## Vérifier les mises à jour des dépendances
 

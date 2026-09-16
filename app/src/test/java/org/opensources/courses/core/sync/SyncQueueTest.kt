@@ -54,6 +54,42 @@ class SyncQueueTest {
         }
 
     @Test
+    fun `the last attempt is the one that reaches the limit`() =
+        runTest {
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")
+            val id = queue.pending().single().id
+
+            repeat(SyncQueue.MAX_ATTEMPTS - 2) { queue.fail(listOf(id), "REJECTED") }
+            assertFalse(queue.pending().single().isLastAttempt)
+
+            queue.fail(listOf(id), "REJECTED")
+            assertTrue(queue.pending().single().isLastAttempt)
+        }
+
+    @Test
+    fun `pending items are listed per list, without list operations`() =
+        runTest {
+            queue.enqueue(SyncOperationType.CREATE_LIST, "list-1")
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list-1", "a")
+            queue.enqueue(SyncOperationType.CHECK_ITEM, "list-1", "a")
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list-2", "b")
+
+            assertEquals(setOf("a"), queue.pendingItemIds("list-1"))
+        }
+
+    @Test
+    fun `clearing the queue removes every operation`() =
+        runTest {
+            queue.enqueue(SyncOperationType.DELETE_LIST, "gone", remoteListId = "todo.bbq")
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")
+
+            queue.clear()
+
+            assertTrue(queue.pending().isEmpty())
+            assertEquals(0, queue.observePendingCount().first())
+        }
+
+    @Test
     fun `clearing a list removes only its operations`() =
         runTest {
             queue.enqueue(SyncOperationType.CREATE_ITEM, "list-1", "a")

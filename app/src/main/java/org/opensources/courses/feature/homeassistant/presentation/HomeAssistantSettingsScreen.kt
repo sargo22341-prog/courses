@@ -57,6 +57,7 @@ fun HomeAssistantRoute(
                     onEnabledChange = viewModel::setEnabled,
                     onSave = viewModel::save,
                     onTest = viewModel::testConnection,
+                    onForget = viewModel::forgetConnection,
                 )
             }
             if (state.config.enabled) {

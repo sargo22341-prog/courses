@@ -17,10 +17,10 @@ import java.util.Locale
 @Composable
 fun FrenchCoursesTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val french =
-        remember(context) {
-            val configuration = Configuration(context.resources.configuration).apply { setLocale(Locale.FRENCH) }
-            context.createConfigurationContext(configuration)
+        remember(context, configuration) {
+            context.createConfigurationContext(Configuration(configuration).apply { setLocale(Locale.FRENCH) })
         }
     CompositionLocalProvider(
         LocalContext provides french,

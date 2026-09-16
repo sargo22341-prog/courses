@@ -28,12 +28,18 @@ class ListsViewModel
         /** True after an attempt to delete the only remaining list. */
         val lastListWarning: StateFlow<Boolean> = mutableLastListWarning.asStateFlow()
 
-        fun create(
-            name: String,
-            onCreated: (String) -> Unit,
-        ) {
+        private val mutableCreatedListId = MutableStateFlow<String?>(null)
+
+        /** The list just created, to open once; the screen then calls [createdListOpened]. */
+        val createdListId: StateFlow<String?> = mutableCreatedListId.asStateFlow()
+
+        fun create(name: String) {
             val cleanName = ListNameRules.sanitize(name) ?: return
-            viewModelScope.launch { onCreated(repository.createList(cleanName).id) }
+            viewModelScope.launch { mutableCreatedListId.value = repository.createList(cleanName).id }
+        }
+
+        fun createdListOpened() {
+            mutableCreatedListId.value = null
         }
 
         fun rename(

@@ -23,6 +23,13 @@ visibles viennent des ressources (six langues, voir [Langues](langues.md)).
 - Appui long sur un article : modifier son nom et sa quantité.
 - Glisser un article vers la gauche : le supprimer. Ces deux actions sont aussi proposées aux
   lecteurs d'écran comme actions d'accessibilité.
+- **Annuler une suppression** : un article supprimé (glissement, boîte d'édition ou lecteur
+  d'écran) disparaît aussitôt et un message « « Lait » supprimé · Annuler » s'affiche quelques
+  secondes. La suppression n'est écrite (et envoyée à Home Assistant) qu'à la fin du message, en
+  supprimant un autre article ou en quittant la liste ; « Annuler » ne modifie rien. Si
+  l'application est tuée pendant ces secondes, l'article reste.
+- **Ajouter un article déjà présent** : sa quantité augmente de 1, sauf s'il a une unité
+  (« 500 g » est une mesure, pas un nombre) ; un article acheté repasse « à acheter ».
 - **Articles achetés** : l'en-tête « Achetés » porte à droite un bouton corbeille qui supprime tous
   les articles cochés, **après confirmation** (la même boîte de dialogue que « Supprimer les
   articles achetés » dans le menu du bas de l'écran). Annuler ne supprime rien.

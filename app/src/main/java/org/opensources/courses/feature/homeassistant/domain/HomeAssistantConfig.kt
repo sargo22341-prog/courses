@@ -13,6 +13,8 @@ enum class HaListMode {
  * when off, the user links it by hand.
  * @property listsSetupDone the user was already asked what to do with the lists that existed before
  * Home Assistant was set up.
+ * @property tokenVersion changes whenever a token is saved, so what was opened with the previous one
+ * is opened again; the token itself never leaves the [HaConfigRepository].
  */
 data class HomeAssistantConfig(
     val enabled: Boolean,
@@ -22,8 +24,12 @@ data class HomeAssistantConfig(
     val autoSync: Boolean,
     val autoCreateLists: Boolean = true,
     val listsSetupDone: Boolean = false,
+    val tokenVersion: Int = 0,
 ) {
     val isConfigured: Boolean get() = baseUrl.isNotBlank() && hasToken
+
+    /** Sent in clear on the network: anyone on the same network can read the token. */
+    val usesCleartext: Boolean get() = baseUrl.startsWith("http://", ignoreCase = true)
 
     companion object {
         val Default = HomeAssistantConfig(false, "", false, HaListMode.APP_CREATED_ONLY, autoSync = true)

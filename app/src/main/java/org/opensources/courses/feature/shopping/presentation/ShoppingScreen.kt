@@ -17,13 +17,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,6 +69,8 @@ fun ShoppingRoute(
                 onAddCustomItem = viewModel::onAddCustomItem,
                 onToggleItem = viewModel::onToggleItem,
                 onDeleteItem = viewModel::onDeleteItem,
+                onUndoDeletion = viewModel::onUndoDeletion,
+                onDeletionConfirmed = viewModel::onDeletionConfirmed,
                 onSaveItem = viewModel::onSaveItem,
                 onToggleHidePurchased = viewModel::onToggleHidePurchased,
                 onDeletePurchased = viewModel::onDeletePurchased,
@@ -72,7 +81,10 @@ fun ShoppingRoute(
     )
 }
 
-/** [onDeletePurchased] deletes: it is only called once the user confirmed. */
+/**
+ * [onDeletePurchased] deletes: it is only called once the user confirmed. [onDeleteItem] only hides
+ * the item, until [onUndoDeletion] or [onDeletionConfirmed].
+ */
 class ShoppingActions(
     val onQueryChange: (String) -> Unit = {},
     val onSubmitQuery: () -> Unit = {},
@@ -80,6 +92,8 @@ class ShoppingActions(
     val onAddCustomItem: () -> Unit = {},
     val onToggleItem: (ShoppingItem) -> Unit = {},
     val onDeleteItem: (ShoppingItem) -> Unit = {},
+    val onUndoDeletion: () -> Unit = {},
+    val onDeletionConfirmed: (ShoppingItem) -> Unit = {},
     val onSaveItem: (ShoppingItem, String, Double, String?) -> Unit = { _, _, _, _ -> },
     val onToggleHidePurchased: () -> Unit = {},
     val onDeletePurchased: () -> Unit = {},
@@ -97,7 +111,9 @@ fun ShoppingScreen(
 ) {
     var editedItemId by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmDeletePurchased by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val searching = query.isNotBlank()
+    state.pendingDeletion?.let { DeletionUndoOffer(it, snackbarHostState, actions) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -132,6 +148,7 @@ fun ShoppingScreen(
                 )
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
@@ -171,6 +188,27 @@ fun ShoppingScreen(
             },
             onDismiss = { confirmDeletePurchased = false },
         )
+    }
+}
+
+/**
+ * "« Lait » supprimé · Annuler". Leaving the composition (undone, or replaced by another deletion)
+ * dismisses the snackbar without confirming anything.
+ */
+@Composable
+private fun DeletionUndoOffer(
+    item: ShoppingItem,
+    snackbarHostState: SnackbarHostState,
+    actions: ShoppingActions,
+) {
+    val message = stringResource(R.string.shopping_item_deleted, item.name)
+    val undo = stringResource(R.string.action_undo)
+    val currentActions by rememberUpdatedState(actions)
+    LaunchedEffect(item.id) {
+        when (snackbarHostState.showSnackbar(message, actionLabel = undo, duration = SnackbarDuration.Short)) {
+            SnackbarResult.ActionPerformed -> currentActions.onUndoDeletion()
+            SnackbarResult.Dismissed -> currentActions.onDeletionConfirmed(item)
+        }
     }
 }
 

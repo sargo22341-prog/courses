@@ -42,7 +42,7 @@ import org.opensources.courses.core.designsystem.component.SwitchRow
 
 /**
  * Once an address and a token are saved, only "Connecté" and the synchronisation switch are shown;
- * tapping "Connecté" unfolds the connection settings.
+ * tapping "Connecté" unfolds the connection settings, where the connection can also be forgotten.
  */
 @Composable
 fun HaConnectionCard(
@@ -55,6 +55,7 @@ fun HaConnectionCard(
     onEnabledChange: (Boolean) -> Unit,
     onSave: () -> Unit,
     onTest: () -> Unit,
+    onForget: () -> Unit,
 ) {
     val configured = state.config.isConfigured
     // Unfolded by default only when nothing was saved yet, so a first setup is not folded away
@@ -62,9 +63,11 @@ fun HaConnectionCard(
     var expanded by rememberSaveable { mutableStateOf(!configured) }
     SettingsCard(stringResource(R.string.ha_connection)) {
         if (configured) ConnectedRow(state.config.baseUrl, expanded, onToggle = { expanded = !expanded })
+        if (configured && state.config.usesCleartext) CleartextWarning()
         SwitchRow(stringResource(R.string.ha_enabled), state.config.enabled, onEnabledChange)
         if (expanded || !configured) {
             ConnectionFields(state, url, token, onUrlChange, onTokenChange, onScanToken, onSave, onTest)
+            if (configured) ForgetConnectionButton(onForget)
         }
         (state.connection as? HaActionStatus.Done)?.let { StatusText(stringResource(it.message.text), it.message.isError) }
     }

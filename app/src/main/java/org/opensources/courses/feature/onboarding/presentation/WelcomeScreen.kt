@@ -21,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +44,19 @@ fun WelcomeRoute(
     viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(state.exit) {
+        when (state.exit) {
+            WelcomeExit.SHOPPING -> onStart()
+            WelcomeExit.HOME_ASSISTANT -> onConnectHomeAssistant()
+            null -> Unit
+        }
+    }
     WelcomeScreen(
         language = state.language,
         enabled = !state.completing,
         onLanguageSelected = viewModel::selectLanguage,
-        onStart = { viewModel.complete(onStart) },
-        onConnectHomeAssistant = { viewModel.complete(onConnectHomeAssistant) },
+        onStart = { viewModel.complete(WelcomeExit.SHOPPING) },
+        onConnectHomeAssistant = { viewModel.complete(WelcomeExit.HOME_ASSISTANT) },
     )
 }
 

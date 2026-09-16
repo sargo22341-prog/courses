@@ -46,3 +46,7 @@ coché plus tard. La comparaison des dates suppose que les horloges du télépho
 - Chaque article porte `localId`, `remoteId`, `updatedAt`, `version` et `syncStatus`.
 - Modifier cette stratégie impose de mettre à jour `ConflictResolver`, `ConflictResolverTest`,
   cette page et l'ADR.
+- **Seule exception** : une modification locale que Home Assistant a **refusée 10 fois** est
+  abandonnée ; l'article redevient synchronisé et reprend l'état distant à la réconciliation
+  ([ADR 0022](adr/0022-abandon-des-operations-refusees.md)). `ConflictResolver` n'est pas modifié :
+  l'abandon retire l'opération en attente, et la règle s'applique ensuite normalement.

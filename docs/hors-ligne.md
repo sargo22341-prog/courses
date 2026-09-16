@@ -28,8 +28,14 @@ ou à une action explicitement réseau demandée par l'utilisateur (« Tester la
 ## Indicateurs
 
 L'état réseau (`ConnectivityObserver`) est affiché discrètement sous le titre de la liste :
-`Hors connexion` et, si Home Assistant est activé, `Synchronisé`, `Synchronisation…` ou
-`Synchronisation impossible`, avec le nombre de modifications en attente.
+`Hors connexion` et, si Home Assistant est activé, `Synchronisé`, `Synchronisation…`,
+`Synchronisation impossible` ou `Modifications refusées`, avec le nombre de modifications en
+attente.
+
+« Hors connexion » signifie qu'Android n'a **aucun réseau par défaut**. La validation d'Internet
+n'est pas exigée : un Wi-Fi domestique dont la box a perdu Internet reste « en ligne » et Home
+Assistant local continue d'être synchronisé. Le catalogue OpenFoodFacts, lui, échoue simplement et
+sera retéléchargé plus tard.
 
 ## Erreurs
 

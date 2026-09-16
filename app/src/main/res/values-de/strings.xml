@@ -9,6 +9,7 @@
     <string name="action_back">Zurück</string>
     <string name="action_clear">Leeren</string>
     <string name="action_close">Schließen</string>
+    <string name="action_undo">Rückgängig</string>
     <string name="open_app_settings">App-Einstellungen öffnen</string>
 
     <!-- QR-Code-Scanner -->
@@ -49,7 +50,7 @@
     <string name="shopping_edit_quantity">Menge</string>
     <string name="shopping_edit_unit">Einheit (optional)</string>
     <string name="shopping_edit_item">%1$s bearbeiten</string>
-    <string name="shopping_no_suggestion">Kein Produkt gefunden</string>
+    <string name="shopping_item_deleted">„%1$s“ gelöscht</string>
 
     <!-- Kategorien (Abteilungen) -->
     <string name="category_fruits_vegetables">Obst und Gemüse</string>
@@ -74,11 +75,11 @@
         <item quantity="one">%d Änderung ausstehend</item>
         <item quantity="other">%d Änderungen ausstehend</item>
     </plurals>
-    <string name="sync_error_unreachable">Home Assistant ist nicht erreichbar.\nDeine lokale Liste bleibt verfügbar.</string>
-    <string name="sync_error_unauthorized">Home Assistant hat das Zugriffstoken abgelehnt.\nPrüfe es in den Einstellungen.</string>
     <string name="sync_error_protocol">Synchronisierung fehlgeschlagen.\nÄnderungen werden automatisch erneut versucht.</string>
     <string name="sync_error_list_unavailable">Eine verknüpfte Liste ist in Home Assistant nicht verfügbar.\nWähle eine andere Liste oder aktiviere ihre Integration wieder. Deine lokale Liste bleibt verfügbar.</string>
     <string name="sync_list_unavailable">Home-Assistant-Liste nicht verfügbar</string>
+    <string name="sync_changes_rejected">Änderungen abgelehnt</string>
+    <string name="sync_error_rejected">Home Assistant hat einige Änderungen wiederholt abgelehnt: Sie werden nicht mehr gesendet. Deine Listen bleiben auf diesem Telefon verfügbar.</string>
 
     <!-- Listen -->
     <string name="lists_title">Meine Listen</string>
@@ -137,6 +138,12 @@
     <string name="ha_url">Adresse von Home Assistant</string>
     <string name="ha_token">Langlebiges Zugriffstoken</string>
     <string name="ha_token_saved">Token gespeichert — leer lassen, um es zu behalten</string>
+    <string name="ha_cleartext_warning">Diese Adresse verwendet http://: Das Token wird unverschlüsselt übertragen und jeder im selben Netzwerk kann es mitlesen. Verwende https://, wenn dein Home Assistant es anbietet.</string>
+    <string name="ha_forget">Verbindung vergessen</string>
+    <string name="ha_forget_confirm_title">Verbindung vergessen?</string>
+    <string name="ha_forget_confirm_body">Adresse und Token von Home Assistant werden von diesem Telefon gelöscht und die Synchronisierung endet. Deine Listen bleiben auf diesem Telefon, ohne Verknüpfung; in Home Assistant wird nichts gelöscht.</string>
+    <string name="ha_forget_confirm">Vergessen</string>
+    <string name="ha_forgotten">Verbindung vergessen. Deine Listen bleiben auf diesem Telefon.</string>
     <string name="ha_scan_token">QR-Code des Tokens scannen</string>
     <string name="ha_scan_token_hint">In Home Assistant: Profil → Sicherheit → Langlebige Zugriffstoken → Token erstellen → QR-Code erzeugen.</string>
     <string name="ha_token_scanned">✓ Token gescannt. Speichern, um es zu behalten.</string>

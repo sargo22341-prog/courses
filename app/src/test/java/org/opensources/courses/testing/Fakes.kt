@@ -3,6 +3,7 @@ package org.opensources.courses.testing
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.opensources.courses.core.network.ConnectivityObserver
+import org.opensources.courses.core.security.SecretStore
 import org.opensources.courses.core.sync.SyncOperationDao
 import org.opensources.courses.core.sync.SyncOperationEntity
 import java.time.Clock
@@ -27,6 +28,10 @@ class FakeSyncOperationDao : SyncOperationDao {
 
     val all: List<SyncOperationEntity> get() = rows.sortedBy { it.id }
 
+    /** Number of queries that read the queue, whatever their filter. */
+    var reads = 0
+        private set
+
     override suspend fun insert(operation: SyncOperationEntity): Long {
         val stored = operation.copy(id = nextId++)
         rows += stored
@@ -34,7 +39,10 @@ class FakeSyncOperationDao : SyncOperationDao {
         return stored.id
     }
 
-    override suspend fun getAll(): List<SyncOperationEntity> = all
+    override suspend fun getAll(): List<SyncOperationEntity> {
+        reads++
+        return all
+    }
 
     override fun observeCount(): Flow<Int> = count
 
@@ -50,14 +58,45 @@ class FakeSyncOperationDao : SyncOperationDao {
         rows.replaceAll { if (it.id in ids) it.copy(attemptCount = it.attemptCount + 1, lastError = error) else it }
     }
 
-    override suspend fun countForItem(itemLocalId: String): Int = rows.count { it.itemLocalId == itemLocalId }
+    override suspend fun countForItem(itemLocalId: String): Int {
+        reads++
+        return rows.count { it.itemLocalId == itemLocalId }
+    }
+
+    override suspend fun getItemIdsForList(listLocalId: String): List<String> {
+        reads++
+        return rows.filter { it.listLocalId == listLocalId }.mapNotNull { it.itemLocalId }.distinct()
+    }
 
     override suspend fun deleteForList(listLocalId: String) {
         rows.removeAll { it.listLocalId == listLocalId }
         publish()
     }
 
+    override suspend fun deleteAll() {
+        rows.clear()
+        publish()
+    }
+
     private fun publish() {
         count.value = rows.size
+    }
+}
+
+/** Secrets kept in memory, readable by the tests. */
+class FakeSecretStore : SecretStore {
+    val values = mutableMapOf<String, String>()
+
+    override suspend fun read(name: String): String? = values[name]
+
+    override suspend fun write(
+        name: String,
+        value: String,
+    ) {
+        values[name] = value
+    }
+
+    override suspend fun remove(name: String) {
+        values.remove(name)
     }
 }

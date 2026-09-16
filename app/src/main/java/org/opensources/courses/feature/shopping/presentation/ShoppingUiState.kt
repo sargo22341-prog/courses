@@ -18,6 +18,8 @@ data class ShoppingUiState(
     val sync: SyncSnapshot = SyncSnapshot.Initial,
     /** A pull to refresh is running. */
     val isRefreshing: Boolean = false,
+    /** Deleted but still undoable: already left out of [toBuy], [toBuySections] and [purchased]. */
+    val pendingDeletion: ShoppingItem? = null,
 ) {
     /** "+ Ajouter …" is offered unless a suggestion is exactly what was typed. */
     fun offersCustomItem(query: String): Boolean {

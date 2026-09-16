@@ -1,6 +1,7 @@
 # ADR 0004 — Pas de WorkManager
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; la cadence de 2 minutes est précisée par
+  [ADR 0023](0023-synchronisation-periodique-au-premier-plan.md)
 - **Voir aussi** : [Synchronisation](../synchronisation.md#quand-synchroniser--synccoordinator), [Limites connues](../limites-connues.md#home-assistant)
 
 ## Contexte

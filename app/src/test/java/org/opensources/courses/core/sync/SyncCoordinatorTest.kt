@@ -58,7 +58,48 @@ class SyncCoordinatorTest {
             assertEquals(atStart + 2, engine.synchronizations)
         }
 
+    @Test
+    fun `the periodic synchronisation runs only while the app is visible`() =
+        runTest {
+            val coordinator = coordinator().apply { start() }
+            settle()
+            advanceTimeBy(TEN_MINUTES_MILLIS)
+            val hidden = engine.synchronizations
+
+            coordinator.onAppForeground()
+            settle()
+            val visible = engine.synchronizations
+            advanceTimeBy(PERIODIC_ELAPSED_MILLIS)
+            assertEquals(visible + 1, engine.synchronizations)
+
+            coordinator.onAppBackground()
+            val backgrounded = engine.synchronizations
+            advanceTimeBy(TEN_MINUTES_MILLIS)
+
+            assertEquals(1, hidden)
+            assertEquals(backgrounded, engine.synchronizations)
+        }
+
+    @Test
+    fun `a synchronisation asked meanwhile waits for the exclusive work to end`() =
+        runTest {
+            val coordinator = coordinator().apply { start() }
+            settle()
+            val before = engine.synchronizations
+
+            coordinator.withoutSynchronisation {
+                coordinator.requestSync()
+                settle()
+                assertEquals(before, engine.synchronizations)
+            }
+            settle()
+
+            assertEquals(before + 1, engine.synchronizations)
+        }
+
     private companion object {
         const val DEBOUNCE_ELAPSED_MILLIS = 2_000L
+        const val PERIODIC_ELAPSED_MILLIS = 2 * 60 * 1_000L + DEBOUNCE_ELAPSED_MILLIS
+        const val TEN_MINUTES_MILLIS = 10 * 60 * 1_000L
     }
 }

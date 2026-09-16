@@ -19,7 +19,9 @@ import org.opensources.courses.feature.shopping.data.renamed
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class RoomSyncLocalStore
     @Inject
     constructor(
@@ -143,6 +145,24 @@ class RoomSyncLocalStore
             transactions.inTransaction {
                 val item = itemDao.getById(itemLocalId) ?: return@inTransaction
                 itemDao.update(item.copy(isDeleted = false, syncStatus = SyncStatus.SYNCED, updatedAt = clock.millis()))
+            }
+        }
+
+        override suspend fun abandonItemChanges(
+            itemLocalId: String,
+            operationIds: List<Long>,
+        ) {
+            transactions.inTransaction {
+                queue.complete(operationIds)
+                val item = itemDao.getById(itemLocalId) ?: return@inTransaction
+                val status =
+                    when {
+                        // Changed again while the synchronisation was running: that change is still sent.
+                        queue.hasPendingForItem(itemLocalId) -> SyncStatus.PENDING
+                        item.remoteId != null -> SyncStatus.SYNCED
+                        else -> SyncStatus.LOCAL_ONLY
+                    }
+                itemDao.update(item.copy(isDeleted = false, syncStatus = status, updatedAt = clock.millis()))
             }
         }
 

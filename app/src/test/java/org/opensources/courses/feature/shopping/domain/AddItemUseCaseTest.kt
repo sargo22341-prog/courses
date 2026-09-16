@@ -47,6 +47,20 @@ class AddItemUseCaseTest {
         }
 
     @Test
+    fun `adding again a product measured with a unit leaves its quantity`() =
+        runTest {
+            val first = addItem("list", "Farine")!!
+            items.updateItem(first.id, "Farine", 1.5, "kg")
+
+            addItem("list", "farine")
+
+            val item = items.getItems("list").single()
+            assertEquals(1.5, item.quantity, 0.0)
+            assertEquals("kg", item.unit)
+            assertEquals(2, catalog.usage[first.catalogProductId])
+        }
+
+    @Test
     fun `adding a purchased product puts it back to buy`() =
         runTest {
             val first = addItem("list", "Lait", "id:Lait")!!

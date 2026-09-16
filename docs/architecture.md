@@ -90,6 +90,17 @@ org.opensources.courses
 Chaque fonctionnalité contient `data/`, `domain/` et `presentation/` quand elle en a besoin.
 Aucun fichier source ne dépasse 600 lignes.
 
+## Portée des objets Hilt
+
+- `@Singleton` pour ce qui porte un état, un verrou ou une ressource partagée : `SyncCoordinator`,
+  `SyncQueue`, `HomeAssistantSyncEngine` (et le `RoomSyncLocalStore` qu'il utilise),
+  `CatalogSyncManager`, `KeystoreSecretStore`, `AndroidConnectivityObserver`, la langue, les
+  clients réseau et les DataStore.
+- Les dépôts et cas d'usage sans état restent non scopés : une instance par point d'injection ne
+  coûte rien et ne peut rien désynchroniser.
+- Les ViewModels n'appellent jamais de callback de navigation : ils exposent un événement dans
+  leur état (liste créée, sortie de l'accueil) et l'écran navigue dans un `LaunchedEffect`.
+
 ## Base Room
 
 - `CoursesDatabase` est la **seule source de vérité** de l'interface.

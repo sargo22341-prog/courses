@@ -61,9 +61,18 @@ fun ListsRoute(
 ) {
     val lists by viewModel.lists.collectAsStateWithLifecycle()
     val lastListWarning by viewModel.lastListWarning.collectAsStateWithLifecycle()
+    val createdListId by viewModel.createdListId.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.lists_delete_last)
     var dialog by remember { mutableStateOf<ListsDialog?>(null) }
+
+    // Opened once: the event is cleared before navigating, so coming back does not open it again.
+    LaunchedEffect(createdListId) {
+        createdListId?.let { id ->
+            viewModel.createdListOpened()
+            onOpenList(id)
+        }
+    }
 
     LaunchedEffect(lastListWarning) {
         if (lastListWarning) {
@@ -76,10 +85,12 @@ fun ListsRoute(
         topBar = { BackTopBar(stringResource(R.string.lists_title), onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
+            val newList = stringResource(R.string.lists_new)
             ExtendedFloatingActionButton(
                 onClick = { dialog = ListsDialog.Create },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.lists_new)) },
+                // Material hides the text from accessibility services: the icon carries the label.
+                icon = { Icon(Icons.Filled.Add, contentDescription = newList) },
+                text = { Text(newList) },
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -110,7 +121,7 @@ fun ListsRoute(
                 confirmLabel = stringResource(R.string.action_create),
                 onConfirm = { name ->
                     dialog = null
-                    viewModel.create(name, onOpenList)
+                    viewModel.create(name)
                 },
                 onDismiss = { dialog = null },
             )

@@ -9,6 +9,7 @@
     <string name="action_back">Retour</string>
     <string name="action_clear">Effacer</string>
     <string name="action_close">Fermer</string>
+    <string name="action_undo">Annuler</string>
     <string name="open_app_settings">Ouvrir les paramètres de l’application</string>
 
     <!-- Scanner de QR code -->
@@ -37,6 +38,7 @@
     <plurals name="shopping_purchased_count">
         <item quantity="one">%d article acheté</item>
         <item quantity="other">%d articles achetés</item>
+        <item quantity="many">%d d’articles achetés</item>
     </plurals>
     <string name="shopping_hide_purchased">Masquer les articles achetés</string>
     <string name="shopping_show_purchased">Afficher les articles achetés</string>
@@ -49,7 +51,7 @@
     <string name="shopping_edit_quantity">Quantité</string>
     <string name="shopping_edit_unit">Unité (facultatif)</string>
     <string name="shopping_edit_item">Modifier %1$s</string>
-    <string name="shopping_no_suggestion">Aucun produit trouvé</string>
+    <string name="shopping_item_deleted">« %1$s » supprimé</string>
 
     <!-- Catégories (rayons) -->
     <string name="category_fruits_vegetables">Fruits et légumes</string>
@@ -73,12 +75,13 @@
     <plurals name="sync_pending">
         <item quantity="one">%d modification en attente</item>
         <item quantity="other">%d modifications en attente</item>
+        <item quantity="many">%d de modifications en attente</item>
     </plurals>
-    <string name="sync_error_unreachable">Impossible de contacter Home Assistant.\nVotre liste locale reste disponible.</string>
-    <string name="sync_error_unauthorized">Home Assistant a refusé le token d’accès.\nVérifiez-le dans les réglages.</string>
     <string name="sync_error_protocol">Synchronisation impossible.\nLes modifications seront réessayées automatiquement.</string>
     <string name="sync_error_list_unavailable">Une liste liée est indisponible dans Home Assistant.\nChoisissez une autre liste ou réactivez son intégration. Votre liste locale reste disponible.</string>
     <string name="sync_list_unavailable">Liste Home Assistant indisponible</string>
+    <string name="sync_changes_rejected">Modifications refusées</string>
+    <string name="sync_error_rejected">Home Assistant a refusé plusieurs fois certaines modifications : elles ne seront plus envoyées. Vos listes restent disponibles sur ce téléphone.</string>
 
     <!-- Listes -->
     <string name="lists_title">Mes listes</string>
@@ -115,6 +118,7 @@
     <plurals name="catalog_products">
         <item quantity="one">%d produit disponible hors connexion</item>
         <item quantity="other">%d produits disponibles hors connexion</item>
+        <item quantity="many">%d de produits disponibles hors connexion</item>
     </plurals>
     <string name="catalog_language_pending">Le catalogue sera téléchargé dans la langue choisie dès qu’une connexion Internet sera disponible. Le catalogue de base est déjà traduit.</string>
     <string name="catalog_sync_now">↻ Synchroniser maintenant</string>
@@ -137,6 +141,12 @@
     <string name="ha_url">Adresse de Home Assistant</string>
     <string name="ha_token">Token d’accès longue durée</string>
     <string name="ha_token_saved">Token enregistré — laisser vide pour le conserver</string>
+    <string name="ha_cleartext_warning">Cette adresse utilise http:// : le token circule en clair et toute personne sur le même réseau peut le lire. Préférez https:// si votre Home Assistant le propose.</string>
+    <string name="ha_forget">Oublier la connexion</string>
+    <string name="ha_forget_confirm_title">Oublier la connexion ?</string>
+    <string name="ha_forget_confirm_body">L’adresse et le token de Home Assistant sont effacés de ce téléphone et la synchronisation s’arrête. Vos listes restent sur ce téléphone, sans lien ; rien n’est supprimé dans Home Assistant.</string>
+    <string name="ha_forget_confirm">Oublier</string>
+    <string name="ha_forgotten">Connexion oubliée. Vos listes restent sur ce téléphone.</string>
     <string name="ha_scan_token">Scanner le QR code du token</string>
     <string name="ha_scan_token_hint">Dans Home Assistant : Profil → Sécurité → Jetons d’accès longue durée → Créer un jeton → Générer un QR code.</string>
     <string name="ha_token_scanned">✓ Token scanné. Enregistrez pour le conserver.</string>
@@ -166,6 +176,7 @@
     <plurals name="ha_mode_app_confirm_body">
         <item quantity="one">%d liste importée de Home Assistant sera supprimée de ce téléphone. Elle reste dans Home Assistant.</item>
         <item quantity="other">%d listes importées de Home Assistant seront supprimées de ce téléphone. Elles restent dans Home Assistant.</item>
+        <item quantity="many">%d de listes importées de Home Assistant seront supprimées de ce téléphone. Elles restent dans Home Assistant.</item>
     </plurals>
     <string name="ha_mode_app_confirm">Retirer</string>
     <string name="ha_lists_section">Listes synchronisées</string>

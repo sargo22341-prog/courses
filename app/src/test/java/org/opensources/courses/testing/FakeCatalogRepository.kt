@@ -103,10 +103,19 @@ class FakeCatalogRepository(
 
     override suspend fun findByIds(ids: Set<String>): List<CatalogProductRef> = refs().filter { it.id in ids }
 
-    override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> =
-        flowOf(categories.filterKeys { it in normalizedNames })
+    /** Number of category queries opened, by name or by id. */
+    var categoryQueries = 0
+        private set
 
-    override fun observeCategoriesByIds(ids: Set<String>): Flow<Map<String, GroceryCategory>> = flowOf(categoriesById.filterKeys { it in ids })
+    override fun observeCategories(normalizedNames: Set<String>): Flow<Map<String, GroceryCategory>> {
+        categoryQueries++
+        return flowOf(categories.filterKeys { it in normalizedNames })
+    }
+
+    override fun observeCategoriesByIds(ids: Set<String>): Flow<Map<String, GroceryCategory>> {
+        categoryQueries++
+        return flowOf(categoriesById.filterKeys { it in ids })
+    }
 
     private fun refs() = candidates.map { CatalogProductRef(it.product.id, TextNormalizer.normalize(it.product.name), it.product.source) }
 }

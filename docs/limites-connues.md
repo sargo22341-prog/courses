@@ -13,12 +13,27 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   To-do). Pour l'intégration « Shopping list » historique, elles restent locales. Écrire la
   quantité dans la description remplace une description saisie à la main dans Home Assistant.
 - **Identifiant après création** : `todo.add_item` ne renvoie pas l'identifiant du nouvel article ;
-  il est retrouvé par nom. Si Home Assistant modifie le texte, l'opération reste en file et est
-  réessayée (risque de doublon distant dans ce cas rare).
+  il est retrouvé par nom. Si Home Assistant modifie le texte, l'article n'est pas renvoyé : la
+  copie de Home Assistant le remplace localement, sans son état coché. Une intégration qui
+  n'ajouterait l'article qu'après la réponse le ferait disparaître jusqu'à la synchronisation
+  suivante.
+- **Abandon après 10 refus** : une modification que Home Assistant refuse 10 fois est abandonnée ;
+  l'article reprend l'état de Home Assistant. Une panne passagère renvoyée comme erreur (502 d'un
+  proxy pendant un redémarrage) compte aussi comme refus, d'où un plafond large.
+- **Création de liste interrompue** : si Home Assistant crée l'entrée *Local To-do* mais que son
+  entité n'apparaît pas dans les 3 s, la création est réessayée et une seconde liste (« Courses 2 »)
+  peut être créée.
 - **Créer ou supprimer une liste dans Home Assistant** nécessite un token d'administrateur (flux
   de configuration *Local To-do*).
 - **Pas d'envoi en arrière-plan application fermée** ([ADR 0004](adr/0004-pas-de-workmanager.md)).
-  Le temps réel (WebSocket) ne fonctionne que tant que l'application est au premier plan.
+  Le temps réel (WebSocket) et le nouvel essai toutes les 2 minutes ne fonctionnent que tant que
+  l'application est au premier plan ([ADR 0023](adr/0023-synchronisation-periodique-au-premier-plan.md)) :
+  une modification refusée en arrière-plan est réessayée au retour dans l'application.
+- **Wi-Fi sans Internet et données mobiles** : si Android bascule alors son réseau par défaut sur
+  les données mobiles, l'application l'utilise aussi et un Home Assistant joignable seulement sur le
+  réseau local peut ne plus répondre. Non vérifié sur appareil.
+- **Suppression annulable** : pendant les quelques secondes du message « Annuler », la suppression
+  n'est pas encore écrite ; si le processus est tué à ce moment, l'article reste dans la liste.
 - **Création automatique** : elle ne s'applique qu'aux listes créées après l'activation du
   réglage ; une liste passée en « Ne pas synchroniser » n'est jamais recréée automatiquement.
 - **Mode « Toutes les listes »** : une liste que Home Assistant ne renvoie plus du tout dans
@@ -61,6 +76,10 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
 
 - Le workflow GitHub Actions n'a pas encore été exécuté sur GitHub : SDK Android 37 sur le runner,
   push sur `main` protégée et publication de la release restent à valider au premier push.
+- Le job émulateur n'a été vérifié que localement (émulateur Android 17, même script de
+  démarrage) : son premier passage sur GitHub reste à valider. Il bloque la release s'il échoue.
+- Le démarrage de la release ne couvre que le lancement : un problème R8 sur un écran ou un appel
+  Home Assistant n'est détecté que par `RetrofitKeepRulesTest` (règle connue) ou à l'usage.
 - Un push sur `main` pendant qu'une release compile fait échouer le push de version de cette
   release ; la version sort au push suivant.
 

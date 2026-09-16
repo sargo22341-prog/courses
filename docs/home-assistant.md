@@ -36,6 +36,11 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
 - **tester la connexion**. « Adresse invalide. » n'est affiché que pour une adresse réellement
   malformée, vérifiée avant tout appel ; une erreur interne de Retrofit est signalée comme
   « Réponse inattendue de Home Assistant. » ;
+- **avertissement `http://`** : une adresse enregistrée en clair affiche, sous « Connecté », que le
+  token circule en clair sur le réseau ([Sécurité](securite.md#trafic-réseau)) ;
+- **oublier la connexion** (connexion dépliée, après confirmation) : efface le token et les
+  réglages, délie les listes sans rien supprimer dans Home Assistant ; une nouvelle connexion
+  repropose le premier paramétrage des listes ;
 - **accès au réseau local** : une carte demande la permission `ACCESS_LOCAL_NETWORK` d'Android 17
   tant qu'elle manque ([Sécurité](securite.md#accès-au-réseau-local)).
 
@@ -94,8 +99,10 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
   réseau disponible), une connexion WebSocket (`/api/websocket`, commande `todo/item/subscribe`)
   suit toutes les listes liées. Chaque changement annoncé déclenche une synchronisation normale
   (regroupée sur 1,5 s) : il n'y a qu'un seul chemin de fusion. Connexion perdue : nouvel essai
-  après 5 s, puis un délai croissant jusqu'à 5 min. Elle est fermée quand l'application passe en
-  arrière-plan ([ADR 0017](adr/0017-temps-reel-websocket-okhttp.md)).
+  après 5 s, puis un délai croissant jusqu'à 5 min. **Token refusé** (ou adresse invalide) : aucun
+  nouvel essai ; une dernière synchronisation est demandée, qui affiche l'erreur, et la connexion
+  est rouverte dès qu'un autre token ou une autre adresse est enregistré. Elle est fermée quand
+  l'application passe en arrière-plan ([ADR 0017](adr/0017-temps-reel-websocket-okhttp.md)).
 - **Tirer pour actualiser** sur la liste de courses.
 - **Articles créés dans Home Assistant** : rattachés au catalogue alimentaire (produit existant de
   même nom, sinon produit personnalisé créé), donc proposés ensuite dans l'autocomplétion, et rangés

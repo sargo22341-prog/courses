@@ -39,7 +39,10 @@ data class SyncOperation(
     val attemptCount: Int,
     /** When the local change was made (epoch millis). */
     val createdAt: Long,
-)
+) {
+    /** One more refusal and the remote has refused it [SyncQueue.MAX_ATTEMPTS] times: it is given up instead. */
+    val isLastAttempt: Boolean get() = attemptCount + 1 >= SyncQueue.MAX_ATTEMPTS
+}
 
 fun SyncOperationEntity.toDomain(): SyncOperation =
     SyncOperation(

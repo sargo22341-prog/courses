@@ -1,6 +1,7 @@
 package org.opensources.courses.core.sync
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -32,10 +33,11 @@ import javax.inject.Singleton
  * Decides *when* to synchronise; the [RemoteSyncEngine] decides *how*.
  *
  * Automatic triggers (only when auto-sync is enabled): application start, return to the
- * foreground, a change announced live by the remote while in the foreground, network regained, a
- * new pending operation, and a periodic retry while the process is alive. Pending operations are
+ * foreground, network regained, a new pending operation and, while the app is in the foreground
+ * only, a change announced live by the remote and a periodic retry. Pending operations are
  * persisted, so anything not sent before the process dies is sent at the next start.
- * WorkManager is deliberately not used: see docs/adr/0004-pas-de-workmanager.md.
+ * WorkManager is deliberately not used: see docs/adr/0004-pas-de-workmanager.md and
+ * docs/adr/0023-synchronisation-periodique-au-premier-plan.md.
  */
 @Singleton
 class SyncCoordinator
@@ -53,7 +55,7 @@ class SyncCoordinator
         private val started = AtomicBoolean(false)
 
         // Changed only from the main thread (activity lifecycle).
-        private var liveUpdates: Job? = null
+        private var foregroundWork: Job? = null
 
         val snapshot: StateFlow<SyncSnapshot> =
             combine(
@@ -77,32 +79,33 @@ class SyncCoordinator
         @OptIn(FlowPreview::class)
         fun start() {
             if (!started.compareAndSet(false, true)) return
-            scope.launch {
+            // Subscribed before returning: a request emitted with no subscriber yet would be lost.
+            scope.launch(start = CoroutineStart.UNDISPATCHED) {
                 requests.debounce(REQUEST_DEBOUNCE_MILLIS).collect {
                     if (engine.isAutoSyncEnabled.first()) runSync()
                 }
             }
             scope.launch { connectivity.isOnline.filter { it }.collect { requestSync() } }
             scope.launch { queue.observePendingCount().filter { it > 0 }.collect { requestSync() } }
-            scope.launch {
-                while (isActive) {
-                    delay(PERIODIC_SYNC_MILLIS)
-                    requestSync()
-                }
-            }
             requestSync()
         }
 
         /**
          * The app became visible: catch up with changes made elsewhere meanwhile, then follow the
-         * remote live until [onAppBackground].
+         * remote live and retry periodically until [onAppBackground].
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         fun onAppForeground() {
             requestSync()
-            if (liveUpdates?.isActive == true) return
-            liveUpdates =
+            if (foregroundWork?.isActive == true) return
+            foregroundWork =
                 scope.launch {
+                    launch {
+                        while (isActive) {
+                            delay(PERIODIC_SYNC_MILLIS)
+                            requestSync()
+                        }
+                    }
                     combine(engine.isAutoSyncEnabled, connectivity.isOnline) { autoSync, online -> autoSync && online }
                         .distinctUntilChanged()
                         .flatMapLatest { active -> if (active) engine.remoteChanges else emptyFlow() }
@@ -110,10 +113,14 @@ class SyncCoordinator
                 }
         }
 
-        /** The live connection is closed; pending operations still leave through the other triggers. */
+        /**
+         * Nobody looks at the lists: the live connection and the periodic retry stop, so the radio is
+         * not woken up every few minutes. New pending operations and a regained network still trigger
+         * a synchronisation.
+         */
         fun onAppBackground() {
-            liveUpdates?.cancel()
-            liveUpdates = null
+            foregroundWork?.cancel()
+            foregroundWork = null
         }
 
         /** Asks for an automatic synchronisation; coalesced and ignored when auto-sync is off. */
@@ -123,6 +130,12 @@ class SyncCoordinator
 
         /** Explicit user request ("Synchroniser maintenant"): runs even when auto-sync is off. */
         suspend fun syncNow(): SyncOutcome = runSync()
+
+        /**
+         * Runs [block] once no synchronisation is running, and keeps any from starting until it ends:
+         * a synchronisation must not write remote data into what [block] resets.
+         */
+        suspend fun <T> withoutSynchronisation(block: suspend () -> T): T = mutex.withLock { block() }
 
         private suspend fun runSync(): SyncOutcome =
             mutex.withLock {

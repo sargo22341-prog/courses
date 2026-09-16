@@ -92,6 +92,14 @@ class HaListLinkRepositoryImpl
             transactions.inTransaction { writer.removeImportedLists() }
         }
 
+        override suspend fun unlinkAll() {
+            transactions.inTransaction {
+                listDao.getAll().filter { it.remoteId != null || it.syncStatus != SyncStatus.LOCAL_ONLY }.forEach { writer.unlink(it) }
+                // Also the deletions of lists already gone from this phone.
+                queue.clear()
+            }
+        }
+
         /** Forgets previous remote ids and pending operations; tombstones are purged. */
         private suspend fun resetItems(listId: String) {
             queue.clearList(listId)

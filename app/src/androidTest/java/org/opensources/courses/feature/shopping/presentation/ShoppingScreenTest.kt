@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipeLeft
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -175,7 +176,88 @@ class ShoppingScreenTest {
         composeRule.onNodeWithText("Votre liste est vide").assertIsDisplayed()
     }
 
+    @Test
+    fun swipingAnItemToTheLeftDeletesIt() {
+        var deleted: ShoppingItem? = null
+        composeRule.setContent {
+            FrenchCoursesTheme { ShoppingScreen(state, query = "", actions = ShoppingActions(onDeleteItem = { deleted = it })) }
+        }
+
+        composeRule.onNodeWithText("Lait").performTouchInput { swipeLeft() }
+        composeRule.waitForIdle()
+
+        assertEquals("Lait", deleted?.name)
+    }
+
+    @Test
+    fun aDeletedItemCanBeBroughtBack() {
+        var undone = false
+        var confirmed: ShoppingItem? = null
+        val milk = item("Lait", quantity = 2.0)
+        val deleting = state.copy(toBuy = state.toBuy - milk, pendingDeletion = milk)
+        composeRule.setContent {
+            FrenchCoursesTheme {
+                ShoppingScreen(deleting, query = "", actions = ShoppingActions(onUndoDeletion = { undone = true }, onDeletionConfirmed = { confirmed = it }))
+            }
+        }
+
+        composeRule.onNodeWithText("« Lait » supprimé").assertIsDisplayed()
+        composeRule.onNodeWithText("Annuler").performClick()
+        composeRule.waitForIdle()
+
+        assertTrue(undone)
+        assertEquals(null, confirmed)
+    }
+
+    @Test
+    fun theDeletionIsConfirmedOnceTheUndoOfferEnds() {
+        var confirmed: ShoppingItem? = null
+        val milk = item("Lait", quantity = 2.0)
+        val deleting = state.copy(toBuy = state.toBuy - milk, pendingDeletion = milk)
+        composeRule.setContent {
+            FrenchCoursesTheme { ShoppingScreen(deleting, query = "", actions = ShoppingActions(onDeletionConfirmed = { confirmed = it })) }
+        }
+
+        composeRule.mainClock.advanceTimeBy(UNDO_OFFER_ELAPSED_MILLIS)
+        composeRule.waitForIdle()
+
+        assertEquals(milk, confirmed)
+    }
+
+    @Test
+    fun swipingThenUndoingBringsTheItemBack() {
+        var screen by mutableStateOf(state)
+        var deletions = 0
+        composeRule.setContent {
+            FrenchCoursesTheme {
+                ShoppingScreen(
+                    screen,
+                    query = "",
+                    actions =
+                        ShoppingActions(
+                            onDeleteItem = { deleted ->
+                                deletions++
+                                screen = screen.copy(toBuy = screen.toBuy - deleted, pendingDeletion = deleted)
+                            },
+                            onUndoDeletion = { screen = state },
+                        ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Lait").performTouchInput { swipeLeft() }
+        composeRule.onNodeWithText("Annuler").performClick()
+        composeRule.waitForIdle()
+
+        // Shown again, and not deleted a second time by the swipe it was removed with.
+        composeRule.onNodeWithText("Lait").assertIsDisplayed()
+        assertEquals(1, deletions)
+    }
+
     private companion object {
         const val PULL_DISTANCE_PX = 1_200f
+
+        /** Beyond the short snackbar duration, whatever the accessibility settings of the test device. */
+        const val UNDO_OFFER_ELAPSED_MILLIS = 60_000L
     }
 }

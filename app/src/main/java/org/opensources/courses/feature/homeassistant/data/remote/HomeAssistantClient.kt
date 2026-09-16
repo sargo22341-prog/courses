@@ -137,7 +137,7 @@ class HomeAssistantClient
             val takenNames = lists.map { it.name }.toMutableSet()
             repeat(CREATE_ATTEMPTS) {
                 val candidate = HaListNameAllocator.uniqueName(name, takenNames)
-                val created = submitLocalTodoFlow(credentials, candidate)
+                val created = administratorOnly(credentials) { submitLocalTodoFlow(credentials, candidate) }
                 if (created.type == FLOW_ABORT && created.reason == ALREADY_CONFIGURED) {
                     // A Local To-do list without a visible entity (disabled…) already uses this name.
                     takenNames += candidate
@@ -191,8 +191,28 @@ class HomeAssistantClient
             credentials: HaCredentials,
             configEntryId: String,
         ) {
-            call { api.deleteConfigEntry(credentials.url("/api/config/config_entries/entry/$configEntryId"), credentials.bearer()) }
+            administratorOnly(credentials) {
+                call { api.deleteConfigEntry(credentials.url("/api/config/config_entries/entry/$configEntryId"), credentials.bearer()) }
+            }
         }
+
+        /**
+         * Home Assistant answers 401 both to an invalid token and to a valid token without
+         * administrator rights. Only the first one must stop the synchronisation: the second one is
+         * a refusal of this request alone.
+         */
+        private suspend fun <T> administratorOnly(
+            credentials: HaCredentials,
+            block: suspend () -> T,
+        ): T =
+            try {
+                block()
+            } catch (exception: HomeAssistantException) {
+                if (exception.kind != HaErrorKind.UNAUTHORIZED) throw exception
+                // Throws UNAUTHORIZED itself when the token is refused everywhere.
+                testConnection(credentials)
+                throw HomeAssistantException(HaErrorKind.REJECTED, exception)
+            }
 
         private suspend fun service(
             credentials: HaCredentials,

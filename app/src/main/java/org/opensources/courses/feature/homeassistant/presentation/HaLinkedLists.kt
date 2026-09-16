@@ -122,8 +122,10 @@ private fun PickerRow(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .heightIn(min = 48.dp)
                 .clickable(enabled = enabled, onClick = onClick)
                 .padding(vertical = 10.dp),
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = label,

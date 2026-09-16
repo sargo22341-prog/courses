@@ -23,4 +23,10 @@ interface HaListLinkRepository {
 
     /** Removes from this phone the lists imported by the "all lists" mode; they stay in Home Assistant. */
     suspend fun removeImportedLists()
+
+    /**
+     * Home Assistant is forgotten: every list stays on this phone, unlinked, and every pending
+     * operation is dropped. Lists are not marked as ignored, so connecting again offers them anew.
+     */
+    suspend fun unlinkAll()
 }

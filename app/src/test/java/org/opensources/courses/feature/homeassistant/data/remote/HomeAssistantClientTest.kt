@@ -208,6 +208,37 @@ class HomeAssistantClientTest {
         }
 
     @Test
+    fun `a list deletion refused to a token without administrator rights refuses only that request`() =
+        runTest {
+            respond("""{"message":"401: Unauthorized"}""", code = 401)
+            respond("""{"message":"API running."}""")
+
+            assertErrorKind(HaErrorKind.REJECTED) { client.deleteList(credentials, "entry-1") }
+
+            assertEquals("/api/config/config_entries/entry/entry-1", server.takeRequest().url.encodedPath)
+            assertEquals("/api/", server.takeRequest().url.encodedPath)
+        }
+
+    @Test
+    fun `a list creation refused to a token without administrator rights refuses only that request`() =
+        runTest {
+            respond("[]")
+            respond("""{"message":"401: Unauthorized"}""", code = 401)
+            respond("""{"message":"API running."}""")
+
+            assertErrorKind(HaErrorKind.REJECTED) { client.createList(credentials, "Courses") }
+        }
+
+    @Test
+    fun `a token refused everywhere stays unauthorized for list changes`() =
+        runTest {
+            respond("""{"message":"401: Unauthorized"}""", code = 401)
+            respond("""{"message":"401: Unauthorized"}""", code = 401)
+
+            assertErrorKind(HaErrorKind.UNAUTHORIZED) { client.deleteList(credentials, "entry-1") }
+        }
+
+    @Test
     fun `stopped server is reported as unreachable`() =
         runTest {
             server.close()

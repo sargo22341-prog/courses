@@ -34,6 +34,8 @@ Fonctionnalités principales :
 - **plusieurs listes**, avec quantités et unités (`12`, `1,5 kg`) ;
 - **autocomplétion instantanée et hors ligne**, tolérante aux fautes de frappe, qui apprend les
   produits achetés le plus souvent ;
+- **historique** des produits les plus ajoutés, proposé en touchant le champ de recherche vide
+  (désactivable et effaçable dans les réglages) ;
 - **catalogue alimentaire local** : un catalogue de base embarqué, complété chaque semaine par
   la taxonomie d'[OpenFoodFacts](https://world.openfoodfacts.org/), sans jamais envoyer ce qui est
   tapé ;

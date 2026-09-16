@@ -40,6 +40,7 @@ class DataStoreAppPreferencesRepository
                     hidePurchased = preferences[HIDE_PURCHASED] ?: false,
                     groupByCategory = preferences[GROUP_BY_CATEGORY] ?: false,
                     languageConfirmed = preferences[LANGUAGE_CONFIRMED] ?: false,
+                    historyEnabled = preferences[HISTORY_ENABLED] ?: true,
                 )
             }
 
@@ -63,12 +64,17 @@ class DataStoreAppPreferencesRepository
             dataStore.edit { it[LANGUAGE_CONFIRMED] = true }
         }
 
+        override suspend fun setHistoryEnabled(enabled: Boolean) {
+            dataStore.edit { it[HISTORY_ENABLED] = enabled }
+        }
+
         private companion object {
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
             val HIDE_PURCHASED = booleanPreferencesKey("hide_purchased")
             val GROUP_BY_CATEGORY = booleanPreferencesKey("group_by_category")
             val LANGUAGE_CONFIRMED = booleanPreferencesKey("language_confirmed")
+            val HISTORY_ENABLED = booleanPreferencesKey("history_enabled")
         }
     }
 

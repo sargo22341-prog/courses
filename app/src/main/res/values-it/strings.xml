@@ -107,6 +107,14 @@
     <string name="settings_shopping_list">Lista della spesa</string>
     <string name="settings_group_by_category">Ordina gli articoli per categoria</string>
     <string name="settings_group_by_category_hint">Gli articoli da comprare vengono raggruppati per reparto grazie al catalogo alimentare, anche quelli aggiunti in Home Assistant. Un articolo non riconosciuto va in «Altro».</string>
+    <string name="history_title">Cronologia</string>
+    <string name="settings_history_enabled">Mostra la cronologia nella ricerca</string>
+    <string name="settings_history_hint">Quando il campo di ricerca è vuoto, vengono proposti i prodotti che aggiungi più spesso, tranne quelli già nella lista. La cronologia resta su questo dispositivo.</string>
+    <string name="settings_history_clear">Cancella la cronologia</string>
+    <string name="settings_history_clear_title">Cancellare la cronologia?</string>
+    <string name="settings_history_clear_body">I prodotti aggiunti in passato non verranno più proposti né favoriti nei suggerimenti. Le tue liste non cambiano.</string>
+    <string name="settings_history_clear_confirm">Cancella</string>
+    <string name="settings_history_empty">La cronologia è vuota.</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Non collegato — facoltativo</string>
     <string name="settings_home_assistant_sync_disabled">Sincronizzazione disattivata</string>

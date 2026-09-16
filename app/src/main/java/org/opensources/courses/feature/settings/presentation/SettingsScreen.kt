@@ -24,6 +24,7 @@ import org.opensources.courses.feature.catalog.presentation.CatalogSection
 import org.opensources.courses.feature.catalog.presentation.CatalogSettingsViewModel
 import org.opensources.courses.feature.language.domain.AppLanguage
 import org.opensources.courses.feature.language.presentation.components.LanguageSelector
+import org.opensources.courses.feature.settings.presentation.components.HistorySection
 import org.opensources.courses.feature.settings.presentation.components.HomeAssistantEntry
 import org.opensources.courses.feature.settings.presentation.components.ThemeModeSelector
 
@@ -47,6 +48,7 @@ fun SettingsRoute(
             SettingsCard(stringResource(R.string.settings_theme)) { ThemeModeSelector(state.themeMode, viewModel::setThemeMode) }
             LanguageSection(state.language, viewModel::setLanguage)
             ShoppingListSection(state.groupByCategory, viewModel::setGroupByCategory)
+            HistorySection(state.history, onEnabledChange = viewModel::setHistoryEnabled, onClear = viewModel::clearHistory)
             HomeAssistantEntry(state.homeAssistant, onOpenHomeAssistant)
             CatalogSection(catalogState, onSyncNow = catalogViewModel::forceSync)
         }

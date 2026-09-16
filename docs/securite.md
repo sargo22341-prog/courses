@@ -5,7 +5,8 @@
 ## Aucune collecte
 
 - Aucun compte, aucun analytics, aucun historique d'achats envoyé : les statistiques d'usage
-  restent dans Room. Les catégories sont calculées localement.
+  restent dans Room et peuvent être effacées (Réglages → Historique → « Vider l'historique »).
+  Les catégories sont calculées localement.
 - Le catalogue OpenFoodFacts est un fichier statique téléchargé en HTTPS : seuls un `User-Agent`
   identifiant l'application et un `ETag` sont envoyés.
 - Aucune dépendance aux services Google Play

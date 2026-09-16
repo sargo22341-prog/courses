@@ -17,6 +17,12 @@ visibles viennent des ressources (six langues, voir [Langues](langues.md)).
 
 - Un champ en haut de la liste ajoute un article ; les suggestions du catalogue apparaissent dès
   la première lettre ([Catalogue et autocomplétion](catalogue.md)).
+- **Historique** : toucher le champ sans rien taper affiche, sous le titre « Historique » (icône
+  d'horloge), les produits ajoutés le plus souvent, sauf ceux déjà à acheter dans la liste ; un
+  article acheté reste proposé (l'ajouter le remet « à acheter »). Toucher un produit l'ajoute et le
+  retire de l'historique ; le champ garde le focus pour en ajouter plusieurs à la suite. Taper une
+  lettre remplace l'historique par les suggestions ; « retour » (clavier fermé) quitte l'historique.
+  Rien ne s'affiche si l'historique est vide ou désactivé.
 - Toucher un article le coche ; il passe dans « Achetés ». Le bas de l'écran indique le nombre
   d'articles achetés ; son menu « Plus d'actions » masque ou affiche les achetés et propose
   « Supprimer les articles achetés ».
@@ -44,6 +50,10 @@ visibles viennent des ressources (six langues, voir [Langues](langues.md)).
   sur son côté. Le choix courant est encadré et coché.
 - **Langue** : puces portant chacune le nom de la langue dans cette langue.
 - **Liste de courses** : ranger les articles par catégorie.
+- **Historique** : « Afficher l'historique dans la recherche » (activé par défaut) et « Vider
+  l'historique » (après confirmation, grisé si l'historique est vide). Vider l'historique efface les
+  statistiques d'usage (`product_usage`) : les suggestions ne favorisent plus les anciens ajouts.
+  Les listes et les produits personnalisés sont conservés.
 - **Catalogue alimentaire** : état du catalogue, « ↻ Synchroniser maintenant ».
 - **Home Assistant** : état de la connexion, voir [Home Assistant](home-assistant.md).
 

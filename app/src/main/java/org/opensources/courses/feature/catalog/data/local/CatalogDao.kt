@@ -85,6 +85,24 @@ interface CatalogDao {
         now: Long,
     )
 
+    /** Products whose usage outlived a catalog import are left out: they can no longer be added by id. */
+    @Query(
+        """
+        SELECT p.id, p.name, p.normalizedName, p.category
+        FROM product_usage u
+        JOIN catalog_products p ON p.id = u.productId
+        ORDER BY u.useCount DESC, u.lastUsedAt DESC
+        LIMIT :limit
+        """,
+    )
+    fun observeFrequent(limit: Int): Flow<List<FrequentProductRow>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM product_usage u JOIN catalog_products p ON p.id = u.productId)")
+    fun observeHasUsage(): Flow<Boolean>
+
+    @Query("DELETE FROM product_usage")
+    suspend fun clearUsage()
+
     @Query("SELECT COUNT(*) FROM catalog_products")
     fun observeCount(): Flow<Int>
 

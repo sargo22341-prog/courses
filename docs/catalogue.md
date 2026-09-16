@@ -86,6 +86,16 @@ après la dernière frappe ; une frappe suivante annule la recherche en cours :
 
 - Si rien ne correspond exactement, `+ Ajouter « … »` crée un **produit personnalisé** local,
   proposé ensuite comme les autres.
-- Chaque ajout alimente les statistiques d'usage.
+- Chaque ajout alimente les statistiques d'usage, y compris quand l'historique est désactivé
+  dans les réglages (le réglage ne masque que la liste).
+
+## Historique
+
+`ProductHistoryUseCase` lit les 100 produits les plus ajoutés (`product_usage` joint au catalogue,
+par nombre d'ajouts puis ajout le plus récent ; l'usage d'un produit disparu du catalogue est
+ignoré), retire ceux déjà à acheter dans la liste (même produit du catalogue ou même nom normalisé,
+pour les articles venus de Home Assistant pas encore rattachés), dédoublonne les noms et en garde
+30. La liste suit Room en direct. « Vider l'historique » supprime toutes les lignes de
+`product_usage` ; le catalogue et les produits personnalisés ne sont pas touchés.
 - Ajouter un produit déjà présent incrémente sa quantité ; ajouter un produit déjà acheté le remet
   « à acheter » (`AddItemUseCase`).

@@ -43,6 +43,7 @@ import org.opensources.courses.feature.settings.domain.AppPreferencesRepository
 import org.opensources.courses.feature.shopping.domain.AddItemUseCase
 import org.opensources.courses.feature.shopping.domain.GroupItemsByCategoryUseCase
 import org.opensources.courses.feature.shopping.domain.ItemSection
+import org.opensources.courses.feature.shopping.domain.ProductHistoryUseCase
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItemRepository
 import org.opensources.courses.feature.shopping.domain.withoutChecked
@@ -60,6 +61,7 @@ class ShoppingViewModel
         private val addItem: AddItemUseCase,
         private val searchSuggestions: SearchSuggestionsUseCase,
         private val groupItemsByCategory: GroupItemsByCategoryUseCase,
+        private val productHistory: ProductHistoryUseCase,
         private val preferences: AppPreferencesRepository,
         private val languages: AppLanguageRepository,
         private val syncCoordinator: SyncCoordinator,
@@ -114,11 +116,22 @@ class ShoppingViewModel
         /** Hidden at once, deleted only once it can no longer be undone. */
         private val pendingDeletion = MutableStateFlow<ShoppingItem?>(null)
 
+        /** Not even read while the history is turned off in the settings. */
+        private val frequentProducts: Flow<List<ProductSuggestion>> =
+            preferences.preferences
+                .map { it.historyEnabled }
+                .distinctUntilChanged()
+                .flatMapLatest { enabled -> if (enabled) productHistory.observeFrequent() else flowOf(emptyList()) }
+
         /**
-         * Computed only when the items or the pending deletion change: the lists keep their identity
-         * when the sync state or the suggestions change, so the list on screen is not recomposed.
+         * Computed only when the items, the pending deletion or the history change: the lists keep
+         * their identity when the sync state or the suggestions change, so the list on screen is not
+         * recomposed. An item being deleted is offered again in the history, as it left the list.
          */
-        private val shownContent: Flow<ListContent> = combine(listContent, pendingDeletion) { content, deleted -> content.without(deleted) }
+        private val shownContent: Flow<ListContent> =
+            combine(listContent, pendingDeletion, frequentProducts) { content, deleted, frequent ->
+                content.without(deleted).let { it.copy(history = productHistory.notInList(frequent, it.toBuy)) }
+            }
 
         val uiState: StateFlow<ShoppingUiState> =
             combine(
@@ -136,6 +149,7 @@ class ShoppingViewModel
                     purchased = shown.purchased,
                     hidePurchased = prefs.hidePurchased,
                     suggestions = found,
+                    history = shown.history,
                     sync = sync,
                     isRefreshing = isRefreshing,
                     pendingDeletion = shown.pendingDeletion,
@@ -150,6 +164,7 @@ class ShoppingViewModel
             query = text
         }
 
+        /** A search suggestion or a product of the history. */
         fun onSuggestionSelected(suggestion: ProductSuggestion) = add(suggestion.name, suggestion.productId)
 
         /** Keyboard "done": the exact suggestion when there is one, otherwise the typed text. */
@@ -245,6 +260,7 @@ class ShoppingViewModel
             val purchased: List<ShoppingItem>,
             val toBuySections: List<ItemSection>?,
             val pendingDeletion: ShoppingItem? = null,
+            val history: List<ProductSuggestion> = emptyList(),
         ) {
             fun without(deleted: ShoppingItem?): ListContent =
                 if (deleted == null) {

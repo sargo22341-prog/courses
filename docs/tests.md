@@ -43,6 +43,7 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | --- | --- |
 | Autocomplétion, ranking, recherche floue (hors fil principal, formes normalisées enregistrées) | `SuggestionRankerTest`, `SearchSuggestionsUseCaseTest`, `FuzzyMatcherTest`, `TextNormalizerTest` |
 | Création, doublons, produit personnalisé | `AddItemUseCaseTest` |
+| Historique (ordre, produits déjà dans la liste exclus, réglage, vidage) | `ProductHistoryUseCaseTest`, `ShoppingViewModelTest`, `SettingsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ShoppingScreenTest`, `HistorySectionTest` |
 | Création, coche/décoche, suppression, file (Room réel) | `RoomRepositoriesTest` |
 | Migrations Room (données des versions 1, 2 et 3 conservées) | `CoursesDatabaseMigrationTest` |
 | File de synchronisation | `SyncQueueTest` |

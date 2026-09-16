@@ -12,4 +12,5 @@ liste des commits. Détails : [docs/release.md](docs/release.md).
 - Démarrage un peu plus rapide et mise à jour du catalogue OpenFoodFacts moins gourmande en mémoire.
 - Scanner de QR code plus léger.
 - Base de données allégée (colonnes inutilisées supprimées), sans perte de données.
+- Historique : en touchant le champ de recherche vide, les produits les plus souvent ajoutés sont proposés (sauf ceux déjà à acheter). Réglages → Historique pour le désactiver ou le vider.
 

@@ -132,6 +132,30 @@ class RoomRepositoriesTest {
         }
 
     @Test
+    fun historyListsTheMostAddedProductsUntilItIsCleared() =
+        runTest {
+            val products = listOf("Laits", "Pains", "Beurres").map { CatalogImportProduct("en:$it", it, null, 3) }
+            repositories.catalog.replaceRemoteCatalog("v1", products)
+            val catalog = repositories.catalog
+            assertFalse(catalog.observeHasUsage().first())
+
+            catalog.recordUsage("en:Laits")
+            repeat(2) { catalog.recordUsage("en:Pains") }
+            // Usage of a product the catalog no longer has is not offered.
+            catalog.recordUsage("en:disparu")
+
+            assertEquals(listOf("Pains", "Laits"), catalog.observeFrequentProducts(10).first().map { it.name })
+            assertEquals(listOf("Pains"), catalog.observeFrequentProducts(1).first().map { it.name })
+            assertTrue(catalog.observeHasUsage().first())
+
+            catalog.clearUsage()
+
+            assertTrue(catalog.observeFrequentProducts(10).first().isEmpty())
+            assertFalse(catalog.observeHasUsage().first())
+            assertEquals(3, catalog.observeProductCount().first())
+        }
+
+    @Test
     fun reimportWithTheSameVersionDropsProductsMissingFromTheNewLanguage() =
         runTest {
             // Same ETag in every language: the English import leaves a product with no French name.

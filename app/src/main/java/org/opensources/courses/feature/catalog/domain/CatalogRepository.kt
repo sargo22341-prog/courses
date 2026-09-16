@@ -20,6 +20,18 @@ interface CatalogRepository {
 
     suspend fun recordUsage(productId: String)
 
+    /**
+     * The [limit] products added most often, the most recently added first among equals. Updated
+     * when the history or the catalog changes.
+     */
+    fun observeFrequentProducts(limit: Int): Flow<List<ProductSuggestion>>
+
+    /** Whether at least one product of the catalog was ever added. */
+    fun observeHasUsage(): Flow<Boolean>
+
+    /** Forgets every addition: the history is empty and suggestions no longer favour past habits. */
+    suspend fun clearUsage()
+
     /** Replaces the OpenFoodFacts part of the catalog; usage statistics are preserved. */
     suspend fun replaceRemoteCatalog(
         version: String,

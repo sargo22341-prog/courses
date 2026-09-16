@@ -15,6 +15,8 @@ data class ShoppingUiState(
     val purchased: List<ShoppingItem> = emptyList(),
     val hidePurchased: Boolean = false,
     val suggestions: List<ProductSuggestion> = emptyList(),
+    /** Products added most often and not waiting in the list; empty when the history is turned off. */
+    val history: List<ProductSuggestion> = emptyList(),
     val sync: SyncSnapshot = SyncSnapshot.Initial,
     /** A pull to refresh is running. */
     val isRefreshing: Boolean = false,

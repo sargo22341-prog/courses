@@ -16,6 +16,7 @@ import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductCandidate
+import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import java.time.Clock
 import java.util.UUID
@@ -56,6 +57,13 @@ class CatalogRepositoryImpl
             }
 
         override suspend fun recordUsage(productId: String) = dao.recordUsage(productId, clock.millis())
+
+        override fun observeFrequentProducts(limit: Int): Flow<List<ProductSuggestion>> =
+            dao.observeFrequent(limit).map { rows -> rows.map { it.toSuggestion() } }
+
+        override fun observeHasUsage(): Flow<Boolean> = dao.observeHasUsage()
+
+        override suspend fun clearUsage() = dao.clearUsage()
 
         override suspend fun replaceRemoteCatalog(
             version: String,

@@ -45,14 +45,7 @@ fun SuggestionsPanel(
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         items(suggestions, key = { it.productId }) { suggestion ->
-            SuggestionRow(onClick = { onSuggestionSelected(suggestion) }) {
-                Column {
-                    Text(suggestion.name, style = MaterialTheme.typography.bodyLarge)
-                    suggestion.category?.let {
-                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
+            SuggestionRow(onClick = { onSuggestionSelected(suggestion) }) { SuggestionLabel(suggestion) }
         }
         if (offersCustomItem) {
             item(key = "custom") {
@@ -71,8 +64,19 @@ fun SuggestionsPanel(
     }
 }
 
+/** Product name, and its catalog category when there is one. */
 @Composable
-private fun SuggestionRow(
+internal fun SuggestionLabel(suggestion: ProductSuggestion) {
+    Column {
+        Text(suggestion.name, style = MaterialTheme.typography.bodyLarge)
+        suggestion.category?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+internal fun SuggestionRow(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {

@@ -107,6 +107,14 @@
     <string name="settings_shopping_list">Lista de compras</string>
     <string name="settings_group_by_category">Organizar os artigos por categoria</string>
     <string name="settings_group_by_category_hint">Os artigos a comprar são agrupados por secção graças ao catálogo alimentar, incluindo os adicionados no Home Assistant. Um artigo não reconhecido vai para «Outros».</string>
+    <string name="history_title">Histórico</string>
+    <string name="settings_history_enabled">Mostrar o histórico na pesquisa</string>
+    <string name="settings_history_hint">Quando o campo de pesquisa está vazio, são propostos os produtos que adiciona com mais frequência, exceto os que já estão na lista. O histórico fica neste dispositivo.</string>
+    <string name="settings_history_clear">Limpar o histórico</string>
+    <string name="settings_history_clear_title">Limpar o histórico?</string>
+    <string name="settings_history_clear_body">Os produtos adicionados no passado deixarão de ser propostos ou favorecidos nas sugestões. As suas listas não mudam.</string>
+    <string name="settings_history_clear_confirm">Limpar</string>
+    <string name="settings_history_empty">O histórico está vazio.</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Não ligado — opcional</string>
     <string name="settings_home_assistant_sync_disabled">Sincronização desativada</string>

@@ -1,11 +1,15 @@
 package org.opensources.courses.feature.shopping.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -36,6 +40,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,6 +54,7 @@ import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.AddItemField
 import org.opensources.courses.feature.shopping.presentation.components.DeletePurchasedDialog
 import org.opensources.courses.feature.shopping.presentation.components.EditItemDialog
+import org.opensources.courses.feature.shopping.presentation.components.HistoryPanel
 import org.opensources.courses.feature.shopping.presentation.components.PurchasedFooter
 import org.opensources.courses.feature.shopping.presentation.components.ShoppingListContent
 import org.opensources.courses.feature.shopping.presentation.components.SuggestionsPanel
@@ -117,6 +124,13 @@ fun ShoppingScreen(
     var confirmDeletePurchased by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val searching = query.isNotBlank()
+    var fieldFocused by remember { mutableStateOf(false) }
+    val showsHistory = fieldFocused && !searching && state.history.isNotEmpty()
+    val focusManager = LocalFocusManager.current
+    // The history belongs to typing: closing the keyboard leaves it, as does "back" without an
+    // on-screen keyboard (hardware keyboard).
+    ClearFocusWhenKeyboardCloses(focusManager)
+    BackHandler(enabled = showsHistory) { focusManager.clearFocus() }
     state.pendingDeletion?.let { DeletionUndoOffer(it, snackbarHostState, actions) }
     Scaffold(
         topBar = {
@@ -143,7 +157,7 @@ fun ShoppingScreen(
             )
         },
         bottomBar = {
-            AnimatedVisibility(visible = state.purchased.isNotEmpty() && !searching) {
+            AnimatedVisibility(visible = state.purchased.isNotEmpty() && !searching && !showsHistory) {
                 PurchasedFooter(
                     purchasedCount = state.purchased.size,
                     hidePurchased = state.hidePurchased,
@@ -161,8 +175,12 @@ fun ShoppingScreen(
                 onQueryChange = actions.onQueryChange,
                 onSubmit = actions.onSubmitQuery,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                onFocusChange = { fieldFocused = it },
             )
-            if (searching) {
+            if (showsHistory) {
+                // The field keeps the focus: several products can be picked in a row.
+                HistoryPanel(history = state.history, onProductSelected = actions.onSuggestionSelected)
+            } else if (searching) {
                 SuggestionsPanel(
                     query = query,
                     suggestions = state.suggestions,
@@ -217,6 +235,18 @@ private fun DeletionUndoOffer(
             SnackbarResult.ActionPerformed -> currentActions.onUndoDeletion()
             SnackbarResult.Dismissed -> currentActions.onDeletionConfirmed(item)
         }
+    }
+}
+
+/** Only on a shown → hidden change: the field is focused before the keyboard opens. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ClearFocusWhenKeyboardCloses(focusManager: FocusManager) {
+    val keyboardVisible = WindowInsets.isImeVisible
+    var wasVisible by remember { mutableStateOf(keyboardVisible) }
+    LaunchedEffect(keyboardVisible) {
+        if (wasVisible && !keyboardVisible) focusManager.clearFocus()
+        wasVisible = keyboardVisible
     }
 }
 

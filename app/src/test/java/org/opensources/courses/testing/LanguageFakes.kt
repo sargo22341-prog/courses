@@ -42,4 +42,6 @@ class FakeAppPreferencesRepository(
     override suspend fun setGroupByCategory(enabled: Boolean) = state.update { it.copy(groupByCategory = enabled) }
 
     override suspend fun setLanguageConfirmed() = state.update { it.copy(languageConfirmed = true) }
+
+    override suspend fun setHistoryEnabled(enabled: Boolean) = state.update { it.copy(historyEnabled = enabled) }
 }

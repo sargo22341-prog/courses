@@ -105,6 +105,14 @@
     <string name="settings_shopping_list">Einkaufsliste</string>
     <string name="settings_group_by_category">Artikel nach Kategorie sortieren</string>
     <string name="settings_group_by_category_hint">Zu kaufende Artikel werden mithilfe des Lebensmittelkatalogs nach Abteilung gruppiert, auch die in Home Assistant hinzugefügten. Ein unbekannter Artikel landet unter „Sonstiges“.</string>
+    <string name="history_title">Verlauf</string>
+    <string name="settings_history_enabled">Verlauf in der Suche anzeigen</string>
+    <string name="settings_history_hint">Ist das Suchfeld leer, werden die am häufigsten hinzugefügten Produkte vorgeschlagen, außer denen, die schon in der Liste stehen. Der Verlauf bleibt auf diesem Gerät.</string>
+    <string name="settings_history_clear">Verlauf löschen</string>
+    <string name="settings_history_clear_title">Verlauf löschen?</string>
+    <string name="settings_history_clear_body">Früher hinzugefügte Produkte werden nicht mehr vorgeschlagen oder in den Vorschlägen bevorzugt. Deine Listen bleiben unverändert.</string>
+    <string name="settings_history_clear_confirm">Löschen</string>
+    <string name="settings_history_empty">Der Verlauf ist leer.</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Nicht verbunden — optional</string>
     <string name="settings_home_assistant_sync_disabled">Synchronisierung deaktiviert</string>

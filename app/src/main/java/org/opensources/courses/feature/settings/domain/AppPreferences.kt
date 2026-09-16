@@ -12,6 +12,8 @@ enum class ThemeMode {
  * @property groupByCategory items to buy are shown under shop sections (off by default).
  * @property languageConfirmed the language was settled once: on the welcome screen, or kept in
  * French for an install that predates languages. The language itself is kept by Android.
+ * @property historyEnabled the products added most often are offered while the search is empty
+ * (on by default).
  */
 data class AppPreferences(
     val themeMode: ThemeMode,
@@ -19,6 +21,7 @@ data class AppPreferences(
     val hidePurchased: Boolean,
     val groupByCategory: Boolean = false,
     val languageConfirmed: Boolean = false,
+    val historyEnabled: Boolean = true,
 ) {
     companion object {
         val Default = AppPreferences(ThemeMode.SYSTEM, onboardingCompleted = false, hidePurchased = false)
@@ -37,4 +40,6 @@ interface AppPreferencesRepository {
     suspend fun setGroupByCategory(enabled: Boolean)
 
     suspend fun setLanguageConfirmed()
+
+    suspend fun setHistoryEnabled(enabled: Boolean)
 }

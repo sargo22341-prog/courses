@@ -8,6 +8,7 @@ import org.opensources.courses.feature.catalog.domain.CatalogProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProductRef
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
+import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 
 /**
  * @property normalizedName [org.opensources.courses.feature.catalog.domain.TextNormalizer] form,
@@ -70,6 +71,16 @@ data class ProductCandidateRow(
     val useCount: Int,
     val lastUsedAt: Long?,
 )
+
+/** A product of the personal history, as the history list shows it. */
+data class FrequentProductRow(
+    val id: String,
+    val name: String,
+    val normalizedName: String,
+    val category: String?,
+) {
+    fun toSuggestion() = ProductSuggestion(id, name, category, normalizedName)
+}
 
 data class ProductAliasRow(
     val productId: String,

@@ -29,6 +29,7 @@ import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.ADD_ITEM_FIELD_TAG
+import org.opensources.courses.feature.shopping.presentation.components.HISTORY_PANEL_TAG
 
 @RunWith(AndroidJUnit4::class)
 class ShoppingScreenTest {
@@ -149,6 +150,46 @@ class ShoppingScreenTest {
 
         assertTrue(customAdded)
         assertEquals("seed:lait-entier", selected?.productId)
+    }
+
+    @Test
+    fun focusingTheEmptySearchShowsTheHistory() {
+        var selected: ProductSuggestion? = null
+        val history = listOf(ProductSuggestion("seed:beurre", "Beurre", null), ProductSuggestion("seed:pates", "Pâtes", null))
+        composeRule.setContent {
+            FrenchCoursesTheme {
+                ShoppingScreen(state.copy(history = history), query = "", actions = ShoppingActions(onSuggestionSelected = { selected = it }))
+            }
+        }
+        composeRule.onNodeWithTag(HISTORY_PANEL_TAG).assertDoesNotExist()
+
+        composeRule.onNodeWithTag(ADD_ITEM_FIELD_TAG).performClick()
+
+        composeRule.onNodeWithText("Historique").assertIsDisplayed()
+        composeRule.onNodeWithText("Lait").assertDoesNotExist()
+        composeRule.onNodeWithText("Pâtes").performClick()
+        assertEquals("seed:pates", selected?.productId)
+        // Still shown: several products can be picked in a row.
+        composeRule.onNodeWithTag(HISTORY_PANEL_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun typingReplacesTheHistoryWithSuggestions() {
+        val history = listOf(ProductSuggestion("seed:beurre", "Beurre", null))
+        val suggestions = listOf(ProductSuggestion("seed:lait-entier", "Lait entier", null))
+        composeRule.setContent {
+            var query by remember { mutableStateOf("") }
+            FrenchCoursesTheme {
+                ShoppingScreen(state.copy(history = history, suggestions = suggestions), query = query, actions = ShoppingActions(onQueryChange = { query = it }))
+            }
+        }
+
+        composeRule.onNodeWithTag(ADD_ITEM_FIELD_TAG).performClick()
+        composeRule.onNodeWithText("Beurre").assertIsDisplayed()
+        composeRule.onNodeWithTag(ADD_ITEM_FIELD_TAG).performTextInput("lai")
+
+        composeRule.onNodeWithTag(HISTORY_PANEL_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("Lait entier").assertIsDisplayed()
     }
 
     @Test

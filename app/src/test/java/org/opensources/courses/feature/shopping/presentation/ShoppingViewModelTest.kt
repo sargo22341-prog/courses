@@ -24,6 +24,7 @@ import org.opensources.courses.feature.catalog.domain.SearchSuggestionsUseCase
 import org.opensources.courses.feature.settings.domain.AppPreferences
 import org.opensources.courses.feature.shopping.domain.AddItemUseCase
 import org.opensources.courses.feature.shopping.domain.GroupItemsByCategoryUseCase
+import org.opensources.courses.feature.shopping.domain.ProductHistoryUseCase
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.testing.FakeAppLanguageRepository
 import org.opensources.courses.testing.FakeAppPreferencesRepository
@@ -60,6 +61,7 @@ class ShoppingViewModelTest {
                         addItem = AddItemUseCase(items, catalog),
                         searchSuggestions = SearchSuggestionsUseCase(catalog, fixedClock(), main.dispatcher),
                         groupItemsByCategory = GroupItemsByCategoryUseCase(catalog, languages, main.dispatcher),
+                        productHistory = ProductHistoryUseCase(catalog),
                         preferences = preferences,
                         languages = languages,
                         syncCoordinator = syncCoordinator(engine, backgroundScope),
@@ -180,6 +182,45 @@ class ShoppingViewModelTest {
             runCurrent()
 
             assertTrue(items.getAllItems().isEmpty())
+        }
+
+    @Test
+    fun `the history offers past products that are not waiting in the list`() =
+        runTest {
+            val viewModel = viewModel()
+            val milk = itemNamed(viewModel, "Lait")
+            val bread = itemNamed(viewModel, "Pain")
+            assertTrue(viewModel.uiState.value.history.isEmpty())
+
+            viewModel.onToggleItem(bread)
+            viewModel.onDeleteItem(milk)
+            runCurrent()
+
+            // Bought or being deleted: both can be added again from the history.
+            assertEquals(setOf("Lait", "Pain"), viewModel.uiState.value.history.map { it.name }.toSet())
+
+            viewModel.onSuggestionSelected(viewModel.uiState.value.history.first { it.name == "Pain" })
+            runCurrent()
+
+            assertEquals(listOf("Lait"), viewModel.uiState.value.history.map { it.name })
+            assertEquals(listOf("Pain"), viewModel.uiState.value.toBuy.map { it.name })
+        }
+
+    @Test
+    fun `no history is offered while it is turned off`() =
+        runTest {
+            val viewModel = viewModel()
+            val milk = itemNamed(viewModel, "Lait")
+            preferences.state.value = preferences.state.value.copy(historyEnabled = false)
+            viewModel.onDeleteItem(milk)
+            runCurrent()
+
+            assertTrue(viewModel.uiState.value.history.isEmpty())
+
+            preferences.state.value = preferences.state.value.copy(historyEnabled = true)
+            runCurrent()
+
+            assertEquals(listOf("Lait"), viewModel.uiState.value.history.map { it.name })
         }
 
     private companion object {

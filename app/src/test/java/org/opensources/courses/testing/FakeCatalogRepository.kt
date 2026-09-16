@@ -3,6 +3,7 @@ package org.opensources.courses.testing
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProduct
 import org.opensources.courses.feature.catalog.domain.CatalogProductRef
@@ -10,6 +11,7 @@ import org.opensources.courses.feature.catalog.domain.CatalogRepository
 import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductCandidate
+import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.catalog.domain.TextNormalizer
 
 fun product(
@@ -48,6 +50,7 @@ class FakeCatalogRepository(
     /** Shop sections of catalog products, by id. */
     val categoriesById = mutableMapOf<String, GroceryCategory>()
     private val count = MutableStateFlow(initial.size)
+    private val usageVersion = MutableStateFlow(0)
 
     override suspend fun findCandidates(
         normalizedQuery: String,
@@ -79,6 +82,24 @@ class FakeCatalogRepository(
 
     override suspend fun recordUsage(productId: String) {
         usage[productId] = (usage[productId] ?: 0) + 1
+        usageVersion.value++
+    }
+
+    /** Most added first; equal counts keep the catalog order, the fake having no clock. */
+    override fun observeFrequentProducts(limit: Int): Flow<List<ProductSuggestion>> =
+        usageVersion.map {
+            candidates
+                .filter { (usage[it.product.id] ?: 0) > 0 }
+                .sortedByDescending { usage[it.product.id] }
+                .take(limit)
+                .map { ProductSuggestion(it.product.id, it.product.name, it.product.category, it.normalizedName) }
+        }
+
+    override fun observeHasUsage(): Flow<Boolean> = usageVersion.map { usage.values.any { it > 0 } }
+
+    override suspend fun clearUsage() {
+        usage.clear()
+        usageVersion.value++
     }
 
     override suspend fun replaceRemoteCatalog(

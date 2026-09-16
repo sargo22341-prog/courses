@@ -130,6 +130,14 @@
     <string name="settings_shopping_list">Shopping list</string>
     <string name="settings_group_by_category">Sort items by category</string>
     <string name="settings_group_by_category_hint">Items to buy are grouped by shop section using the food catalog, including those added in Home Assistant. An unrecognised item goes to “Other”.</string>
+    <string name="history_title">History</string>
+    <string name="settings_history_enabled">Show history in search</string>
+    <string name="settings_history_hint">When the search field is empty, the products you add most often are offered, except those already in the list. The history stays on this device.</string>
+    <string name="settings_history_clear">Clear history</string>
+    <string name="settings_history_clear_title">Clear history?</string>
+    <string name="settings_history_clear_body">Past additions will no longer be offered or favoured in suggestions. Your lists are not changed.</string>
+    <string name="settings_history_clear_confirm">Clear</string>
+    <string name="settings_history_empty">The history is empty.</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_off">Not connected — optional</string>
     <string name="settings_home_assistant_sync_disabled">Sync disabled</string>

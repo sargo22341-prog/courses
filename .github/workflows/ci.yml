@@ -79,12 +79,20 @@ jobs:
 
       # Émulateur jetable : connectedDebugAndroidTest peut y désinstaller l'application (jamais sur un
       # téléphone personnel, voir docs/tests.md). Migrations Room, hors ligne, Room réel, parcours UI.
+      # Avec les réglages par défaut (2 cœurs, RAM minimale), l'image Android 17 ne finit pas de
+      # démarrer sur le runner et adb reste « device offline » jusqu'au délai d'attente.
       - name: Tests instrumentés et démarrage de l'APK release sur Android 17
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: '37.0'
           target: google_apis
           arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 6G
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
           disable-animations: true
           script: |
             ./gradlew :app:connectedDebugAndroidTest --console=plain

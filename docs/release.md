@@ -12,7 +12,8 @@ Le workflow `.github/workflows/ci.yml` :
   - `assembleDebug`, `testDebugUnitTest`, `lintDebug` et `compileDebugAndroidTestKotlin` (les
     rapports de tests et de Lint sont joints au run en cas d'échec) ;
   - en parallèle, sur un **émulateur Android 17** (`reactivecircus/android-emulator-runner`,
-    image `google_apis` x86_64, KVM activé) : `connectedDebugAndroidTest` (migrations Room, hors
+    image `google_apis` x86_64, KVM activé, 4 cœurs et 4 Go de RAM : avec les
+    réglages par défaut l'image ne finit pas de démarrer et adb reste « device offline ») : `connectedDebugAndroidTest` (migrations Room, hors
     ligne, Room réel, parcours UI), puis `scripts/release-smoke-test.sh`, qui signe l'APK release
     minifié avec la clé de debug, l'installe, le démarre et échoue s'il a planté ;
 - sur **chaque push sur `main`**, si ces deux jobs passent :

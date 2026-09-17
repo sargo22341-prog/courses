@@ -25,7 +25,9 @@ l'importait sur le téléphone. Trois constats après usage :
 ## Décision
 
 - Le catalogue est **généré avant la compilation** par `scripts/generate-catalog.py`, lancé à la
-  main sur un poste de développement, jamais par le build ni par l'application.
+  main sur un poste de développement, jamais par le build ni par l'application. Le script ne monte
+  la version du catalogue, n'écrit la note de version et ne lance les vérifications que si les
+  produits générés diffèrent vraiment de ceux déjà commités.
 - Le script lit les deux sources publiques (`categories.json` du CDN et `categories.txt` du dépôt
   `openfoodfacts-server`), applique le nettoyage, calcule le rayon sur **tout le graphe de parents**
   et écrit un fichier par langue dans `app/src/main/assets/catalog/taxonomy-<langue>.json`, commité

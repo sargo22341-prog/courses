@@ -62,14 +62,20 @@ Le catalogue OpenFoodFacts embarqué (`app/src/main/assets/catalog/taxonomy-<lan
 produit hors du build, à la main, par un script Python 3 sans dépendance :
 
 ```powershell
-python scripts/generate-catalog.py            # télécharge les sources puis génère les six fichiers
-python scripts/generate-catalog.py --offline  # réutilise le cache de build/catalog-sources
+python scripts/generate-catalog.py              # tout, du téléchargement aux vérifications
+python scripts/generate-catalog.py --offline    # réutilise le cache de build/catalog-sources
+python scripts/generate-catalog.py --no-verify  # sans les vérifications Gradle
 ```
 
-Ensuite : incrémenter `AssetTaxonomyCatalogSource.VERSION` **et** `FORMAT_VERSION` du script (un
-test vérifie qu'ils correspondent), relire le diff des fichiers générés, relancer les vérifications
-et commiter les fichiers. Le build ne lance jamais ce script : il resterait reproductible sans
-réseau. Détail des sources et du nettoyage : [Catalogue](catalogue.md#génération-du-catalogue-openfoodfacts).
+Une seule commande suffit : le script télécharge les sources, régénère les six fichiers et, **si et
+seulement si les produits ont changé**, monte `AssetTaxonomyCatalogSource.VERSION` (et la version
+inscrite dans les fichiers), ajoute `- Catalogue alimentaire mis à jour depuis Open Food Facts.`
+dans `RELEASE_NOTES.md` et lance les vérifications ci-dessus. Il reste à relire le diff et à
+commiter ; la montée de version de l'application, elle, est faite par la CI.
+
+Sans changement de données, le script ne modifie aucun fichier et s'arrête. Le build ne lance jamais
+ce script : il resterait reproductible sans réseau. Détail des sources et du nettoyage :
+[Catalogue](catalogue.md#génération-du-catalogue-openfoodfacts).
 
 ## Release et R8
 

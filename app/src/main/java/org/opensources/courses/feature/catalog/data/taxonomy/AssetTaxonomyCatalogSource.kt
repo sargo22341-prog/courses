@@ -42,8 +42,8 @@ class AssetTaxonomyCatalogSource
         companion object {
             /**
              * `version` of the generated files, known without decoding them: a file is only read when
-             * it must be imported. Increase both together (guarded by a test), as
-             * `scripts/generate-catalog.py` writes it.
+             * it must be imported. `scripts/generate-catalog.py` reads this line and increases it,
+             * here and in the files it writes, when the products it generates really changed.
              */
             const val VERSION = 1
 

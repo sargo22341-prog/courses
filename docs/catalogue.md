@@ -33,10 +33,17 @@ correspondent à ce qu'on écrit sur une liste de courses.
 Le script écrit un fichier par langue, commité au dépôt :
 
 ```
-python scripts/generate-catalog.py            # télécharge les sources puis génère
+python scripts/generate-catalog.py            # tout, du téléchargement aux vérifications
 python scripts/generate-catalog.py --offline  # réutilise le cache de build/catalog-sources
+python scripts/generate-catalog.py --no-verify  # sans les vérifications Gradle
 ```
 
+Tout est automatique sauf le commit. Le script compare les produits qu'il vient de calculer à ceux
+des fichiers déjà présents et, **seulement s'ils diffèrent**, monte la version du catalogue (dans
+les fichiers et dans `AssetTaxonomyCatalogSource.VERSION`), ajoute la ligne de note dans
+`RELEASE_NOTES.md` et lance les vérifications Gradle d'`AGENTS.md`. Sans changement réel, il ne
+touche à rien : la date de génération seule ne crée pas de diff. Un fichier absent est réécrit sans
+monter la version.
 Nettoyage appliqué : nom obligatoire dans la langue ; exclusion des appellations protégées (AOP/IGP)
 et des entrées liées à une origine ; au plus 4 mots et 40 caractères ; aucun chiffre
 (`Laits 2ème âge`) ; dédoublonnage sur le nom normalisé en gardant l'entrée la plus générique.
@@ -52,9 +59,10 @@ Données extraites pour chaque produit :
 | `section` | rayon de l'application, lu sur **tout le graphe de parents** ([Catégories](categories.md)) |
 | `aliases` | synonymes de la taxonomie dans cette langue |
 
-Après une génération : incrémenter `AssetTaxonomyCatalogSource.VERSION` **et** `FORMAT_VERSION` du
-script (un test vérifie qu'ils correspondent), puis relancer les tests. Un catalogue déjà importé
-par une version précédente est alors réimporté au prochain démarrage.
+La version du catalogue n'existe qu'à un endroit, `AssetTaxonomyCatalogSource.VERSION` : le script
+la lit et l'incrémente lui-même. C'est elle qui décide du réimport — un catalogue importé par une
+version précédente de l'application est relu au prochain démarrage. Un test vérifie qu'elle
+correspond à celle inscrite dans les six fichiers.
 
 Résultat en septembre 2026 :
 

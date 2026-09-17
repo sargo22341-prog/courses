@@ -14,21 +14,32 @@ Deux sources, toutes deux publiques et sous licence ODbL :
 - `categories.txt` (dépôt openfoodfacts-server) : la même taxonomie sous sa forme source, seule à
   contenir les **synonymes** par langue (`fr: Laits, lait`). Le JSON du CDN les perd.
 
+Tout est automatique sauf le commit. Le script télécharge les sources, régénère les six fichiers et,
+**seulement si les produits ont réellement changé** :
+
+1. incrémente la version du catalogue, dans les fichiers générés et dans
+   `AssetTaxonomyCatalogSource.VERSION` — sans quoi les applications déjà installées ne
+   réimporteraient jamais les nouvelles données ;
+2. ajoute la ligne de note de version dans `RELEASE_NOTES.md` ;
+3. lance les vérifications Gradle.
+
+Sans changement, il ne touche à rien : pas de version montée, pas de note, pas de diff à commiter.
+
 Usage :
 
-    python scripts/generate-catalog.py                 # télécharge les sources puis génère
+    python scripts/generate-catalog.py                 # tout, du téléchargement aux vérifications
     python scripts/generate-catalog.py --offline       # réutilise le cache déjà téléchargé
+    python scripts/generate-catalog.py --no-verify     # sans les vérifications Gradle
     python scripts/generate-catalog.py --cache-dir DIR # emplacement du cache (défaut : build/catalog-sources)
-
-Après génération, incrémenter `AssetTaxonomyCatalogSource.VERSION` **et** `FORMAT_VERSION` ci-dessous
-(un test vérifie qu'ils correspondent), puis relancer les tests.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 import unicodedata
 import urllib.request
@@ -36,9 +47,18 @@ from collections import OrderedDict
 from datetime import date
 from pathlib import Path
 
-# Version du format écrit dans chaque fichier. Doit rester égale à AssetTaxonomyCatalogSource.VERSION :
-# l'incrémenter fait réimporter le catalogue au prochain démarrage.
-FORMAT_VERSION = 1
+# La version du catalogue vit dans le code de l'application, pas ici : une seule source de vérité,
+# que ce script lit et incrémente. Un test vérifie qu'elle correspond à celle des fichiers générés.
+VERSION_SOURCE = Path("app/src/main/java/org/opensources/courses/feature/catalog/data/taxonomy/AssetTaxonomyCatalogSource.kt")
+VERSION_LINE = re.compile(r"(const val VERSION = )(\d+)")
+
+RELEASE_NOTES = Path("RELEASE_NOTES.md")
+RELEASE_NOTES_MARKER = "<!-- notes -->"
+RELEASE_NOTE = "- Catalogue alimentaire mis à jour depuis Open Food Facts."
+
+# Vérifications d'AGENTS.md, lancées telles quelles après un changement.
+GRADLE_TASKS = [":app:assembleDebug", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileDebugAndroidTestKotlin"]
+DEFAULT_JAVA_HOME = r"C:\Program Files\Android\Android Studio\jbr"
 
 CATEGORIES_JSON_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
 CATEGORIES_TXT_URL = (
@@ -294,10 +314,68 @@ def build(language: str, entries: dict, synonyms: "dict[str, list[str]]") -> "li
     return sorted(by_name.values(), key=lambda product: product["id"])
 
 
-def write(path: Path, language: str, products: "list[dict]", taxonomy_date: str) -> None:
+def current_version(root: Path) -> int:
+    """Version du catalogue telle que l'application la connaît."""
+    match = VERSION_LINE.search((root / VERSION_SOURCE).read_text(encoding="utf-8"))
+    if not match:
+        sys.exit(f"`const val VERSION` introuvable dans {VERSION_SOURCE}.")
+    return int(match.group(2))
+
+
+def set_version(root: Path, version: int) -> None:
+    path = root / VERSION_SOURCE
+    text = path.read_text(encoding="utf-8")
+    path.write_text(VERSION_LINE.sub(rf"\g<1>{version}", text, count=1), encoding="utf-8", newline="\n")
+
+
+def published_products(path: Path) -> "list[dict] | None":
+    """Produits du fichier déjà généré, ou None s'il manque ou n'est pas lisible."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))["products"]
+    except (ValueError, KeyError):
+        return None
+
+
+def add_release_note(root: Path) -> bool:
+    """Ajoute la note de version sous la ligne marqueur, sauf si elle y est déjà."""
+    path = root / RELEASE_NOTES
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if RELEASE_NOTE in (line.strip() for line in lines):
+        return False
+    # La ligne marqueur est aussi citée dans le texte d'explication : seule celle qui est seule compte.
+    marker = next((index for index, line in enumerate(lines) if line.strip() == RELEASE_NOTES_MARKER), None)
+    if marker is None:
+        sys.exit(f"Ligne marqueur {RELEASE_NOTES_MARKER} absente de {RELEASE_NOTES}.")
+    insertion = marker + 1
+    if insertion < len(lines) and not lines[insertion].strip():
+        insertion += 1
+    else:
+        lines.insert(insertion, "")
+        insertion += 1
+    lines.insert(insertion, RELEASE_NOTE)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return True
+
+
+def run_checks(root: Path) -> None:
+    """Les vérifications d'AGENTS.md, avec le JDK d'Android Studio si l'environnement n'en donne pas."""
+    gradle = root / ("gradlew.bat" if os.name == "nt" else "gradlew")
+    environment = dict(os.environ)
+    if not environment.get("JAVA_HOME") and Path(DEFAULT_JAVA_HOME).exists():
+        environment["JAVA_HOME"] = DEFAULT_JAVA_HOME
+    # flush : la sortie de Gradle arrive directement sur le terminal, sans passer par ce tampon.
+    print(f"\nVérifications : {' '.join(GRADLE_TASKS)}", flush=True)
+    result = subprocess.run([str(gradle), *GRADLE_TASKS, "--console=plain"], cwd=root, env=environment)
+    if result.returncode != 0:
+        sys.exit("\nLes vérifications ont échoué : ne pas commiter en l'état.")
+
+
+def write(path: Path, language: str, products: "list[dict]", taxonomy_date: str, version: int) -> None:
     """Un produit par ligne : le fichier reste relisible et un diff montre les produits changés."""
     header = {
-        "version": FORMAT_VERSION,
+        "version": version,
         "language": language,
         "source": "OpenFoodFacts categories taxonomy (ODbL)",
         "generated": taxonomy_date,
@@ -318,6 +396,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Génère le catalogue embarqué depuis la taxonomie OpenFoodFacts.")
     parser.add_argument("--cache-dir", type=Path, default=root / "build" / "catalog-sources")
     parser.add_argument("--offline", action="store_true", help="réutilise les fichiers déjà téléchargés")
+    parser.add_argument("--no-verify", action="store_true", help="ne lance pas les vérifications Gradle")
     parser.add_argument("--out-dir", type=Path, default=root / "app" / "src" / "main" / "assets" / "catalog")
     arguments = parser.parse_args()
 
@@ -327,16 +406,49 @@ def main() -> None:
     entries = json.loads(json_path.read_text(encoding="utf-8"))
     synonyms = read_synonyms(txt_path)
     taxonomy_date = date.fromtimestamp(json_path.stat().st_mtime).isoformat()
-    print(f"{len(entries)} entrées lues, format {FORMAT_VERSION}")
+    version = current_version(root)
+    print(f"{len(entries)} entrées lues, catalogue en version {version}")
 
+    generated: "dict[str, list[dict]]" = {}
+    changed: "list[str]" = []
+    first_generation = False
     for language in LANGUAGES:
         products = build(language, entries, synonyms[language])
-        destination = arguments.out_dir / f"taxonomy-{language}.json"
-        write(destination, language, products, taxonomy_date)
+        generated[language] = products
+        published = published_products(arguments.out_dir / f"taxonomy-{language}.json")
+        if published is None:
+            first_generation = True
+        elif published != products:
+            changed.append(language)
         alias_count = sum(len(product.get("aliases", [])) for product in products)
         placed = sum(1 for product in products if "section" in product)
-        size = destination.stat().st_size // 1024
-        print(f"{language}: {len(products):5d} produits, {alias_count:5d} alias, {placed:5d} rangés, {size:4d} Ko")
+        state = "nouveau" if published is None else ("modifié" if published != products else "inchangé")
+        print(f"{language}: {len(products):5d} produits, {alias_count:5d} alias, {placed:5d} rangés, {state}")
+
+    if not changed and not first_generation:
+        print("\nAucun produit n'a changé : rien à régénérer, ni version à monter, ni à commiter.")
+        return
+
+    # Les fichiers manquants sont réécrits à la version courante ; seules de vraies données
+    # différentes justifient de faire réimporter le catalogue sur les téléphones déjà installés.
+    if changed:
+        version += 1
+        set_version(root, version)
+    for language in LANGUAGES:
+        write(arguments.out_dir / f"taxonomy-{language}.json", language, generated[language], taxonomy_date, version)
+
+    if changed:
+        print(f"\nProduits modifiés en {', '.join(changed)} : catalogue passé en version {version}.")
+        print(f"  {VERSION_SOURCE.name} mis à jour.")
+        print(f"  {RELEASE_NOTES.name} : note {'ajoutée' if add_release_note(root) else 'déjà présente'}.")
+    else:
+        print(f"\nFichiers manquants réécrits en version {version}, produits inchangés.")
+
+    if arguments.no_verify:
+        print("\nVérifications non lancées (--no-verify).")
+        return
+    run_checks(root)
+    print("\nVérifications passées. Il ne reste qu'à relire le diff et commiter.")
 
 
 if __name__ == "__main__":

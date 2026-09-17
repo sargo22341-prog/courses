@@ -5,8 +5,8 @@ import okhttp3.Response
 import org.opensources.courses.BuildConfig
 
 /**
- * OpenFoodFacts asks every client to identify itself (`app_name/app_version (contact)`).
- * No personal data is sent: only the application name and version.
+ * Identifies the application to the servers it calls, Home Assistant being the only one
+ * (`app_name/app_version (application_id)`). No personal data is sent: only the name and version.
  */
 class UserAgentInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response =

@@ -1,4 +1,4 @@
-package org.opensources.courses.feature.catalog.data.seed
+package org.opensources.courses.feature.catalog.data.taxonomy
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,35 +15,38 @@ import org.opensources.courses.feature.language.domain.AppLanguage
 import javax.inject.Inject
 
 /**
- * Reads the curated catalog bundled in `assets/catalog/seed.json`: the few hundred products of an
- * everyday list, written by hand, translated, and filed under a shop section more reliably than the
- * generic taxonomy can.
+ * Reads the generated OpenFoodFacts catalog bundled in `assets/catalog/taxonomy-<language>.json`.
+ * Only the file of the application language is read; the others stay compressed in the package.
  */
-class AssetSeedCatalogSource
+class AssetTaxonomyCatalogSource
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
         private val json: Json,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : BundledCatalogSource {
-        override val source: CatalogSource = CatalogSource.SEED
+        override val source: CatalogSource = CatalogSource.OPEN_FOOD_FACTS
 
         override val version: Int = VERSION
 
         @OptIn(ExperimentalSerializationApi::class)
         override suspend fun load(language: AppLanguage): List<CatalogImportProduct> =
             withContext(ioDispatcher) {
-                val seed = context.assets.open(ASSET_PATH).use { json.decodeFromStream(SeedCatalogDto.serializer(), it) }
-                SeedCatalogMapper.map(seed, language)
+                context.assets
+                    .open(assetPath(language))
+                    .use { json.decodeFromStream(TaxonomyCatalogDto.serializer(), it) }
+                    .products
+                    .map { it.toDomain() }
             }
 
         companion object {
             /**
-             * `version` of the asset, known without decoding it: the file is only read when it must
-             * be imported. Increase both together (guarded by a test).
+             * `version` of the generated files, known without decoding them: a file is only read when
+             * it must be imported. Increase both together (guarded by a test), as
+             * `scripts/generate-catalog.py` writes it.
              */
-            const val VERSION = 3
+            const val VERSION = 1
 
-            const val ASSET_PATH = "catalog/seed.json"
+            fun assetPath(language: AppLanguage): String = "catalog/taxonomy-${language.tag}.json"
         }
     }

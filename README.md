@@ -36,9 +36,10 @@ Fonctionnalités principales :
   produits achetés le plus souvent ;
 - **historique** des produits les plus ajoutés, proposé en touchant le champ de recherche vide
   (désactivable et effaçable dans les réglages) ;
-- **catalogue alimentaire local** : un catalogue de base embarqué, complété chaque semaine par
-  la taxonomie d'[OpenFoodFacts](https://world.openfoodfacts.org/), sans jamais envoyer ce qui est
-  tapé ;
+- **catalogue alimentaire entièrement embarqué** : un catalogue de base écrit à la main et
+  plusieurs milliers de produits générés depuis la taxonomie
+  d'[OpenFoodFacts](https://world.openfoodfacts.org/), livrés avec l'application — rien n'est
+  téléchargé, rien de ce qui est tapé n'est envoyé ;
 - **rangement par rayon** (fruits et légumes, boulangerie, produits laitiers…), facultatif ;
 - **six langues** : français, anglais, allemand, espagnol, italien, portugais ;
 - **Home Assistant (facultatif)** : synchronisation dans les deux sens, en temps réel quand
@@ -89,9 +90,10 @@ Le token est chiffré par le Keystore Android et n'est jamais réaffiché. Guide
 ## Confidentialité
 
 - Les listes, l'historique d'ajout et les préférences restent sur le téléphone.
-- Le seul service externe contacté sans action de l'utilisateur est le serveur statique
-  d'OpenFoodFacts, une fois par semaine au plus, pour télécharger le catalogue.
-- Home Assistant n'est contacté que s'il a été configuré.
+- Aucun service externe n'est contacté sans action de l'utilisateur : le catalogue alimentaire est
+  livré avec l'application.
+- Home Assistant n'est contacté que s'il a été configuré ; c'est le seul serveur que l'application
+  sache joindre.
 
 ## Stack
 
@@ -131,4 +133,5 @@ pouvez le redistribuer et le modifier selon ses termes ; toute version modifiée
 doit rester sous la même licence. Texte complet : [`LICENSE`](LICENSE).
 
 Les données du catalogue proviennent d'[Open Food Facts](https://world.openfoodfacts.org) et
-restent sous licence [ODbL](https://opendatacommons.org/licenses/odbl/1-0/).
+restent sous licence [ODbL](https://opendatacommons.org/licenses/odbl/1-0/). Les fichiers de
+`app/src/main/assets/catalog/` sont une base dérivée produite par `scripts/generate-catalog.py`.

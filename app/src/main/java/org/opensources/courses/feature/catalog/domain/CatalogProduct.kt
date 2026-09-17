@@ -5,7 +5,7 @@ enum class CatalogSource {
     /** Curated list bundled with the app: available offline from the very first launch. */
     SEED,
 
-    /** Imported from the OpenFoodFacts categories taxonomy. */
+    /** Generated from the OpenFoodFacts categories taxonomy and bundled too, but far less precise. */
     OPEN_FOOD_FACTS,
 
     /** Typed by the user when nothing matched. */

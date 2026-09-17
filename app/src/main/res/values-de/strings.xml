@@ -119,20 +119,11 @@
 
     <!-- Katalog -->
     <string name="catalog_title">Lebensmittelkatalog</string>
-    <string name="catalog_last_sync">Letzte Synchronisierung:\n%1$s</string>
-    <string name="catalog_never_synced">Noch nie synchronisiert.\nDer Basiskatalog bleibt offline verfügbar.</string>
     <plurals name="catalog_products">
         <item quantity="one">%d Produkt offline verfügbar</item>
         <item quantity="other">%d Produkte offline verfügbar</item>
     </plurals>
-    <string name="catalog_language_pending">Der Katalog wird in der gewählten Sprache heruntergeladen, sobald eine Internetverbindung besteht. Der Basiskatalog ist bereits übersetzt.</string>
-    <string name="catalog_sync_now">↻ Jetzt synchronisieren</string>
-    <string name="catalog_syncing">Synchronisierung…</string>
-    <string name="catalog_updated">✓ Katalog aktualisiert</string>
-    <string name="catalog_up_to_date">✓ Katalog bereits aktuell</string>
-    <string name="catalog_offline">Keine Internetverbindung.\nDer aktuelle Katalog bleibt verfügbar.</string>
-    <string name="catalog_failed">Der Katalog konnte nicht aktualisiert werden.\nDer aktuelle Katalog bleibt verfügbar.</string>
-    <string name="catalog_attribution">Quelle: Open Food Facts (Lizenz ODbL). Wöchentliche automatische Aktualisierung.</string>
+    <string name="catalog_attribution">Quelle: Open Food Facts (Lizenz ODbL). Der Katalog ist in der App enthalten und wird mit ihr aktualisiert.</string>
 
     <!-- Home Assistant -->
     <string name="ha_title">Home Assistant</string>

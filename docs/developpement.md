@@ -56,6 +56,21 @@ Toute modification d'entité incrémente la version de `CoursesDatabase`, fourni
 une `AutoMigration`), conserve le schéma exporté dans `app/schemas` et teste la migration
 ([ADR 0020](adr/0020-migrations-room-sans-perte.md)).
 
+## Régénérer le catalogue alimentaire
+
+Le catalogue OpenFoodFacts embarqué (`app/src/main/assets/catalog/taxonomy-<langue>.json`) est
+produit hors du build, à la main, par un script Python 3 sans dépendance :
+
+```powershell
+python scripts/generate-catalog.py            # télécharge les sources puis génère les six fichiers
+python scripts/generate-catalog.py --offline  # réutilise le cache de build/catalog-sources
+```
+
+Ensuite : incrémenter `AssetTaxonomyCatalogSource.VERSION` **et** `FORMAT_VERSION` du script (un
+test vérifie qu'ils correspondent), relire le diff des fichiers générés, relancer les vérifications
+et commiter les fichiers. Le build ne lance jamais ce script : il resterait reproductible sans
+réseau. Détail des sources et du nettoyage : [Catalogue](catalogue.md#génération-du-catalogue-openfoodfacts).
+
 ## Release et R8
 
 La variante `release` est réduite par R8. Retrofit lit le type de réponse d'une méthode `suspend`

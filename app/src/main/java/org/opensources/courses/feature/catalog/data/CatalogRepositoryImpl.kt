@@ -65,16 +65,6 @@ class CatalogRepositoryImpl
 
         override suspend fun clearUsage() = dao.clearUsage()
 
-        override suspend fun replaceRemoteCatalog(
-            version: String,
-            products: List<CatalogImportProduct>,
-        ) = replaceSource(CatalogSource.OPEN_FOOD_FACTS, version, products)
-
-        override suspend fun replaceSeedCatalog(
-            version: String,
-            products: List<CatalogImportProduct>,
-        ) = replaceSource(CatalogSource.SEED, version, products)
-
         override fun observeProductCount(): Flow<Int> = dao.observeCount()
 
         override suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef> =
@@ -119,11 +109,11 @@ class CatalogRepositoryImpl
          * (ids are stable, so usage statistics and list items keep pointing at them, whatever the
          * language) and every row the import did not write is deleted afterwards.
          *
-         * Rows are first marked outdated because the version alone cannot tell imports apart: the
-         * OpenFoodFacts file, hence its ETag, is the same in every language. Re-importing it in
-         * another language would otherwise keep the products that have no name in the new language.
+         * Rows are first marked outdated because a product can disappear from one language to the
+         * next: re-importing in another language would otherwise keep the products the new language
+         * does not name.
          */
-        private suspend fun replaceSource(
+        override suspend fun replaceCatalog(
             source: CatalogSource,
             version: String,
             products: List<CatalogImportProduct>,

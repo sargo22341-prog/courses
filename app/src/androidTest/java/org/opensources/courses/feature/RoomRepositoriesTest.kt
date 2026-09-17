@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.feature.catalog.domain.CatalogImportProduct
+import org.opensources.courses.feature.catalog.domain.CatalogSource
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.shopping.domain.NewShoppingItem
 import org.opensources.courses.testing.TestRepositories
@@ -117,13 +118,14 @@ class RoomRepositoriesTest {
     fun catalogSearchUsesNamesAliasesAndKeepsUsageAcrossImports() =
         runTest {
             val milk = CatalogImportProduct("en:milks", "Laits", "Produits laitiers", 3, aliases = listOf("lolo"))
-            repositories.catalog.replaceRemoteCatalog("v1", listOf(milk, CatalogImportProduct("en:breads", "Pains", null, 3)))
+            val bread = CatalogImportProduct("en:breads", "Pains", null, 3)
+            repositories.catalog.replaceCatalog(CatalogSource.OPEN_FOOD_FACTS, "v1", listOf(milk, bread))
             repositories.catalog.recordUsage("en:milks")
 
             assertEquals(listOf("Laits"), repositories.catalog.findCandidates("lai", 10).map { it.product.name })
             assertEquals(listOf("Laits"), repositories.catalog.findCandidates("lolo", 10).map { it.product.name })
 
-            repositories.catalog.replaceRemoteCatalog("v2", listOf(milk))
+            repositories.catalog.replaceCatalog(CatalogSource.OPEN_FOOD_FACTS, "v2", listOf(milk))
 
             val candidates = repositories.catalog.findCandidates("ai", 10)
             assertEquals(listOf("Laits"), candidates.map { it.product.name })
@@ -135,7 +137,7 @@ class RoomRepositoriesTest {
     fun historyListsTheMostAddedProductsUntilItIsCleared() =
         runTest {
             val products = listOf("Laits", "Pains", "Beurres").map { CatalogImportProduct("en:$it", it, null, 3) }
-            repositories.catalog.replaceRemoteCatalog("v1", products)
+            repositories.catalog.replaceCatalog(CatalogSource.OPEN_FOOD_FACTS, "v1", products)
             val catalog = repositories.catalog
             assertFalse(catalog.observeHasUsage().first())
 
@@ -156,10 +158,11 @@ class RoomRepositoriesTest {
         }
 
     @Test
-    fun reimportWithTheSameVersionDropsProductsMissingFromTheNewLanguage() =
+    fun reimportInAnotherLanguageDropsProductsTheNewLanguageDoesNotName() =
         runTest {
-            // Same ETag in every language: the English import leaves a product with no French name.
-            repositories.catalog.replaceRemoteCatalog(
+            // The English import left a product the French catalog does not name.
+            repositories.catalog.replaceCatalog(
+                CatalogSource.OPEN_FOOD_FACTS,
                 "W/\"etag\"",
                 listOf(
                     CatalogImportProduct("en:milks", "Milks", null, 3),
@@ -168,7 +171,8 @@ class RoomRepositoriesTest {
             )
             repositories.catalog.recordUsage("en:milks")
 
-            repositories.catalog.replaceRemoteCatalog("W/\"etag\"", listOf(CatalogImportProduct("en:milks", "Laits", null, 3)))
+            val french = listOf(CatalogImportProduct("en:milks", "Laits", null, 3))
+            repositories.catalog.replaceCatalog(CatalogSource.OPEN_FOOD_FACTS, "W/\"etag\"", french)
 
             assertTrue(repositories.catalog.findCandidates("tomato", 10).isEmpty())
             val milk = repositories.catalog.findCandidates("lait", 10).single()
@@ -188,9 +192,10 @@ class RoomRepositoriesTest {
         }
 
     @Test
-    fun shopSectionsAreFoundByNameAndTheSeedWinsOverOpenFoodFacts() =
+    fun shopSectionsAreFoundByNameAndTheSeedWinsOverTheTaxonomy() =
         runTest {
-            repositories.catalog.replaceRemoteCatalog(
+            repositories.catalog.replaceCatalog(
+                CatalogSource.OPEN_FOOD_FACTS,
                 "v1",
                 listOf(
                     CatalogImportProduct("en:tomatoes", "Tomates", null, 3, groceryCategory = GroceryCategory.FRUITS_VEGETABLES),
@@ -198,7 +203,8 @@ class RoomRepositoriesTest {
                     CatalogImportProduct("en:food-additives", "Additifs", null, 3),
                 ),
             )
-            repositories.catalog.replaceSeedCatalog(
+            repositories.catalog.replaceCatalog(
+                CatalogSource.SEED,
                 "seed-3-fr",
                 listOf(CatalogImportProduct("seed:lait", "Lait", "Produits laitiers", 8, groceryCategory = GroceryCategory.DAIRY_EGGS)),
             )

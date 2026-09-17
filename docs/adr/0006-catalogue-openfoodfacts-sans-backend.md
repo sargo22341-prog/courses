@@ -1,6 +1,6 @@
 # ADR 0006 — Catalogue OpenFoodFacts importé localement, sans backend
 
-- **Statut** : acceptée
+- **Statut** : remplacée par [ADR 0025](0025-catalogue-genere-a-la-compilation.md)
 - **Voir aussi** : [Catalogue et autocomplétion](../catalogue.md)
 
 ## Contexte

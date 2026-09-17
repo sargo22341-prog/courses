@@ -5,7 +5,6 @@ import android.security.NetworkSecurityPolicy
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -38,8 +37,8 @@ class NetworkSecurityConfigTest {
                 }
             }
         }
-        // The base config, then the OpenFoodFacts one.
-        assertEquals(2, anchorsByConfig.size)
+        // Home Assistant is the only server the app calls: the base config is the only one.
+        assertEquals(1, anchorsByConfig.size)
         anchorsByConfig.forEach { anchors -> assertEquals(setOf("system", "user"), anchors) }
     }
 
@@ -47,11 +46,6 @@ class NetworkSecurityConfigTest {
     fun localHostnamesMayUsePlainHttp() {
         assertTrue(NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted("ha.nas.home"))
         assertTrue(NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted("192.168.1.10"))
-    }
-
-    @Test
-    fun openFoodFactsIsNeverCalledInClear() {
-        assertFalse(NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted("static.openfoodfacts.org"))
     }
 
     /**

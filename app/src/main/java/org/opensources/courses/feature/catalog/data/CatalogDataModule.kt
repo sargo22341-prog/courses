@@ -6,21 +6,16 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Binds
-import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
-import org.opensources.courses.feature.catalog.data.remote.OpenFoodFactsApi
-import org.opensources.courses.feature.catalog.data.remote.OpenFoodFactsCatalogSource
 import org.opensources.courses.feature.catalog.data.seed.AssetSeedCatalogSource
-import org.opensources.courses.feature.catalog.domain.CatalogRemoteSource
+import org.opensources.courses.feature.catalog.data.taxonomy.AssetTaxonomyCatalogSource
+import org.opensources.courses.feature.catalog.domain.BundledCatalogSource
+import org.opensources.courses.feature.catalog.domain.CatalogImportStateStore
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
-import org.opensources.courses.feature.catalog.domain.CatalogSyncStateStore
-import org.opensources.courses.feature.catalog.domain.SeedCatalogSource
-import retrofit2.Retrofit
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -35,25 +30,16 @@ abstract class CatalogDataModule {
     abstract fun bindCatalogRepository(repository: CatalogRepositoryImpl): CatalogRepository
 
     @Binds
-    abstract fun bindCatalogRemoteSource(source: OpenFoodFactsCatalogSource): CatalogRemoteSource
-
-    @Binds
-    abstract fun bindSeedCatalogSource(source: AssetSeedCatalogSource): SeedCatalogSource
-
-    @Binds
-    abstract fun bindCatalogSyncStateStore(store: DataStoreCatalogSyncStateStore): CatalogSyncStateStore
+    abstract fun bindCatalogImportStateStore(store: DataStoreCatalogImportStateStore): CatalogImportStateStore
 
     companion object {
+        /** The curated catalog first: where both know a product, its section is the one kept. */
         @Provides
         @Singleton
-        fun openFoodFactsApi(client: Lazy<OkHttpClient>): OpenFoodFactsApi =
-            Retrofit
-                .Builder()
-                .baseUrl(OpenFoodFactsApi.BASE_URL)
-                // The client is only built for a download, not at every start.
-                .callFactory { request -> client.get().newCall(request) }
-                .build()
-                .create(OpenFoodFactsApi::class.java)
+        fun bundledCatalogSources(
+            seed: AssetSeedCatalogSource,
+            taxonomy: AssetTaxonomyCatalogSource,
+        ): List<BundledCatalogSource> = listOf(seed, taxonomy)
 
         @Provides
         @Singleton

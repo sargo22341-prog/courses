@@ -41,7 +41,7 @@ Data (Room, DataStore, Retrofit, implémentations des dépôts)
 - L'UI ne lit **que** des `StateFlow` exposés par les ViewModels.
 - Les ViewModels n'appellent que des interfaces du domaine (dépôts, cas d'usage).
 - Aucun composable n'accède à Room, à Retrofit ou aux détails Home Assistant.
-- La logique métier (classement des suggestions, conflits, fraîcheur du catalogue, fusion des
+- La logique métier (classement des suggestions, conflits, import du catalogue, fusion des
   doublons, catégories…) vit dans des classes pures du domaine, testées sans Android.
 - Les détails Home Assistant ne sortent pas de `feature/homeassistant` : `core/sync` ne connaît
   que l'interface `RemoteSyncEngine`.
@@ -64,7 +64,7 @@ Le détail de la file et du moteur est dans [Synchronisation](synchronisation.md
 
 ```
 org.opensources.courses
-├── CoursesApplication.kt / AppInitializer.kt   démarrage (catalogue de base, fraîcheur, sync)
+├── CoursesApplication.kt / AppInitializer.kt   démarrage (import du catalogue, sync)
 ├── MainActivity.kt / MainViewModel.kt          thème + destination de départ
 ├── navigation/                                 routes typées, NavHost, transitions
 ├── core/
@@ -80,7 +80,7 @@ org.opensources.courses
 └── feature/
     ├── shopping/      articles : CRUD, ajout intelligent, rangement par catégorie, écran principal
     ├── lists/         listes : créer, renommer, supprimer, liste par défaut
-    ├── catalog/       catalogue local, autocomplétion, catégories, import OpenFoodFacts
+    ├── catalog/       catalogue embarqué, autocomplétion, catégories, import dans Room
     ├── homeassistant/ configuration, client REST et WebSocket, liaison des listes, moteur de sync
     ├── settings/      écran des réglages et préférences (thème, masquage des achetés, rangement)
     ├── language/      langue de l'application (langue par application d'Android), sélecteur
@@ -94,7 +94,7 @@ Aucun fichier source ne dépasse 600 lignes.
 
 - `@Singleton` pour ce qui porte un état, un verrou ou une ressource partagée : `SyncCoordinator`,
   `SyncQueue`, `HomeAssistantSyncEngine` (et le `RoomSyncLocalStore` qu'il utilise),
-  `CatalogSyncManager`, `KeystoreSecretStore`, `AndroidConnectivityObserver`, la langue, les
+  `CatalogImporter`, `KeystoreSecretStore`, `AndroidConnectivityObserver`, la langue, les
   clients réseau et les DataStore.
 - Les dépôts et cas d'usage sans état restent non scopés : une instance par point d'injection ne
   coûte rien et ne peut rien désynchroniser.
@@ -117,9 +117,10 @@ Aucun fichier source ne dépasse 600 lignes.
 | `shopping_lists` | listes, liaison Home Assistant, liste importée et dernier nom distant appliqué |
 | `shopping_items` | articles, quantité, état coché, produit associé, champs de synchronisation |
 | `sync_operations` | file des opérations locales en attente d'envoi |
-| `catalog_products`, `catalog_aliases` | catalogue alimentaire (base + OpenFoodFacts + personnalisés) |
+| `catalog_products`, `catalog_aliases` | catalogue alimentaire (base + taxonomie + personnalisés) |
 | `product_usage` | habitudes d'ajout, séparées du catalogue |
 | `ha_tracked_lists`, `ha_ignored_lists` | listes créées par l'application / listes à ne plus importer |
 
-Les préférences (thème, réglages de la liste, état du catalogue, configuration Home Assistant)
+Les préférences (thème, réglages de la liste, versions du catalogue importées, configuration
+Home Assistant)
 sont dans DataStore ; le token Home Assistant est chiffré ([Sécurité](securite.md)).

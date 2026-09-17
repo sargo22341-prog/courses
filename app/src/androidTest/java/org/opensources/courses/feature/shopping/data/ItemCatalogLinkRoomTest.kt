@@ -47,12 +47,12 @@ class ItemCatalogLinkRoomTest {
     @Test
     fun replacingTheCatalogInAnotherLanguageKeepsListItemsAndTheirProducts() =
         runTest {
-            repositories.catalog.replaceSeedCatalog("seed-3-fr", listOf(seedMilk("Lait")))
+            repositories.catalog.replaceCatalog(CatalogSource.SEED, "seed-3-fr", listOf(seedMilk("Lait")))
             val list = repositories.lists.createList("Courses")
             val item = repositories.items.addItem(NewShoppingItem(list.id, "Lait", catalogProductId = "seed:lait"))
             repositories.catalog.recordUsage("seed:lait")
 
-            repositories.catalog.replaceSeedCatalog("seed-3-en", listOf(seedMilk("Milk")))
+            repositories.catalog.replaceCatalog(CatalogSource.SEED, "seed-3-en", listOf(seedMilk("Milk")))
             LinkItemsToCatalogUseCase(repositories.items, repositories.catalog, english)()
 
             val stored = repositories.items.getItems(list.id).single()
@@ -67,7 +67,7 @@ class ItemCatalogLinkRoomTest {
     @Test
     fun productsAreFoundByNameAndById() =
         runTest {
-            repositories.catalog.replaceSeedCatalog("seed-3-en", listOf(seedMilk("Milk")))
+            repositories.catalog.replaceCatalog(CatalogSource.SEED, "seed-3-en", listOf(seedMilk("Milk")))
             val custom = repositories.catalog.getOrCreateCustomProduct("Homemade sauce")
 
             assertEquals(listOf(CatalogProductRef("seed:lait", "milk", CatalogSource.SEED)), repositories.catalog.findByNormalizedNames(setOf("milk", "bread")))

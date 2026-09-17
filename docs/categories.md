@@ -20,16 +20,20 @@ Les articles achetés restent dans « Achetés ».
 | 7 | 🍫 Épicerie sucrée | `en:sweet-snacks`, `en:confectioneries`, `en:jams` |
 | 8 | 🧊 Surgelés | `en:frozen-foods`, `en:ice-creams-and-sorbets` |
 | 9 | 🥤 Boissons | `en:beverages-and-beverages-preparations` |
-| 10 | 🧴 Hygiène et maison | catalogue de base uniquement (OpenFoodFacts ne couvre que l'alimentaire) |
+| 10 | 🧴 Hygiène et maison | catalogue de base uniquement (la taxonomie ne couvre que l'alimentaire) |
 | 11 | 🍼 Bébé et animaux | `en:baby-foods` ; croquettes, litière… du catalogue de base |
 | 12 | 🛒 **Autres** | tout article non reconnu, notamment les produits créés à la main |
 
 ## Import
 
-Chaque produit OpenFoodFacts reçoit le rayon du premier identifiant connu sur sa chaîne de
-parents, du plus précis au plus général (`OpenFoodFactsGroceryCategories`) : `en:breads` l'emporte
-sur la racine `en:plant-based-foods-and-beverages`. Le catalogue de base déclare le rayon de chaque
-section (`seed.json`, version 3). Stockage : colonne `catalog_products.groceryCategory`.
+Le rayon des produits OpenFoodFacts est calculé une fois pour toutes par
+`scripts/generate-catalog.py` ([Catalogue](catalogue.md)), puis livré dans les fichiers
+`assets/catalog/taxonomy-<langue>.json`. Le script parcourt **tout le graphe de parents** d'une
+catégorie, par niveaux, et retient le premier identifiant connu de sa table : `en:breads` l'emporte
+sur la racine `en:plant-based-foods-and-beverages`, et un produit qu'une branche de parents ne place
+pas est placé par l'autre (98,8 % des produits français contre 97,7 % avec une seule branche). Le
+catalogue de base déclare le rayon de chaque section (`seed.json`, version 3). Stockage : colonne
+`catalog_products.groceryCategory`.
 
 ## Rangement d'un article
 
@@ -41,7 +45,7 @@ La catégorie est **calculée**, pas stockée sur l'article
    (`CategoryNameKeys` et les terminaisons régulières de chaque langue, `WordForms` : `Tomate`
    trouve `Tomates`, `pomodoro` trouve `Pomodori`, `limón` trouve `Limones`). Le rangement suit
    donc les renommages et s'applique de la même façon aux articles tapés à la main et aux
-   **articles créés dans Home Assistant**, dès qu'OpenFoodFacts ou le catalogue de base connaît ce
+   **articles créés dans Home Assistant**, dès que la taxonomie ou le catalogue de base connaît ce
    nom. Si les deux le connaissent, le catalogue de base l'emporte.
 2. **Sinon, par produit associé** : l'article prend le rayon du produit auquel il est rattaché
    (`shopping_items.catalogProductId`). C'est ce qui garde à sa place un article écrit dans
@@ -54,7 +58,7 @@ Le rangement se met à jour tout seul après un import du catalogue (requête Ro
 ## Rattachement des articles
 
 `LinkItemsToCatalogUseCase`, `ItemCatalogLinkResolver` — au démarrage puis après chaque import
-(catalogue de base ou OpenFoodFacts, donc après tout changement de langue), pour les articles de
+(catalogue de base ou taxonomie, donc après tout changement de langue), pour les articles de
 toutes les listes :
 
 1. un produit du catalogue portant le nom de l'article ;

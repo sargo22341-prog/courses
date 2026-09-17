@@ -32,14 +32,9 @@ interface CatalogRepository {
     /** Forgets every addition: the history is empty and suggestions no longer favour past habits. */
     suspend fun clearUsage()
 
-    /** Replaces the OpenFoodFacts part of the catalog; usage statistics are preserved. */
-    suspend fun replaceRemoteCatalog(
-        version: String,
-        products: List<CatalogImportProduct>,
-    )
-
-    /** Replaces the bundled part of the catalog; usage statistics are preserved. */
-    suspend fun replaceSeedCatalog(
+    /** Replaces every product of [source] with [products]; usage statistics are preserved. */
+    suspend fun replaceCatalog(
+        source: CatalogSource,
         version: String,
         products: List<CatalogImportProduct>,
     )

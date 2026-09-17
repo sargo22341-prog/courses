@@ -5,6 +5,7 @@
 local.properties
 *.iml
 captures/
+__pycache__/
 
 # Signing material — never commit.
 *.jks

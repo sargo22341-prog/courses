@@ -1,6 +1,6 @@
 # ADR 0012 — Catalogue retéléchargé dans la langue choisie
 
-- **Statut** : acceptée
+- **Statut** : remplacée par [ADR 0025](0025-catalogue-genere-a-la-compilation.md)
 - **Voir aussi** : [Langues](../langues.md#changement-de-langue), [Catalogue](../catalogue.md)
 
 ## Contexte

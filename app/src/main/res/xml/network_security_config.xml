@@ -9,18 +9,10 @@
         <trust-anchors>
             <certificates src="system" />
             <!-- Self-hosted instances (https://ha.nas.home) are often signed by a private CA the user
-                 installed in Android settings. A domain-config replaces these anchors for its domains
-                 when it declares its own: every one below declares both again. Guarded by
+                 installed in Android settings. A domain-config would replace these anchors for its
+                 domains unless it declared both again; there is none. Guarded by
                  NetworkSecurityConfigTest. -->
             <certificates src="user" tools:ignore="AcceptsUserCertificates" />
         </trust-anchors>
     </base-config>
-    <!-- OpenFoodFacts is only ever called over HTTPS: cleartext is refused there, even after a redirect. -->
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">openfoodfacts.org</domain>
-        <trust-anchors>
-            <certificates src="system" />
-            <certificates src="user" tools:ignore="AcceptsUserCertificates" />
-        </trust-anchors>
-    </domain-config>
 </network-security-config>

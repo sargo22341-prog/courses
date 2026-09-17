@@ -10,9 +10,10 @@ Room est la **seule source de vérité** pour l'interface
 - ajouter, rechercher, cocher, décocher, modifier la quantité et supprimer des articles ;
 - utiliser l'autocomplétion.
 
-Le réseau ne sert qu'à synchroniser Home Assistant, à mettre à jour le catalogue OpenFoodFacts,
-ou à une action explicitement réseau demandée par l'utilisateur (« Tester la connexion »,
-« Synchroniser maintenant »).
+Le réseau ne sert qu'à synchroniser Home Assistant ou à une action explicitement réseau demandée
+par l'utilisateur (« Tester la connexion »). Le catalogue alimentaire, lui, est livré avec
+l'application et n'est jamais téléchargé
+([ADR 0025](adr/0025-catalogue-genere-a-la-compilation.md)).
 
 ## Premier lancement
 
@@ -20,10 +21,12 @@ ou à une action explicitement réseau demandée par l'utilisateur (« Tester la
   **Connecter Home Assistant**.
 - La liste par défaut est créée, nommée dans la langue affichée (« Courses », « Groceries »,
   « Einkaufsliste », « Compra », « Spesa », « Compras »), et ouverte immédiatement.
-- Un **catalogue de base** (266 produits et variantes courants, rangés par catégorie, traduits
-  dans les six langues, `assets/catalog/seed.json`) est importé dans Room au premier démarrage,
-  et de nouveau, hors ligne, à chaque changement de langue : l'autocomplétion fonctionne avant
-  tout téléchargement ([ADR 0007](adr/0007-catalogue-de-base-embarque.md)).
+- Le **catalogue complet** est importé dans Room au premier démarrage, hors ligne : les 266
+  produits et variantes du catalogue de base écrit à la main
+  ([ADR 0007](adr/0007-catalogue-de-base-embarque.md)) et les milliers de produits générés depuis la
+  taxonomie OpenFoodFacts (6 554 en français), tous livrés dans `assets/catalog/`. L'autocomplétion
+  et le rangement par rayon sont complets dès l'installation, sans le moindre téléchargement
+  ([Catalogue](catalogue.md)).
 
 ## Indicateurs
 
@@ -34,8 +37,7 @@ attente.
 
 « Hors connexion » signifie qu'Android n'a **aucun réseau par défaut**. La validation d'Internet
 n'est pas exigée : un Wi-Fi domestique dont la box a perdu Internet reste « en ligne » et Home
-Assistant local continue d'être synchronisé. Le catalogue OpenFoodFacts, lui, échoue simplement et
-sera retéléchargé plus tard.
+Assistant local continue d'être synchronisé.
 
 ## Erreurs
 

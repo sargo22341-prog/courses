@@ -39,10 +39,10 @@ class FakeCatalogRepository(
 ) : CatalogRepository {
     val candidates = initial.toMutableList()
     val usage = mutableMapOf<String, Int>()
-    var importedVersion: String? = null
-    var imported: List<CatalogImportProduct> = emptyList()
-    var seedVersion: String? = null
-    var seed: List<CatalogImportProduct> = emptyList()
+
+    /** Version written by the last import of each source, and the products it wrote. */
+    val importedVersions = mutableMapOf<CatalogSource, String>()
+    val imported = mutableMapOf<CatalogSource, List<CatalogImportProduct>>()
 
     /** Shop sections of catalog products, by normalized name. */
     val categories = mutableMapOf<String, GroceryCategory>()
@@ -102,20 +102,13 @@ class FakeCatalogRepository(
         usageVersion.value++
     }
 
-    override suspend fun replaceRemoteCatalog(
+    override suspend fun replaceCatalog(
+        source: CatalogSource,
         version: String,
         products: List<CatalogImportProduct>,
     ) {
-        importedVersion = version
-        imported = products
-    }
-
-    override suspend fun replaceSeedCatalog(
-        version: String,
-        products: List<CatalogImportProduct>,
-    ) {
-        seedVersion = version
-        seed = products
+        importedVersions[source] = version
+        imported[source] = products
     }
 
     override fun observeProductCount(): Flow<Int> = count

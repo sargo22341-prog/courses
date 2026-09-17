@@ -14,8 +14,9 @@ avant de modifier.
 - Pas de compte, pas de configuration obligatoire, pas d'écran de chargement réseau, pas d'écran
   inutile, aucun analytics.
 - Home Assistant est **facultatif** ; l'application doit fonctionner parfaitement sans.
-- Le réseau sert uniquement à : synchroniser Home Assistant, mettre à jour le catalogue
-  OpenFoodFacts, ou une action explicitement réseau demandée par l'utilisateur.
+- Le réseau sert uniquement à : synchroniser Home Assistant, ou une action explicitement réseau
+  demandée par l'utilisateur. Le catalogue alimentaire est livré avec l'application et n'est
+  jamais téléchargé.
 - Interface en français, anglais, allemand, espagnol, italien et portugais (langue de l'appareil
   par défaut, choix au premier lancement et dans les réglages), Material 3, thème clair
   chaud/calme, thème sombre sobre, mode système.
@@ -100,8 +101,9 @@ UI → ViewModel → Repository → Room → Flow → UI
 - Toute modification d'entité Room : incrémenter la version de `CoursesDatabase`, fournir une
   migration (ou `AutoMigration`), conserver le schéma exporté dans `app/schemas`, tester la
   migration. Jamais de `fallbackToDestructiveMigration` : les données utilisateur ne se perdent pas.
-- Catalogue : jamais de requête OpenFoodFacts par frappe ; import hebdomadaire, nettoyé, stocké
-  localement. Les habitudes (`product_usage`) restent séparées du catalogue.
+- Catalogue : aucune requête OpenFoodFacts, jamais. Les fichiers de `assets/catalog/` sont générés
+  hors du build par `scripts/generate-catalog.py` puis commités (ADR 0025) ; le build ne les
+  régénère pas. Les habitudes (`product_usage`) restent séparées du catalogue.
 - Secrets (token Home Assistant) : uniquement via `SecretStore` (Keystore). Jamais en clair dans
   DataStore/SharedPreferences, jamais dans un log, un `toString()`, un test ou un rapport.
 - Ne pas envoyer de données personnelles (historique d'achats) à un service externe.

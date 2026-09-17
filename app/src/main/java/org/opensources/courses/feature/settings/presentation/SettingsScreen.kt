@@ -50,7 +50,7 @@ fun SettingsRoute(
             ShoppingListSection(state.groupByCategory, viewModel::setGroupByCategory)
             HistorySection(state.history, onEnabledChange = viewModel::setHistoryEnabled, onClear = viewModel::clearHistory)
             HomeAssistantEntry(state.homeAssistant, onOpenHomeAssistant)
-            CatalogSection(catalogState, onSyncNow = catalogViewModel::forceSync)
+            CatalogSection(catalogState)
         }
     }
 }

@@ -54,7 +54,8 @@ visibles viennent des ressources (six langues, voir [Langues](langues.md)).
   l'historique » (après confirmation, grisé si l'historique est vide). Vider l'historique efface les
   statistiques d'usage (`product_usage`) : les suggestions ne favorisent plus les anciens ajouts.
   Les listes et les produits personnalisés sont conservés.
-- **Catalogue alimentaire** : état du catalogue, « ↻ Synchroniser maintenant ».
+- **Catalogue alimentaire** : nombre de produits disponibles hors connexion et attribution
+  Open Food Facts. Rien à synchroniser : le catalogue est livré avec l'application.
 - **Home Assistant** : état de la connexion, voir [Home Assistant](home-assistant.md).
 
 ## Transitions entre écrans

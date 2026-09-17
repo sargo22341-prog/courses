@@ -11,7 +11,7 @@ Documentation technique et fonctionnelle de l'application. La présentation gén
 | [Interface](interface.md) | écrans, gestes, réglages, thèmes, transitions, barres système |
 | [Fonctionnement hors ligne](hors-ligne.md) | ce qui marche sans réseau, premier lancement, indicateurs |
 | [Langues](langues.md) | six langues, choix, changement de langue et catalogue |
-| [Catalogue et autocomplétion](catalogue.md) | sources, import OpenFoodFacts, mise à jour, classement des suggestions |
+| [Catalogue et autocomplétion](catalogue.md) | sources, génération du catalogue, import, classement des suggestions |
 | [Catégories](categories.md) | rangement par rayon, rattachement des articles au catalogue |
 | [Home Assistant](home-assistant.md) | connexion, modes des listes, liaison, temps réel, API utilisées |
 

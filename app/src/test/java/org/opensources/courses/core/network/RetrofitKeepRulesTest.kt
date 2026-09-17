@@ -3,7 +3,6 @@ package org.opensources.courses.core.network
 import kotlinx.serialization.Serializable
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.opensources.courses.feature.catalog.data.remote.OpenFoodFactsApi
 import org.opensources.courses.feature.homeassistant.data.remote.ApiStatusDto
 import org.opensources.courses.feature.homeassistant.data.remote.HomeAssistantApi
 import java.io.File
@@ -20,7 +19,7 @@ import kotlin.coroutines.Continuation
  * the Retrofit interfaces is covered by it.
  */
 class RetrofitKeepRulesTest {
-    private val retrofitInterfaces = listOf(HomeAssistantApi::class.java, OpenFoodFactsApi::class.java)
+    private val retrofitInterfaces = listOf(HomeAssistantApi::class.java)
 
     @Test
     fun `release keep rule for network DTOs is present`() {

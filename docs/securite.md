@@ -7,8 +7,9 @@
 - Aucun compte, aucun analytics, aucun historique d'achats envoyé : les statistiques d'usage
   restent dans Room et peuvent être effacées (Réglages → Historique → « Vider l'historique »).
   Les catégories sont calculées localement.
-- Le catalogue OpenFoodFacts est un fichier statique téléchargé en HTTPS : seuls un `User-Agent`
-  identifiant l'application et un `ETag` sont envoyés.
+- Le catalogue alimentaire est livré avec l'application : aucune requête n'est faite pour le
+  consulter ni pour le tenir à jour, et la saisie n'est jamais divulguée
+  ([ADR 0025](adr/0025-catalogue-genere-a-la-compilation.md)).
 - Aucune dépendance aux services Google Play
   ([ADR 0016](adr/0016-aucune-dependance-google-play.md)).
 
@@ -33,11 +34,11 @@
   « Connecté » tant que l'adresse enregistrée commence par `http://`. Une adresse saisie sans
   schéma reste complétée en `http://` : c'est ce que sert une installation Home Assistant par
   défaut (port 8123), et essayer `https://` d'abord demanderait un appel réseau à l'enregistrement.
-- **OpenFoodFacts** (`openfoodfacts.org` et ses sous-domaines) : le clair y est **refusé** par un
-  `domain-config`, même après une redirection.
+- Home Assistant est le **seul** serveur que l'application contacte : il n'y a plus qu'une
+  configuration réseau, celle de base.
 - **Certificats installés par l'utilisateur** : `network_security_config.xml` fait confiance aux
-  autorités système **et** utilisateur pour tous les domaines : le `domain-config` d'OpenFoodFacts
-  redéclare les deux ([ADR 0018](adr/0018-confiance-aux-certificats-utilisateur.md)). Un Home Assistant en
+  autorités système **et** utilisateur pour tous les domaines, et aucun `domain-config` ne vient les
+  remplacer ([ADR 0018](adr/0018-confiance-aux-certificats-utilisateur.md)). Un Home Assistant en
   `https://ha.nas.home` signé par une autorité privée fonctionne donc dès que cette autorité est
   installée dans Android (Paramètres → Sécurité → Chiffrement et identifiants → Installer un
   certificat → Certificat CA). Le nom du certificat serveur doit correspondre à l'adresse saisie

@@ -41,5 +41,9 @@ class FakeShoppingListRepository : ShoppingListRepository {
         lists.value = lists.value.map { it.copy(isDefault = it.id == id) }
     }
 
+    override suspend fun reorderLists(orderedIds: List<String>) {
+        lists.value = lists.value.sortedBy { list -> orderedIds.indexOf(list.id).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+    }
+
     override suspend fun ensureDefaultList(name: String): ShoppingList = lists.value.firstOrNull { it.isDefault } ?: createList(name)
 }

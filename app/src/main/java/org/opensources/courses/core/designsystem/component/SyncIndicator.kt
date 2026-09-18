@@ -1,6 +1,18 @@
 package org.opensources.courses.core.designsystem.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -12,8 +24,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -43,16 +58,50 @@ fun SyncIndicator(snapshot: SyncSnapshot) {
         } else {
             ""
         }
+    val dotColor by animateColorAsState(color, label = "sync_color")
     Row(verticalAlignment = Alignment.CenterVertically) {
-        if (snapshot.state == SyncState.SYNCING) {
-            CircularProgressIndicator(modifier = Modifier.size(8.dp), strokeWidth = 1.5.dp, color = color)
-        } else {
-            Box(Modifier.size(8.dp).background(color, CircleShape))
+        Crossfade(snapshot.state == SyncState.SYNCING, label = "sync_dot") { syncing ->
+            if (syncing) {
+                CircularProgressIndicator(modifier = Modifier.size(8.dp), strokeWidth = 1.5.dp, color = dotColor)
+            } else {
+                StatusDot(dotColor, pulsing = pending.isNotEmpty())
+            }
         }
         Spacer(Modifier.width(6.dp))
-        Text(label + pending, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        AnimatedContent(
+            targetState = label + pending,
+            transitionSpec = { fadeIn(tween(TEXT_FADE_MILLIS)) togetherWith fadeOut(tween(TEXT_FADE_MILLIS)) using SizeTransform(clip = false) },
+            label = "sync_label",
+        ) { text ->
+            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
+
+/** Breathes slowly while changes wait to be sent: something is still to happen. */
+@Composable
+private fun StatusDot(
+    color: Color,
+    pulsing: Boolean,
+) {
+    val alpha =
+        if (pulsing) {
+            rememberInfiniteTransition(label = "sync_pulse")
+                .animateFloat(
+                    initialValue = 1f,
+                    targetValue = PULSE_MIN_ALPHA,
+                    animationSpec = infiniteRepeatable(tween(PULSE_MILLIS), RepeatMode.Reverse),
+                    label = "sync_pulse_alpha",
+                ).value
+        } else {
+            1f
+        }
+    Box(Modifier.size(8.dp).graphicsLayer { this.alpha = alpha }.background(color, CircleShape))
+}
+
+private const val TEXT_FADE_MILLIS = 200
+private const val PULSE_MILLIS = 900
+private const val PULSE_MIN_ALPHA = 0.35f
 
 @StringRes
 private fun errorLabel(failure: SyncFailure?): Int =

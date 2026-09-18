@@ -45,11 +45,13 @@ fun PurchasedFooter(
         ) {
             Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
             Spacer(Modifier.width(12.dp))
-            Text(
-                text = LocalResources.current.getQuantityString(R.plurals.shopping_purchased_count, purchasedCount, purchasedCount),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-            )
+            val resources = LocalResources.current
+            RollingValue(purchasedCount, Modifier.weight(1f)) { count ->
+                Text(
+                    text = resources.getQuantityString(R.plurals.shopping_purchased_count, count, count),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             Box {
                 IconButton(onClick = { menuOpen = true }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.shopping_more_actions))

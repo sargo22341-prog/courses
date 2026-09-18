@@ -60,6 +60,24 @@ class ListsViewModel
             viewModelScope.launch { repository.setDefaultList(listId) }
         }
 
+        /** After a drag and drop: [orderedIds] is the whole new order. */
+        fun reorder(orderedIds: List<String>) {
+            if (orderedIds == lists.value.map { it.id }) return
+            viewModelScope.launch { repository.reorderLists(orderedIds) }
+        }
+
+        /** One place up (negative [offset]) or down, from the menu: the same as a drag, without one. */
+        fun move(
+            listId: String,
+            offset: Int,
+        ) {
+            val ids = lists.value.map { it.id }
+            val from = ids.indexOf(listId)
+            val to = from + offset
+            if (from < 0 || to !in ids.indices) return
+            reorder(ids.toMutableList().apply { add(to, removeAt(from)) })
+        }
+
         fun lastListWarningShown() {
             mutableLastListWarning.value = false
         }

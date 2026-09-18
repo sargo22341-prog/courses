@@ -51,6 +51,7 @@ class ShoppingListRepositoryImpl
                     updatedAt = now,
                     createdByApp = synchronize,
                     syncStatus = if (synchronize) SyncStatus.PENDING else SyncStatus.LOCAL_ONLY,
+                    position = dao.nextPosition(),
                 )
             dao.insert(entity)
             if (synchronize) queue.enqueue(SyncOperationType.CREATE_LIST, listLocalId = entity.localId)
@@ -106,6 +107,11 @@ class ShoppingListRepositoryImpl
             }
 
         override suspend fun setDefaultList(id: String) = dao.setDefault(id)
+
+        /** Local only: Home Assistant has no order of lists, nothing is queued. */
+        override suspend fun reorderLists(orderedIds: List<String>) {
+            transactions.inTransaction { orderedIds.forEachIndexed { position, id -> dao.setPosition(id, position) } }
+        }
 
         override suspend fun ensureDefaultList(name: String): ShoppingList {
             val synchronize = remoteSync.synchronizesNewLists()

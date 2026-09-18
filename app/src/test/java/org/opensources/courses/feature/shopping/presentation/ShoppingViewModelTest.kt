@@ -102,6 +102,90 @@ class ShoppingViewModelTest {
         }
 
     @Test
+    fun `a quantity typed before the name is searched without it and added with it`() =
+        runTest {
+            val viewModel = viewModel()
+
+            viewModel.onQueryChange("2 laits")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(SEARCH_ELAPSED_MILLIS)
+            runCurrent()
+            val shown = viewModel.uiState.value
+            assertEquals("laits", shown.searchedEntry.name)
+            assertEquals("Lait", shown.exactSuggestion?.name)
+            assertFalse(shown.offersCustomItem)
+
+            viewModel.onSubmitQuery()
+            runCurrent()
+
+            val added = items.getAllItems().single()
+            assertEquals("Lait", added.name)
+            assertEquals(2.0, added.quantity, 0.0)
+        }
+
+    @Test
+    fun `done typed faster than the search still finds the catalog product`() =
+        runTest {
+            val viewModel = viewModel()
+
+            viewModel.onQueryChange("1 l de lait")
+            viewModel.onSubmitQuery()
+            runCurrent()
+
+            val added = items.getAllItems().single()
+            assertEquals("id:Lait", added.catalogProductId)
+            assertEquals(1.0, added.quantity, 0.0)
+            assertEquals("L", added.unit)
+        }
+
+    @Test
+    fun `a chosen suggestion takes the quantity typed`() =
+        runTest {
+            val viewModel = viewModel()
+            viewModel.onQueryChange("500 g de lait")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(SEARCH_ELAPSED_MILLIS)
+            runCurrent()
+
+            viewModel.onSuggestionSelected(viewModel.uiState.value.suggestions.first { it.name == "Lait d'amande" })
+            runCurrent()
+
+            val added = items.getAllItems().single()
+            assertEquals("Lait d'amande", added.name)
+            assertEquals(500.0, added.quantity, 0.0)
+            assertEquals("g", added.unit)
+        }
+
+    @Test
+    fun `plus and minus change the quantity and each quick tap counts`() =
+        runTest {
+            val viewModel = viewModel()
+            val bread = itemNamed(viewModel, "Pain")
+
+            viewModel.onChangeQuantity(bread, increase = true)
+            viewModel.onChangeQuantity(bread, increase = true)
+            runCurrent()
+            assertEquals(3.0, items.getAllItems().single().quantity, 0.0)
+
+            repeat(3) { viewModel.onChangeQuantity(bread, increase = false) }
+            runCurrent()
+            assertEquals(1.0, items.getAllItems().single().quantity, 0.0)
+        }
+
+    @Test
+    fun `an item just added is highlighted until the list showed it`() =
+        runTest {
+            val viewModel = viewModel()
+            val bread = itemNamed(viewModel, "Pain")
+
+            assertEquals(bread.id, viewModel.uiState.value.highlightedItemId)
+
+            viewModel.onHighlightShown()
+            runCurrent()
+            assertNull(viewModel.uiState.value.highlightedItemId)
+        }
+
+    @Test
     fun `a pull to refresh already running is not started twice`() =
         runTest {
             val viewModel = viewModel()

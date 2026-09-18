@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.opensources.courses.core.common.ApplicationScope
 import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
@@ -41,9 +43,13 @@ import org.opensources.courses.feature.lists.domain.ShoppingListDefaults
 import org.opensources.courses.feature.lists.domain.ShoppingListRepository
 import org.opensources.courses.feature.settings.domain.AppPreferencesRepository
 import org.opensources.courses.feature.shopping.domain.AddItemUseCase
+import org.opensources.courses.feature.shopping.domain.ExactSuggestionFinder
 import org.opensources.courses.feature.shopping.domain.GroupItemsByCategoryUseCase
+import org.opensources.courses.feature.shopping.domain.ItemEntry
+import org.opensources.courses.feature.shopping.domain.ItemEntryParser
 import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ProductHistoryUseCase
+import org.opensources.courses.feature.shopping.domain.QuantityStepper
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.domain.ShoppingItemRepository
 import org.opensources.courses.feature.shopping.domain.withoutChecked
@@ -105,16 +111,22 @@ class ShoppingViewModel
                 }
             }
 
-        private val suggestions: Flow<List<ProductSuggestion>> =
+        /** Searched for the name only: "500 g de pâtes" suggests "Pâtes". */
+        private val searchResults: Flow<SearchResults> =
             snapshotFlow { query }
                 .debounce(SEARCH_DEBOUNCE_MILLIS)
-                .mapLatest { text -> if (text.isBlank()) emptyList() else searchSuggestions(text) }
-                .onStart { emit(emptyList()) }
+                .mapLatest { text -> search(ItemEntryParser.parse(text)) }
+                .onStart { emit(SearchResults(ItemEntry(""), emptyList(), exact = null)) }
 
         private val refreshing = MutableStateFlow(false)
 
         /** Hidden at once, deleted only once it can no longer be undone. */
         private val pendingDeletion = MutableStateFlow<ShoppingItem?>(null)
+
+        private val justAdded = MutableStateFlow<String?>(null)
+
+        /** "+" and "−" read the item again: quick taps must each count, not repeat a stale quantity. */
+        private val quantityChanges = Mutex()
 
         /** Not even read while the history is turned off in the settings. */
         private val frequentProducts: Flow<List<ProductSuggestion>> =
@@ -129,15 +141,15 @@ class ShoppingViewModel
          * recomposed. An item being deleted is offered again in the history, as it left the list.
          */
         private val shownContent: Flow<ListContent> =
-            combine(listContent, pendingDeletion, frequentProducts) { content, deleted, frequent ->
-                content.without(deleted).let { it.copy(history = productHistory.notInList(frequent, it.toBuy)) }
+            combine(listContent, pendingDeletion, frequentProducts, justAdded) { content, deleted, frequent, added ->
+                content.without(deleted).let { it.copy(history = productHistory.notInList(frequent, it.toBuy), highlightedItemId = added) }
             }
 
         val uiState: StateFlow<ShoppingUiState> =
             combine(
                 shownContent,
                 preferences.preferences,
-                suggestions,
+                searchResults,
                 syncCoordinator.snapshot,
                 refreshing,
             ) { shown, prefs, found, sync, isRefreshing ->
@@ -148,11 +160,14 @@ class ShoppingViewModel
                     toBuySections = shown.toBuySections,
                     purchased = shown.purchased,
                     hidePurchased = prefs.hidePurchased,
-                    suggestions = found,
+                    suggestions = found.suggestions,
+                    searchedEntry = found.entry,
+                    exactSuggestion = found.exact,
                     history = shown.history,
                     sync = sync,
                     isRefreshing = isRefreshing,
                     pendingDeletion = shown.pendingDeletion,
+                    highlightedItemId = shown.highlightedItemId,
                 )
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ShoppingUiState())
 
@@ -164,17 +179,28 @@ class ShoppingViewModel
             query = text
         }
 
-        /** A search suggestion or a product of the history. */
-        fun onSuggestionSelected(suggestion: ProductSuggestion) = add(suggestion.name, suggestion.productId)
-
-        /** Keyboard "done": the exact suggestion when there is one, otherwise the typed text. */
-        fun onSubmitQuery() {
-            if (TextNormalizer.normalize(query).isEmpty()) return
-            val exact = uiState.value.exactSuggestion(query)
-            add(exact?.name ?: query, exact?.productId)
+        /** A search suggestion or a product of the history, with the quantity typed if any. */
+        fun onSuggestionSelected(suggestion: ProductSuggestion) {
+            val entry = ItemEntryParser.parse(query)
+            add(entry.copy(name = suggestion.name), suggestion.productId)
         }
 
-        fun onAddCustomItem() = add(query, catalogProductId = null)
+        /**
+         * Keyboard "done": the exact suggestion when there is one, otherwise the typed name. Suggestions
+         * shown for older text (typed faster than the search) are searched again rather than trusted.
+         */
+        fun onSubmitQuery() {
+            val entry = ItemEntryParser.parse(query)
+            if (TextNormalizer.normalize(entry.name).isEmpty()) return
+            val shown = uiState.value.takeIf { it.searchedEntry == entry }
+            query = ""
+            viewModelScope.launch {
+                val exact = if (shown != null) shown.exactSuggestion else search(entry).exact
+                addNow(if (exact == null) entry else entry.copy(name = exact.name), exact?.productId)
+            }
+        }
+
+        fun onAddCustomItem() = add(ItemEntryParser.parse(query), catalogProductId = null)
 
         fun onToggleItem(item: ShoppingItem) {
             viewModelScope.launch { items.setChecked(item.id, !item.isChecked) }
@@ -196,6 +222,30 @@ class ShoppingViewModel
         /** The undo offer for [item] ended without being used. */
         fun onDeletionConfirmed(item: ShoppingItem) {
             if (pendingDeletion.compareAndSet(item, null)) delete(item)
+        }
+
+        /** "+" or "−" on a row; "−" never goes below one step. */
+        fun onChangeQuantity(
+            item: ShoppingItem,
+            increase: Boolean,
+        ) {
+            viewModelScope.launch {
+                quantityChanges.withLock {
+                    val current = items.getItems(item.listId).firstOrNull { it.id == item.id } ?: return@withLock
+                    val quantity =
+                        if (increase) {
+                            QuantityStepper.increase(current.quantity, current.unit)
+                        } else {
+                            QuantityStepper.decrease(current.quantity, current.unit) ?: return@withLock
+                        }
+                    items.updateItem(current.id, current.name, quantity, current.unit)
+                }
+            }
+        }
+
+        /** The list scrolled to the item just added and lit it up. */
+        fun onHighlightShown() {
+            justAdded.value = null
         }
 
         fun onSaveItem(
@@ -231,14 +281,25 @@ class ShoppingViewModel
         }
 
         private fun add(
-            name: String,
+            entry: ItemEntry,
             catalogProductId: String?,
         ) {
             query = ""
-            viewModelScope.launch {
-                val listId = currentListId() ?: return@launch
-                addItem(listId, name, catalogProductId)
-            }
+            viewModelScope.launch { addNow(entry, catalogProductId) }
+        }
+
+        private suspend fun addNow(
+            entry: ItemEntry,
+            catalogProductId: String?,
+        ) {
+            val listId = currentListId() ?: return
+            addItem(listId, entry.name, catalogProductId, entry.quantity, entry.unit)?.let { justAdded.value = it.id }
+        }
+
+        private suspend fun search(entry: ItemEntry): SearchResults {
+            if (entry.name.isBlank()) return SearchResults(entry, emptyList(), exact = null)
+            val found = searchSuggestions(entry.name)
+            return SearchResults(entry, found, ExactSuggestionFinder.find(found, entry.name, languages.language.value))
         }
 
         /** Leaving the screen for good ends the undo offer: the deletion is done. */
@@ -261,6 +322,7 @@ class ShoppingViewModel
             val toBuySections: List<ItemSection>?,
             val pendingDeletion: ShoppingItem? = null,
             val history: List<ProductSuggestion> = emptyList(),
+            val highlightedItemId: String? = null,
         ) {
             fun without(deleted: ShoppingItem?): ListContent =
                 if (deleted == null) {
@@ -289,6 +351,12 @@ class ShoppingViewModel
                 }
             }
         }
+
+        private data class SearchResults(
+            val entry: ItemEntry,
+            val suggestions: List<ProductSuggestion>,
+            val exact: ProductSuggestion?,
+        )
 
         private companion object {
             const val SEARCH_DEBOUNCE_MILLIS = 60L

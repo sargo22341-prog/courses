@@ -42,10 +42,12 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Sujet | Tests |
 | --- | --- |
 | Autocomplétion, ranking, recherche floue (hors fil principal, formes normalisées enregistrées) | `SuggestionRankerTest`, `SearchSuggestionsUseCaseTest`, `FuzzyMatcherTest`, `TextNormalizerTest` |
-| Création, doublons, produit personnalisé | `AddItemUseCaseTest` |
+| Création, doublons, produit personnalisé, quantité tapée (cumul ou remplacement) | `AddItemUseCaseTest` |
+| Quantité tapée avec le nom, suggestion exacte au pluriel, « − » / « + » | `ItemEntryParserTest`, `ExactSuggestionFinderTest`, `QuantityStepperTest`, `ShoppingViewModelTest`, `ShoppingScreenTest` |
+| Ordre des listes (glisser-déposer, Monter / Descendre, nouvelles listes à la fin, rien à synchroniser) | `ListsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ListsRouteTest` |
 | Historique (ordre, produits déjà dans la liste exclus, réglage, vidage) | `ProductHistoryUseCaseTest`, `ShoppingViewModelTest`, `SettingsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ShoppingScreenTest`, `HistorySectionTest` |
 | Création, coche/décoche, suppression, file (Room réel) | `RoomRepositoriesTest` |
-| Migrations Room (données des versions 1, 2 et 3 conservées) | `CoursesDatabaseMigrationTest` |
+| Migrations Room (données des versions 1 à 4 conservées, ordre des listes gardé) | `CoursesDatabaseMigrationTest` |
 | File de synchronisation | `SyncQueueTest` |
 | Refus, abandon des opérations, lecture unique de la file, texte modifié par Home Assistant, token non administrateur | `HomeAssistantRefusedChangesTest`, `HomeAssistantClientTest`, `HaGivenUpChangesRoomTest` (Room réel) |
 | Synchronisation périodique au premier plan seulement (10 min en temps réel), demandes fusionnées, exécution exclusive | `SyncCoordinatorTest`, `ForgetHomeAssistantUseCaseTest` |

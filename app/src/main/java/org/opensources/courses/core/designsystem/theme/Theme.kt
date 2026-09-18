@@ -34,7 +34,7 @@ fun CoursesTheme(
         }
     SystemBarsAppearance(darkTheme = dark)
     MaterialTheme(
-        colorScheme = themeColorScheme(dark),
+        colorScheme = animatedColorScheme(themeColorScheme(dark)),
         typography = CoursesTypography,
         shapes = CoursesShapes,
         content = content,

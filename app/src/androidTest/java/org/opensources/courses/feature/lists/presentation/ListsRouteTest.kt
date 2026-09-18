@@ -1,5 +1,6 @@
 package org.opensources.courses.feature.lists.presentation
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -7,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -47,6 +49,29 @@ class ListsRouteTest {
         val created = runBlocking { repositories.database.shoppingListDao().getAll() }.single { it.name == "BBQ" }
         assertEquals(listOf(created.localId), opened)
         assertNull(viewModel.createdListId.value)
+    }
+
+    @Test
+    fun aListMovedUpFromItsMenuKeepsItsNewPlace() {
+        val viewModel = ListsViewModel(repositories.lists)
+        runBlocking {
+            repositories.lists.createList("Courses")
+            repositories.lists.createList("BBQ")
+        }
+        composeRule.setContent {
+            FrenchCoursesTheme { ListsRoute(onBack = {}, onOpenList = {}, viewModel = viewModel) }
+        }
+
+        composeRule.onNodeWithContentDescription("Actions pour BBQ").performClick()
+        // The first list cannot go higher: only the second one offers it.
+        composeRule.onNodeWithText("Monter").performClick()
+        composeRule.waitUntil(TIMEOUT_MILLIS) {
+            runBlocking { repositories.lists.observeLists().first() }.first().name == "BBQ"
+        }
+
+        composeRule.onNodeWithContentDescription("Actions pour BBQ").performClick()
+        composeRule.onNodeWithText("Monter").assertDoesNotExist()
+        composeRule.onNodeWithText("Descendre").assertIsDisplayed()
     }
 
     private companion object {

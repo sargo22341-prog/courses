@@ -2,38 +2,44 @@ package org.opensources.courses.feature.shopping.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
 import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
-import java.util.Locale
 
 /**
  * Takes only what the list shows, not the whole screen state: a change of the sync state or of the
  * suggestions leaves these parameters unchanged, and the list is not recomposed.
  *
  * @param toBuySections [toBuy] grouped by shop section, or null to show them as they come.
+ * @param highlightedItemId an item just added: the list scrolls to it if needed, lights it up, then
+ * calls [onHighlightShown].
  */
 @Composable
 fun ShoppingListContent(
@@ -42,60 +48,69 @@ fun ShoppingListContent(
     toBuySections: List<ItemSection>?,
     purchased: List<ShoppingItem>,
     hidePurchased: Boolean,
-    onToggleItem: (ShoppingItem) -> Unit,
-    onDeleteItem: (ShoppingItem) -> Unit,
-    onEditItem: (ShoppingItem) -> Unit,
+    actions: ItemRowActions,
     onRequestDeletePurchased: () -> Unit,
+    modifier: Modifier = Modifier,
+    highlightedItemId: String? = null,
+    onHighlightShown: () -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
 ) {
     if (isLoading) return
     if (toBuy.isEmpty() && purchased.isEmpty()) {
-        EmptyState()
+        EmptyState(modifier)
         return
     }
+    val rows = remember(toBuy, toBuySections, purchased, hidePurchased) { listRows(toBuy, toBuySections, purchased, hidePurchased) }
+    ScrollToHighlight(listState, rows, highlightedItemId, onHighlightShown)
     // Read once for every row.
     val locale = LocalConfiguration.current.locales[0]
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (toBuy.isEmpty()) {
-            item(key = "all_purchased") {
-                Text(
-                    text = stringResource(R.string.shopping_all_purchased),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp).animateItem(),
-                    textAlign = TextAlign.Center,
-                )
+        items(rows, key = { it.key }, contentType = { it.contentType }) { row ->
+            val animated = Modifier.animateItem()
+            when (row) {
+                ListRow.AllPurchased ->
+                    AppearingStatus(Icons.Filled.CheckCircle, stringResource(R.string.shopping_all_purchased), animated.padding(vertical = 24.dp))
+                is ListRow.CategoryTitle -> CategoryHeader(row.section.category, animated)
+                ListRow.PurchasedTitle -> PurchasedHeader(onRequestDeletePurchased, animated)
+                is ListRow.Item ->
+                    ShoppingItemRow(
+                        item = row.item,
+                        locale = locale,
+                        onToggle = actions.onToggle,
+                        onDelete = actions.onDelete,
+                        onEdit = actions.onEdit,
+                        onChangeQuantity = actions.onChangeQuantity,
+                        modifier = animated,
+                        highlighted = row.item.id == highlightedItemId,
+                    )
             }
-        }
-        if (toBuySections == null) {
-            itemRows(toBuy, locale, onToggleItem, onDeleteItem, onEditItem)
-        } else {
-            toBuySections.forEach { section ->
-                item(key = "category_${section.category.name}", contentType = CATEGORY_HEADER) {
-                    CategoryHeader(section.category, Modifier.animateItem())
-                }
-                itemRows(section.items, locale, onToggleItem, onDeleteItem, onEditItem)
-            }
-        }
-        if (purchased.isNotEmpty() && !hidePurchased) {
-            item(key = "purchased_header") { PurchasedHeader(onRequestDeletePurchased, Modifier.animateItem()) }
-            itemRows(purchased, locale, onToggleItem, onDeleteItem, onEditItem)
         }
     }
 }
 
-private fun LazyListScope.itemRows(
-    items: List<ShoppingItem>,
-    locale: Locale,
-    onToggleItem: (ShoppingItem) -> Unit,
-    onDeleteItem: (ShoppingItem) -> Unit,
-    onEditItem: (ShoppingItem) -> Unit,
+/** Scrolls only when the item is out of sight: the list does not jump for an item already shown. */
+@Composable
+private fun ScrollToHighlight(
+    listState: LazyListState,
+    rows: List<ListRow>,
+    highlightedItemId: String?,
+    onHighlightShown: () -> Unit,
 ) {
-    items(items, key = { it.id }, contentType = { ITEM_ROW }) { item ->
-        ShoppingItemRow(item, locale, onToggleItem, onDeleteItem, onEditItem, Modifier.animateItem())
+    val currentOnHighlightShown by rememberUpdatedState(onHighlightShown)
+    LaunchedEffect(highlightedItemId, rows) {
+        val id = highlightedItemId ?: return@LaunchedEffect
+        // The item shows up with the next emission of the list: until then, wait for it.
+        val index = rows.indexOfFirst { it is ListRow.Item && it.item.id == id }
+        if (index < 0) return@LaunchedEffect
+        val layout = listState.layoutInfo
+        val shown = layout.visibleItemsInfo.any { it.index == index && it.offset >= 0 && it.offset + it.size <= layout.viewportEndOffset }
+        if (!shown) listState.animateScrollToItem(index)
+        currentOnHighlightShown()
     }
 }
 
@@ -123,23 +138,16 @@ private fun PurchasedHeader(
 
 /** Scrollable, so that pull to refresh also works on an empty list. */
 @Composable
-private fun EmptyState() {
-    LazyColumn(Modifier.fillMaxSize()) {
+private fun EmptyState(modifier: Modifier = Modifier) {
+    LazyColumn(modifier.fillMaxSize()) {
         item(key = "empty") {
             Box(Modifier.fillParentMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.shopping_empty_title), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        text = stringResource(R.string.shopping_empty_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                AppearingStatus(
+                    icon = Icons.Filled.ShoppingCart,
+                    title = stringResource(R.string.shopping_empty_title),
+                    body = stringResource(R.string.shopping_empty_body),
+                )
             }
         }
     }
 }
-
-private const val CATEGORY_HEADER = "category_header"
-private const val ITEM_ROW = "item_row"

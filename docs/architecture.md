@@ -104,17 +104,19 @@ Aucun fichier source ne dépasse 600 lignes.
 ## Base Room
 
 - `CoursesDatabase` est la **seule source de vérité** de l'interface.
-- Schéma exporté dans `app/schemas`, version 4 (2 et 3 par `AutoMigration` :
+- Schéma exporté dans `app/schemas`, version 5 (2 et 3 par `AutoMigration` :
   `catalog_products.groceryCategory` ; `shopping_lists.importedFromRemote`,
   `shopping_lists.remoteName` et table `ha_ignored_lists`. 4 par `CoursesDatabaseMigrations` :
-  suppression sur place des colonnes jamais lues).
+  suppression sur place des colonnes jamais lues. 5 par `AutoMigration` :
+  `shopping_lists.position`, l'ordre choisi par l'utilisateur, à 0 pour les listes existantes qui
+  gardent leur ordre).
 - Toute évolution du schéma incrémente la version et fournit une migration testée contre
   `app/schemas` (`CoursesDatabaseMigrationTest`). Jamais de migration destructive
   ([ADR 0020](adr/0020-migrations-room-sans-perte.md)).
 
 | Table | Contenu |
 | --- | --- |
-| `shopping_lists` | listes, liaison Home Assistant, liste importée et dernier nom distant appliqué |
+| `shopping_lists` | listes, ordre choisi, liaison Home Assistant, liste importée et dernier nom distant appliqué |
 | `shopping_items` | articles, quantité, état coché, produit associé, champs de synchronisation |
 | `sync_operations` | file des opérations locales en attente d'envoi |
 | `catalog_products`, `catalog_aliases` | catalogue alimentaire (base + taxonomie + personnalisés) |

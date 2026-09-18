@@ -33,7 +33,7 @@
     <string name="shopping_open_settings">Definições</string>
     <string name="shopping_empty_title">A sua lista está vazia</string>
     <string name="shopping_empty_body">Escreva acima o nome de um produto para o adicionar.</string>
-    <string name="shopping_all_purchased">Tudo comprado ✓</string>
+    <string name="shopping_all_purchased">Tudo comprado</string>
     <string name="shopping_section_purchased">Comprados</string>
     <plurals name="shopping_purchased_count">
         <item quantity="one">%d artigo comprado</item>
@@ -51,6 +51,9 @@
     <string name="shopping_edit_quantity">Quantidade</string>
     <string name="shopping_edit_unit">Unidade (opcional)</string>
     <string name="shopping_edit_item">Editar %1$s</string>
+    <string name="shopping_quantity_times">× %1$s</string>
+    <string name="shopping_quantity_decrease">%1$s: diminuir a quantidade</string>
+    <string name="shopping_quantity_increase">%1$s: aumentar a quantidade</string>
     <string name="shopping_item_deleted">«%1$s» eliminado</string>
 
     <!-- Categorias (secções) -->
@@ -95,6 +98,8 @@
     <string name="lists_delete_body">Os artigos desta lista serão eliminados deste telemóvel.</string>
     <string name="lists_delete_last">Não é possível eliminar a última lista.</string>
     <string name="lists_actions">Ações para %1$s</string>
+    <string name="lists_move_up">Mover para cima</string>
+    <string name="lists_move_down">Mover para baixo</string>
 
     <!-- Definições -->
     <string name="settings_title">Definições</string>

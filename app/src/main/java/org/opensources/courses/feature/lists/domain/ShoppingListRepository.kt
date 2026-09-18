@@ -21,6 +21,9 @@ interface ShoppingListRepository {
 
     suspend fun setDefaultList(id: String)
 
+    /** Shows the lists in the order of [orderedIds], the order the user chose. */
+    suspend fun reorderLists(orderedIds: List<String>)
+
     /** Returns the default list, creating one named [name] if none exists yet. */
     suspend fun ensureDefaultList(name: String): ShoppingList
 }

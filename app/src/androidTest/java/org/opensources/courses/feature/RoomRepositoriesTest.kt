@@ -115,6 +115,25 @@ class RoomRepositoriesTest {
         }
 
     @Test
+    fun listsKeepTheOrderChosenAndNewListsGoLast() =
+        runTest {
+            val first = repositories.lists.createList("Courses")
+            val second = repositories.lists.createList("BBQ")
+            val third = repositories.lists.createList("Pharmacie")
+
+            repositories.lists.reorderLists(listOf(third.id, first.id, second.id))
+            repositories.syncStore.importList("todo.maison", "Maison")
+            repositories.lists.createList("Bricolage")
+
+            assertEquals(
+                listOf("Pharmacie", "Courses", "BBQ", "Maison", "Bricolage"),
+                repositories.lists.observeLists().first().map { it.name },
+            )
+            // Only the order moved: nothing to tell Home Assistant.
+            assertTrue(repositories.queue.pending().isEmpty())
+        }
+
+    @Test
     fun catalogSearchUsesNamesAliasesAndKeepsUsageAcrossImports() =
         runTest {
             val milk = CatalogImportProduct("en:milks", "Laits", "Produits laitiers", 3, aliases = listOf("lolo"))

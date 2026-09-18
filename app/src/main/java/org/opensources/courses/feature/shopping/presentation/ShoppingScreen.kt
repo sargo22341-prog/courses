@@ -1,7 +1,12 @@
 package org.opensources.courses.feature.shopping.presentation
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
@@ -55,6 +61,7 @@ import org.opensources.courses.feature.shopping.presentation.components.AddItemF
 import org.opensources.courses.feature.shopping.presentation.components.DeletePurchasedDialog
 import org.opensources.courses.feature.shopping.presentation.components.EditItemDialog
 import org.opensources.courses.feature.shopping.presentation.components.HistoryPanel
+import org.opensources.courses.feature.shopping.presentation.components.ItemRowActions
 import org.opensources.courses.feature.shopping.presentation.components.PurchasedFooter
 import org.opensources.courses.feature.shopping.presentation.components.ShoppingListContent
 import org.opensources.courses.feature.shopping.presentation.components.SuggestionsPanel
@@ -81,6 +88,8 @@ fun ShoppingRoute(
                 onUndoDeletion = viewModel::onUndoDeletion,
                 onDeletionConfirmed = viewModel::onDeletionConfirmed,
                 onSaveItem = viewModel::onSaveItem,
+                onChangeQuantity = viewModel::onChangeQuantity,
+                onHighlightShown = viewModel::onHighlightShown,
                 onToggleHidePurchased = viewModel::onToggleHidePurchased,
                 onDeletePurchased = viewModel::onDeletePurchased,
                 onRefresh = viewModel::onRefresh,
@@ -106,6 +115,8 @@ class ShoppingActions(
     val onUndoDeletion: () -> Unit = {},
     val onDeletionConfirmed: (ShoppingItem) -> Unit = {},
     val onSaveItem: (ShoppingItem, String, Double, String?) -> Unit = { _, _, _, _ -> },
+    val onChangeQuantity: (ShoppingItem, Boolean) -> Unit = { _, _ -> },
+    val onHighlightShown: () -> Unit = {},
     val onToggleHidePurchased: () -> Unit = {},
     val onDeletePurchased: () -> Unit = {},
     val onRefresh: () -> Unit = {},
@@ -127,6 +138,10 @@ fun ShoppingScreen(
     var fieldFocused by remember { mutableStateOf(false) }
     val showsHistory = fieldFocused && !searching && state.history.isNotEmpty()
     val focusManager = LocalFocusManager.current
+    // Kept while the suggestions are shown: the list comes back where it was left.
+    val listState = rememberLazyListState()
+    val rowActions =
+        remember(actions) { ItemRowActions(actions.onToggleItem, actions.onDeleteItem, { editedItemId = it.id }, actions.onChangeQuantity) }
     // The history belongs to typing: closing the keyboard leaves it, as does "back" without an
     // on-screen keyboard (hardware keyboard).
     ClearFocusWhenKeyboardCloses(focusManager)
@@ -177,30 +192,43 @@ fun ShoppingScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 onFocusChange = { fieldFocused = it },
             )
-            if (showsHistory) {
-                // The field keeps the focus: several products can be picked in a row.
-                HistoryPanel(history = state.history, onProductSelected = actions.onSuggestionSelected)
-            } else if (searching) {
-                SuggestionsPanel(
-                    query = query,
-                    suggestions = state.suggestions,
-                    offersCustomItem = remember(query, state.suggestions) { state.offersCustomItem(query) },
-                    onSuggestionSelected = actions.onSuggestionSelected,
-                    onAddCustomItem = actions.onAddCustomItem,
-                )
-            } else {
-                RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
-                    ShoppingListContent(
-                        isLoading = state.isLoading,
-                        toBuy = state.toBuy,
-                        toBuySections = state.toBuySections,
-                        purchased = state.purchased,
-                        hidePurchased = state.hidePurchased,
-                        onToggleItem = actions.onToggleItem,
-                        onDeleteItem = actions.onDeleteItem,
-                        onEditItem = { editedItemId = it.id },
-                        onRequestDeletePurchased = { confirmDeletePurchased = true },
-                    )
+            val panel =
+                when {
+                    showsHistory -> Panel.HISTORY
+                    searching -> Panel.SUGGESTIONS
+                    else -> Panel.LIST
+                }
+            AnimatedContent(
+                targetState = panel,
+                transitionSpec = { fadeIn(tween(PANEL_FADE_MILLIS)) togetherWith fadeOut(tween(PANEL_FADE_MILLIS)) },
+                label = "panel",
+            ) { shown ->
+                when (shown) {
+                    // The field keeps the focus: several products can be picked in a row.
+                    Panel.HISTORY -> HistoryPanel(history = state.history, onProductSelected = actions.onSuggestionSelected)
+                    Panel.SUGGESTIONS ->
+                        SuggestionsPanel(
+                            entry = state.searchedEntry,
+                            suggestions = state.suggestions,
+                            offersCustomItem = state.offersCustomItem,
+                            onSuggestionSelected = actions.onSuggestionSelected,
+                            onAddCustomItem = actions.onAddCustomItem,
+                        )
+                    Panel.LIST ->
+                        RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
+                            ShoppingListContent(
+                                isLoading = state.isLoading,
+                                toBuy = state.toBuy,
+                                toBuySections = state.toBuySections,
+                                purchased = state.purchased,
+                                hidePurchased = state.hidePurchased,
+                                actions = rowActions,
+                                onRequestDeletePurchased = { confirmDeletePurchased = true },
+                                highlightedItemId = state.highlightedItemId,
+                                onHighlightShown = actions.onHighlightShown,
+                                listState = listState,
+                            )
+                        }
                 }
             }
         }
@@ -216,6 +244,11 @@ fun ShoppingScreen(
         )
     }
 }
+
+/** What the space under the field shows; switching fades one into the other. */
+private enum class Panel { HISTORY, SUGGESTIONS, LIST }
+
+private const val PANEL_FADE_MILLIS = 150
 
 /**
  * "« Lait » supprimé · Annuler". Leaving the composition (undone, or replaced by another deletion)

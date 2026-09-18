@@ -51,6 +51,15 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   description, `get_items`, suppression de l'entrée), mais le parcours complet de l'application
   contre une vraie instance reste à valider.
 
+## Saisie
+
+- **Quantité tapée avec le nom** : un nombre suivi d'un espace en début de saisie est toujours lu
+  comme une quantité. Un produit dont le nom commence par un nombre séparé (« 7 up ») est ajouté
+  comme « up » × 7 ; l'écrire sans espace (« 7up ») ou le modifier ensuite. Les contenants
+  (« 2 bouteilles de vin ») ne sont pas des unités : c'est 2 × « bouteilles de vin ».
+- **Ordre des listes** : il reste sur le téléphone ; Home Assistant n'a pas d'ordre des listes et
+  un autre appareil synchronisé garde le sien.
+
 ## Catégories
 
 - La reconnaissance se fait sur le nom exact (au singulier ou au pluriel près). Un nom plus précis

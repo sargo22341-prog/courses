@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ShoppingListDao {
-    @Query("SELECT * FROM shopping_lists ORDER BY isDefault DESC, createdAt ASC")
+    @Query("SELECT * FROM shopping_lists ORDER BY position ASC, isDefault DESC, createdAt ASC")
     fun observeAll(): Flow<List<ShoppingListEntity>>
 
     @Query("SELECT * FROM shopping_lists WHERE localId = :id")
@@ -40,4 +40,14 @@ interface ShoppingListDao {
 
     @Query("UPDATE shopping_lists SET isDefault = (localId = :id)")
     suspend fun setDefault(id: String)
+
+    /** After every existing list: a new list goes to the end. */
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM shopping_lists")
+    suspend fun nextPosition(): Int
+
+    @Query("UPDATE shopping_lists SET position = :position WHERE localId = :id")
+    suspend fun setPosition(
+        id: String,
+        position: Int,
+    )
 }

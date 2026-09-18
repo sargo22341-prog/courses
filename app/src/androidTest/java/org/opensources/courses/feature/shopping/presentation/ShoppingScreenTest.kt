@@ -4,8 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -26,6 +29,7 @@ import org.opensources.courses.core.sync.SyncSnapshot
 import org.opensources.courses.core.sync.SyncState
 import org.opensources.courses.feature.catalog.domain.GroceryCategory
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
+import org.opensources.courses.feature.shopping.domain.ItemEntry
 import org.opensources.courses.feature.shopping.domain.ItemSection
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.ADD_ITEM_FIELD_TAG
@@ -59,6 +63,38 @@ class ShoppingScreenTest {
         composeRule.onNodeWithText("12").assertIsDisplayed()
         composeRule.onNodeWithText("Achetés").assertIsDisplayed()
         composeRule.onNodeWithText("1 article acheté").assertIsDisplayed()
+    }
+
+    @Test
+    fun plusAndMinusChangeTheQuantityOfAnItemToBuyOnly() {
+        val changes = mutableListOf<Pair<String, Boolean>>()
+        val withOne = state.copy(toBuy = state.toBuy + item("Sel"))
+        composeRule.setContent {
+            FrenchCoursesTheme {
+                ShoppingScreen(withOne, query = "", actions = ShoppingActions(onChangeQuantity = { item, increase -> changes += item.name to increase }))
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Lait : augmenter la quantité").performClick()
+        composeRule.onNodeWithContentDescription("Lait : diminuer la quantité").performClick()
+        // A single one cannot go lower, and a bought item only shows its quantity.
+        composeRule.onNodeWithContentDescription("Sel : diminuer la quantité").assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("Pain : augmenter la quantité").assertDoesNotExist()
+
+        assertEquals(listOf("Lait" to true, "Lait" to false), changes)
+    }
+
+    @Test
+    fun theQuantityTypedIsShownOnEveryChoice() {
+        val searched =
+            state.copy(
+                suggestions = listOf(ProductSuggestion("seed:pates-completes", "Pâtes complètes", null)),
+                searchedEntry = ItemEntry("pâtes", 500.0, "g"),
+            )
+        composeRule.setContent { FrenchCoursesTheme { ShoppingScreen(searched, query = "500g de pâtes", actions = ShoppingActions()) } }
+
+        composeRule.onNodeWithText("Ajouter « pâtes »").assertIsDisplayed()
+        composeRule.onAllNodesWithText("500 g").assertCountEquals(2)
     }
 
     @Test
@@ -131,7 +167,7 @@ class ShoppingScreenTest {
             var query by remember { mutableStateOf("") }
             FrenchCoursesTheme {
                 ShoppingScreen(
-                    state = state.copy(suggestions = suggestions),
+                    state = state.copy(suggestions = suggestions, searchedEntry = ItemEntry("lai")),
                     query = query,
                     actions =
                         ShoppingActions(

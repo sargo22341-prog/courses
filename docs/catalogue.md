@@ -136,3 +136,7 @@ pour les articles venus de Home Assistant pas encore rattachés), dédoublonne l
 `product_usage` ; le catalogue et les produits personnalisés ne sont pas touchés.
 - Ajouter un produit déjà présent incrémente sa quantité ; ajouter un produit déjà acheté le remet
   « à acheter » (`AddItemUseCase`).
+- Une quantité tapée avec le nom (« 2 pain », « 500g de pâtes ») est retirée avant la recherche
+  (`ItemEntryParser`) : seules les suggestions du nom sont cherchées, et le produit est ajouté avec
+  la quantité. La suggestion « exacte » (celle qu'ajoute « OK » au clavier) tolère le pluriel
+  (`ExactSuggestionFinder`, mêmes formes que `CategoryNameKeys`).

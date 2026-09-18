@@ -89,6 +89,7 @@ class RoomSyncLocalStore
                         importedFromRemote = true,
                         remoteName = remoteName,
                         syncStatus = SyncStatus.SYNCED,
+                        position = listDao.nextPosition(),
                     ),
                 )
             }

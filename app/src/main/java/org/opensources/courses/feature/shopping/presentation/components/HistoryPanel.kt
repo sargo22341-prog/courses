@@ -3,8 +3,10 @@ package org.opensources.courses.feature.shopping.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
@@ -38,12 +40,11 @@ fun HistoryPanel(
     ) {
         item(key = "title") { HistoryTitle() }
         items(history, key = { it.productId }) { product ->
-            SuggestionRow(onClick = { onProductSelected(product) }) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // The title already says these are past additions: the icon is decorative.
-                    Icon(painterResource(R.drawable.ic_history), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    SuggestionLabel(product)
-                }
+            SuggestionRow(onClick = { onProductSelected(product) }, modifier = Modifier.animateItem()) {
+                // The title already says these are past additions: the icon is decorative.
+                Icon(painterResource(R.drawable.ic_history), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.width(12.dp))
+                SuggestionLabel(product)
             }
         }
     }

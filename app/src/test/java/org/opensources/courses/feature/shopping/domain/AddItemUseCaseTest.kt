@@ -72,6 +72,62 @@ class AddItemUseCaseTest {
         }
 
     @Test
+    fun `a typed count is the quantity of a new item`() =
+        runTest {
+            val added = addItem("list", "Pain", quantity = 2.0)
+
+            assertEquals(2.0, added?.quantity ?: 0.0, 0.0)
+            assertNull(added?.unit)
+        }
+
+    @Test
+    fun `a typed measure is kept with its unit`() =
+        runTest {
+            addItem("list", "Pâtes", quantity = 500.0, unit = "g")
+
+            val item = items.getItems("list").single()
+            assertEquals(500.0, item.quantity, 0.0)
+            assertEquals("g", item.unit)
+        }
+
+    @Test
+    fun `a typed quantity adds up with the one waiting in the same unit`() =
+        runTest {
+            addItem("list", "Pain")
+            addItem("list", "pain", quantity = 2.0)
+            addItem("list", "Pâtes", quantity = 500.0, unit = "g")
+            addItem("list", "pâtes", quantity = 250.0, unit = "G")
+
+            val (bread, pasta) = items.getItems("list")
+            assertEquals(3.0, bread.quantity, 0.0)
+            assertEquals(750.0, pasta.quantity, 0.0)
+        }
+
+    @Test
+    fun `a typed quantity in another unit replaces the one waiting`() =
+        runTest {
+            addItem("list", "Farine", quantity = 500.0, unit = "g")
+            addItem("list", "Farine", quantity = 1.0, unit = "kg")
+
+            val item = items.getItems("list").single()
+            assertEquals(1.0, item.quantity, 0.0)
+            assertEquals("kg", item.unit)
+        }
+
+    @Test
+    fun `a purchased product added again with a quantity takes that quantity`() =
+        runTest {
+            val first = addItem("list", "Lait", "id:Lait", quantity = 3.0)!!
+            items.setChecked(first.id, true)
+
+            addItem("list", "Lait", "id:Lait", quantity = 2.0)
+
+            val item = items.getItems("list").single()
+            assertFalse(item.isChecked)
+            assertEquals(2.0, item.quantity, 0.0)
+        }
+
+    @Test
     fun `blank names are ignored`() =
         runTest {
             assertNull(addItem("list", "   "))

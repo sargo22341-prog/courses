@@ -30,6 +30,8 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  * - 3: `shopping_lists.importedFromRemote` and `remoteName` (lists imported from Home Assistant),
  *   table `ha_ignored_lists`. Existing lists are not imported ones.
  * - 4: columns never read are dropped ([CoursesDatabaseMigrations.FROM_3_TO_4]).
+ * - 5: `shopping_lists.position`, the order chosen by the user. Existing lists all get 0 and keep
+ *   their former order (default list first, then by creation).
  */
 @Database(
     entities = [
@@ -42,9 +44,9 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
         HaTrackedListEntity::class,
         HaIgnoredListEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 4, to = 5)],
 )
 abstract class CoursesDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao

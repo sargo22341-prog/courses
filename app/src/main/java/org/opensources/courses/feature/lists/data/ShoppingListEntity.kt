@@ -14,6 +14,8 @@ import org.opensources.courses.feature.lists.domain.ShoppingList
  * than created by the user: it only mirrors the remote list.
  * @property remoteName remote name last applied to an imported list, so that a rename made remotely
  * is told apart from a rename made in the app.
+ * @property position order chosen by the user on the lists screen; local only, Home Assistant has no
+ * order of lists. Lists that share one (all 0 before version 5) keep the former order.
  */
 @Entity(tableName = "shopping_lists")
 data class ShoppingListEntity(
@@ -28,6 +30,7 @@ data class ShoppingListEntity(
     val syncStatus: SyncStatus = SyncStatus.LOCAL_ONLY,
     @ColumnInfo(defaultValue = "0") val importedFromRemote: Boolean = false,
     val remoteName: String? = null,
+    @ColumnInfo(defaultValue = "0") val position: Int = 0,
 )
 
 fun ShoppingListEntity.toDomain(): ShoppingList =

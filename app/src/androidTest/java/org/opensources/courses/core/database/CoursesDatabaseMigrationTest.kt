@@ -118,6 +118,27 @@ class CoursesDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun version4ListsKeepTheirOrderAndGainAPosition() {
+        helper.createDatabase(DB_NAME_V4, 4).use { db ->
+            db.execSQL(
+                "INSERT INTO shopping_lists (localId, name, isDefault, createdAt, updatedAt, remoteId, remoteEntryId, createdByApp, syncStatus, " +
+                    "importedFromRemote, remoteName) VALUES ('l1', 'Courses', 1, 0, 0, NULL, NULL, 0, 'LOCAL_ONLY', 0, NULL)",
+            )
+            db.execSQL(
+                "INSERT INTO shopping_lists (localId, name, isDefault, createdAt, updatedAt, remoteId, remoteEntryId, createdByApp, syncStatus, " +
+                    "importedFromRemote, remoteName) VALUES ('l2', 'BBQ', 0, 5, 5, 'todo.bbq', NULL, 0, 'SYNCED', 1, 'BBQ')",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME_V4, 5, true, *CoursesDatabaseMigrations.ALL).use { db ->
+            db.query("SELECT localId, name, position FROM shopping_lists ORDER BY position ASC, isDefault DESC, createdAt ASC").use { cursor ->
+                val rows = buildList { while (cursor.moveToNext()) add(listOf(cursor.getString(0), cursor.getString(1), cursor.getString(2))) }
+                assertEquals(listOf(listOf("l1", "Courses", "0"), listOf("l2", "BBQ", "0")), rows)
+            }
+        }
+    }
+
     /** The query returns exactly one row, whose columns read as [expected]. */
     private fun SupportSQLiteDatabase.assertRow(
         sql: String,
@@ -140,5 +161,6 @@ class CoursesDatabaseMigrationTest {
         const val DB_NAME = "migration-test.db"
         const val DB_NAME_V2 = "migration-test-v2.db"
         const val DB_NAME_V3 = "migration-test-v3.db"
+        const val DB_NAME_V4 = "migration-test-v4.db"
     }
 }

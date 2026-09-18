@@ -33,7 +33,7 @@
     <string name="shopping_open_settings">Impostazioni</string>
     <string name="shopping_empty_title">La tua lista è vuota</string>
     <string name="shopping_empty_body">Scrivi qui sopra il nome di un prodotto per aggiungerlo.</string>
-    <string name="shopping_all_purchased">Tutto comprato ✓</string>
+    <string name="shopping_all_purchased">Tutto comprato</string>
     <string name="shopping_section_purchased">Comprati</string>
     <plurals name="shopping_purchased_count">
         <item quantity="one">%d articolo comprato</item>
@@ -51,6 +51,9 @@
     <string name="shopping_edit_quantity">Quantità</string>
     <string name="shopping_edit_unit">Unità (facoltativa)</string>
     <string name="shopping_edit_item">Modifica %1$s</string>
+    <string name="shopping_quantity_times">× %1$s</string>
+    <string name="shopping_quantity_decrease">%1$s: diminuisci la quantità</string>
+    <string name="shopping_quantity_increase">%1$s: aumenta la quantità</string>
     <string name="shopping_item_deleted">«%1$s» eliminato</string>
 
     <!-- Categorie (reparti) -->
@@ -95,6 +98,8 @@
     <string name="lists_delete_body">Gli articoli di questa lista verranno eliminati da questo telefono.</string>
     <string name="lists_delete_last">Impossibile eliminare l’ultima lista.</string>
     <string name="lists_actions">Azioni per %1$s</string>
+    <string name="lists_move_up">Sposta su</string>
+    <string name="lists_move_down">Sposta giù</string>
 
     <!-- Impostazioni -->
     <string name="settings_title">Impostazioni</string>

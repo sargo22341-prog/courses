@@ -165,7 +165,8 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 - Vérifier la limite de 600 lignes sur les fichiers modifiés.
 - Si Room ou le schéma change : migration écrite et testée.
 - Si un comportement documenté change : mettre à jour la page de `docs/` concernée (et
-  `README.md` si la présentation de l'application change). Un choix structurant nouveau ou
+  `README.md` et ses traductions `README.<langue>.md` si la présentation de l'application
+  change ; l'anglais est le README par défaut). Un choix structurant nouveau ou
   remplacé : une ADR dans `docs/adr/`.
 - Ne jamais annoncer comme vérifié ce qui ne l'a pas été (ex. synchronisation avec une vraie
   instance Home Assistant).

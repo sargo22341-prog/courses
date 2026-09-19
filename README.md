@@ -1,72 +1,81 @@
 <p align="center">
-  <img src="./docs/icon/courses_icon.svg" width="120" alt="Logo de courses" />
+  <strong>English</strong> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.pt.md">Português</a>
+</p>
+
+<p align="center">
+  <img src="./docs/icon/courses_icon.svg" width="120" alt="courses logo" />
 </p>
 
 <h1 align="center">courses</h1>
 
 <p align="center">
-  Une liste de courses Android simple, rapide et <strong>hors ligne</strong>,<br />
-  avec synchronisation facultative avec Home Assistant.
+  A simple, fast, <strong>offline</strong> Android shopping list,<br />
+  with optional Home Assistant synchronization.
 </p>
 
-## Avertissement
+<p align="center">
+  <a href="https://github.com/sargo22341-prog/courses/releases/latest"><img src="./docs/images/badges/badge_github.png" height="80" alt="Get it on GitHub" /></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/sargo22341-prog/courses"><img src="./docs/images/badges/badge_obtainium.png" height="80" alt="Get it on Obtainium" /></a>
+</p>
+
+## Disclaimer
 
 > [!WARNING]
-> Cette application a été **développée avec l'aide d'une intelligence artificielle**.
-> Le code, les tests et la documentation ont été produits en grande partie par IA puis vérifiés
-> par des tests automatisés, mais tout n'a pas été relu ligne à ligne ni validé dans toutes les
-> situations réelles. Utilisez-la en connaissance de cause et consultez les
-> [limites connues](docs/limites-connues.md).
+> This application was **developed with the help of artificial intelligence**.
+> The code, tests and documentation were largely produced by AI and then checked by automated
+> tests, but not everything has been reviewed line by line or validated in every real-world
+> situation. Use it knowingly and see the [known limitations](docs/limites-connues.md).
 
-## Présentation
+## Overview
 
-**courses** part d'une idée simple : *ouvrir → taper → sélectionner → cocher*. L'application
-démarre directement sur la liste, sans compte, sans configuration et sans écran de chargement.
-Tout est stocké sur le téléphone : on peut consulter et modifier ses listes au fond d'un magasin,
-sans réseau.
+**courses** is built on a simple idea: *open → type → select → check off*. The app opens
+straight on the list, with no account, no setup and no loading screen. Everything is stored on
+the phone: you can view and edit your lists at the back of a store, with no network.
 
-Pour partager une liste avec la famille ou l'afficher sur un tableau de bord, elle peut se
-synchroniser avec les listes `todo` d'une instance **Home Assistant** auto-hébergée. C'est
-entièrement facultatif.
+To share a list with your family or show it on a dashboard, it can sync with the `todo` lists of
+a self-hosted **Home Assistant** instance. This is entirely optional.
 
-Fonctionnalités principales :
+Main features:
 
-- **plusieurs listes**, avec quantités et unités (`12`, `1,5 kg`) ;
-- **autocomplétion instantanée et hors ligne**, tolérante aux fautes de frappe, qui apprend les
-  produits achetés le plus souvent ;
-- **historique** des produits les plus ajoutés, proposé en touchant le champ de recherche vide
-  (désactivable et effaçable dans les réglages) ;
-- **catalogue alimentaire entièrement embarqué** : un catalogue de base écrit à la main et
-  plusieurs milliers de produits générés depuis la taxonomie
-  d'[OpenFoodFacts](https://world.openfoodfacts.org/), livrés avec l'application — rien n'est
-  téléchargé, rien de ce qui est tapé n'est envoyé ;
-- **rangement par rayon** (fruits et légumes, boulangerie, produits laitiers…), facultatif ;
-- **six langues** : français, anglais, allemand, espagnol, italien, portugais ;
-- **Home Assistant (facultatif)** : synchronisation dans les deux sens, en temps réel quand
-  l'application est ouverte, sans perte des modifications faites hors ligne ;
-- thème clair, sombre ou système, Material 3 ;
-- **aucun compte, aucun analytics, aucune dépendance aux services Google Play** : fonctionne sur
-  GrapheneOS.
+- **multiple lists**, with quantities and units (`12`, `1.5 kg`);
+- **instant, offline autocomplete**, tolerant of typos, that learns the products you buy most
+  often;
+- **history** of the most frequently added products, offered when you tap the empty search field
+  (can be disabled and cleared in the settings);
+- **fully built-in food catalog**: a hand-written base catalog plus several thousand products
+  generated from the [OpenFoodFacts](https://world.openfoodfacts.org/) taxonomy, shipped with the
+  app — nothing is downloaded, nothing you type is sent anywhere;
+- **sorting by aisle** (fruit and vegetables, bakery, dairy…), optional;
+- **six languages**: French, English, German, Spanish, Italian, Portuguese;
+- **Home Assistant (optional)**: two-way sync, in real time while the app is open, without losing
+  changes made offline;
+- light, dark or system theme, Material 3;
+- **no account, no analytics, no dependency on Google Play services**: works on GrapheneOS.
 
-### Aperçu
+### Preview
 
-| Premier lancement | Liste de courses | Autocomplétion |
+| First launch | Shopping list | Autocomplete |
 | --- | --- | --- |
-| ![Écran d'accueil et choix de la langue](docs/images/accueil.png) | ![Liste de courses](docs/images/liste.png) | ![Suggestions pendant la saisie](docs/images/autocompletion.png) |
+| ![Welcome screen and language choice](docs/images/accueil.png) | ![Shopping list](docs/images/liste.png) | ![Suggestions while typing](docs/images/autocompletion.png) |
 
-| Rangement par rayon | Thème sombre | Réglages |
+| Sorting by aisle | Dark theme | Settings |
 | --- | --- | --- |
-| ![Articles rangés par catégorie](docs/images/categories.png) | ![Liste en thème sombre](docs/images/sombre.png) | ![Réglages](docs/images/reglages.png) |
+| ![Items sorted by category](docs/images/categories.png) | ![List in dark theme](docs/images/sombre.png) | ![Settings](docs/images/reglages.png) |
 
-Captures prises sur un émulateur avec des données fictives.
+Screenshots taken on an emulator with fictitious data.
 
 ## Installation
 
-Il n'existe pas de version publiée sur un store : l'APK signé de chaque version est joint aux
-releases GitHub du dépôt, ou l'application se compile depuis les sources.
+There is no release on an app store: the signed APK of each version is attached to the
+repository's GitHub releases, or the app can be built from source.
 
-Prérequis : Android Studio récent (JDK 21 embarqué), SDK Android 37, et un téléphone ou un
-émulateur sous **Android 17 (API 37)** minimum.
+Requirements: a recent Android Studio (bundled JDK 21), Android SDK 37, and a phone or emulator
+running **Android 17 (API 37)** or later.
 
 ```powershell
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
@@ -74,64 +83,63 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 .\gradlew.bat :app:installDebug
 ```
 
-Détails, vérifications et release signée : [Développement](docs/developpement.md).
+Details, checks and signed release: [Development](docs/developpement.md).
 
-## Home Assistant en bref
+## Home Assistant in short
 
-1. Dans Home Assistant : Profil → Sécurité → Jetons d'accès longue durée → créer un jeton (le QR
-   code peut être scanné par l'application).
-2. Dans l'application : Réglages → Home Assistant → adresse, token, **Tester la connexion**.
-3. Choisir pour chaque liste : la créer dans Home Assistant, la lier à une liste existante ou la
-   garder locale.
+1. In Home Assistant: Profile → Security → Long-lived access tokens → create a token (the app can
+   scan it as a QR code).
+2. In the app: Settings → Home Assistant → address, token, **Test connection**.
+3. For each list, choose: create it in Home Assistant, link it to an existing list, or keep it
+   local.
 
-Le token est chiffré par le Keystore Android et n'est jamais réaffiché. Guide complet :
+The token is encrypted by the Android Keystore and is never shown again. Full guide:
 [Home Assistant](docs/home-assistant.md).
 
-## Confidentialité
+## Privacy
 
-- Les listes, l'historique d'ajout et les préférences restent sur le téléphone.
-- Aucun service externe n'est contacté sans action de l'utilisateur : le catalogue alimentaire est
-  livré avec l'application.
-- Home Assistant n'est contacté que s'il a été configuré ; c'est le seul serveur que l'application
-  sache joindre.
+- Lists, add history and preferences stay on the phone.
+- No external service is contacted without a user action: the food catalog ships with the app.
+- Home Assistant is only contacted if it has been configured; it is the only server the app can
+  reach.
 
 ## Stack
 
-| Couche | Technologie |
+| Layer | Technology |
 | --- | --- |
-| Langage | Kotlin, coroutines, Flow |
-| Interface | Jetpack Compose, Material 3, Navigation Compose |
-| Données | Room (seule source de vérité), DataStore |
+| Language | Kotlin, coroutines, Flow |
+| UI | Jetpack Compose, Material 3, Navigation Compose |
+| Data | Room (single source of truth), DataStore |
 | Injection | Hilt |
-| Réseau | Retrofit, OkHttp (REST et WebSocket), Kotlin Serialization |
-| Sécurité | Android Keystore (AES-256-GCM) |
-| Scan QR | CameraX + ZXing |
-| Plateforme | Android 17 (API 37) minimum |
+| Network | Retrofit, OkHttp (REST and WebSocket), Kotlin Serialization |
+| Security | Android Keystore (AES-256-GCM) |
+| QR scanning | CameraX + ZXing |
+| Platform | Android 17 (API 37) minimum |
 
 ## Documentation
 
-Toute la documentation est dans [`docs/`](docs/README.md) :
+All documentation (in French) lives in [`docs/`](docs/README.md):
 
-- [Interface](docs/interface.md) · [Fonctionnement hors ligne](docs/hors-ligne.md) ·
-  [Langues](docs/langues.md)
-- [Catalogue et autocomplétion](docs/catalogue.md) · [Catégories](docs/categories.md)
-- [Home Assistant](docs/home-assistant.md) · [Synchronisation](docs/synchronisation.md) ·
-  [Stratégie de conflit](docs/conflits.md)
-- [Architecture](docs/architecture.md) · [Décisions d'architecture (ADR)](docs/adr/README.md)
-- [Sécurité et confidentialité](docs/securite.md) · [Limites connues](docs/limites-connues.md)
-- [Développement](docs/developpement.md) · [Tests](docs/tests.md) ·
-  [Release signée](docs/release.md)
+- [User interface](docs/interface.md) · [Offline operation](docs/hors-ligne.md) ·
+  [Languages](docs/langues.md)
+- [Catalog and autocomplete](docs/catalogue.md) · [Categories](docs/categories.md)
+- [Home Assistant](docs/home-assistant.md) · [Synchronization](docs/synchronisation.md) ·
+  [Conflict strategy](docs/conflits.md)
+- [Architecture](docs/architecture.md) · [Architecture decisions (ADR)](docs/adr/README.md)
+- [Security and privacy](docs/securite.md) · [Known limitations](docs/limites-connues.md)
+- [Development](docs/developpement.md) · [Tests](docs/tests.md) ·
+  [Signed release](docs/release.md)
 
-Règles de contribution (humains et agents) : [`AGENTS.md`](AGENTS.md).
+Contribution rules (humans and agents): [`AGENTS.md`](AGENTS.md).
 
-## Licence
+## License
 
 Copyright © 2026 sargo.
 
-courses est un logiciel libre distribué sous licence **GNU General Public License v3.0** : vous
-pouvez le redistribuer et le modifier selon ses termes ; toute version modifiée et redistribuée
-doit rester sous la même licence. Texte complet : [`LICENSE`](LICENSE).
+courses is free software distributed under the **GNU General Public License v3.0**: you may
+redistribute and modify it under its terms; any modified version you redistribute must remain
+under the same license. Full text: [`LICENSE`](LICENSE).
 
-Les données du catalogue proviennent d'[Open Food Facts](https://world.openfoodfacts.org) et
-restent sous licence [ODbL](https://opendatacommons.org/licenses/odbl/1-0/). Les fichiers de
-`app/src/main/assets/catalog/` sont une base dérivée produite par `scripts/generate-catalog.py`.
+The catalog data comes from [Open Food Facts](https://world.openfoodfacts.org) and remains under
+the [ODbL](https://opendatacommons.org/licenses/odbl/1-0/) license. The files in
+`app/src/main/assets/catalog/` are a derived database produced by `scripts/generate-catalog.py`.

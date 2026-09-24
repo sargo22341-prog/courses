@@ -11,6 +11,8 @@ import org.opensources.courses.feature.catalog.data.local.CatalogProductEntity
 import org.opensources.courses.feature.catalog.data.local.ProductUsageEntity
 import org.opensources.courses.feature.homeassistant.data.local.HaIgnoredListDao
 import org.opensources.courses.feature.homeassistant.data.local.HaIgnoredListEntity
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationDao
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationEntity
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListEntity
 import org.opensources.courses.feature.lists.data.ShoppingListDao
@@ -32,6 +34,8 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  * - 4: columns never read are dropped ([CoursesDatabaseMigrations.FROM_3_TO_4]).
  * - 5: `shopping_lists.position`, the order chosen by the user. Existing lists all get 0 and keep
  *   their former order (default list first, then by creation).
+ * - 6: table `ha_list_integrations`, the integration of each Home Assistant list without description
+ *   (Mealie lists are read differently). Empty at first: the entity registry is asked at the next sync.
  */
 @Database(
     entities = [
@@ -43,10 +47,16 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
         SyncOperationEntity::class,
         HaTrackedListEntity::class,
         HaIgnoredListEntity::class,
+        HaListIntegrationEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 4, to = 5)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
+    ],
 )
 abstract class CoursesDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
@@ -60,6 +70,8 @@ abstract class CoursesDatabase : RoomDatabase() {
     abstract fun haTrackedListDao(): HaTrackedListDao
 
     abstract fun haIgnoredListDao(): HaIgnoredListDao
+
+    abstract fun haListIntegrationDao(): HaListIntegrationDao
 
     companion object {
         const val NAME = "courses.db"

@@ -5,9 +5,9 @@ ksp = "2.3.12"
 
 composeBom = "2026.09.00"
 activityCompose = "1.13.0"
-coreKtx = "1.19.0"
+coreKtx = "1.19.1"
 lifecycle = "2.11.0"
-navigationCompose = "2.10.1"
+navigationCompose = "2.10.2"
 
 hilt = "2.60.1"
 hiltAndroidx = "1.4.0"
@@ -71,4 +71,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
-gradle-versions = { id = "com.github.ben-manes.versions", version.ref = "gradleVersions" }
+gradle-versions = { id = "io.github.ben-manes.versions", version.ref = "gradleVersions" }

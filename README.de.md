@@ -57,7 +57,8 @@ Wichtigste Funktionen:
 - **Sortierung nach Abteilung** (Obst und Gemüse, Bäckerei, Milchprodukte…), optional;
 - **sechs Sprachen**: Französisch, Englisch, Deutsch, Spanisch, Italienisch, Portugiesisch;
 - **Home Assistant (optional)**: Synchronisierung in beide Richtungen, in Echtzeit bei geöffneter
-  App, ohne Verlust offline vorgenommener Änderungen;
+  App, ohne Verlust offline vorgenommener Änderungen, auch mit **Mealie**-Einkaufslisten (Mengen
+  und Produkte aus dem Mealie-Text gelesen, ohne die Liste in Mealie zu beschädigen);
 - helles, dunkles oder System-Design, Material 3;
 - **kein Konto, keine Analyse, keine Abhängigkeit von Google-Play-Diensten**: funktioniert unter
   GrapheneOS.
@@ -96,7 +97,8 @@ Details, Prüfungen und signiertes Release: [Entwicklung](docs/developpement.md)
    kann ihn als QR-Code scannen).
 2. In der App: Einstellungen → Home Assistant → Adresse, Token, **Verbindung testen**.
 3. Für jede Liste wählen: in Home Assistant anlegen, mit einer bestehenden Liste verknüpfen oder
-   lokal behalten.
+   lokal behalten. **Meine Listen → Neue Liste → Home-Assistant-Liste importieren** holt eine
+   bestehende Liste (zum Beispiel eine Mealie-Liste) verknüpft in die App.
 
 Der Token wird vom Android Keystore verschlüsselt und nie wieder angezeigt. Vollständige
 Anleitung: [Home Assistant](docs/home-assistant.md).

@@ -33,6 +33,7 @@ import org.opensources.courses.R
 import org.opensources.courses.core.designsystem.component.BackTopBar
 import org.opensources.courses.core.designsystem.component.ConfirmDialog
 import org.opensources.courses.feature.lists.domain.ShoppingList
+import org.opensources.courses.feature.lists.presentation.components.ImportRemoteListDialog
 import org.opensources.courses.feature.lists.presentation.components.ListDragHandle
 import org.opensources.courses.feature.lists.presentation.components.ListRowActions
 import org.opensources.courses.feature.lists.presentation.components.ShoppingListRow
@@ -59,6 +60,8 @@ fun ListsRoute(
     val lists by viewModel.lists.collectAsStateWithLifecycle()
     val lastListWarning by viewModel.lastListWarning.collectAsStateWithLifecycle()
     val createdListId by viewModel.createdListId.collectAsStateWithLifecycle()
+    val canImportRemoteList by viewModel.canImportRemoteList.collectAsStateWithLifecycle()
+    val importState by viewModel.importState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.lists_delete_last)
     var dialog by remember { mutableStateOf<ListsDialog?>(null) }
@@ -140,6 +143,15 @@ fun ListsRoute(
                     viewModel.create(name)
                 },
                 onDismiss = { dialog = null },
+                onImport =
+                    if (canImportRemoteList) {
+                        {
+                            dialog = null
+                            viewModel.openImport()
+                        }
+                    } else {
+                        null
+                    },
             )
         is ListsDialog.Rename ->
             ListNameDialog(
@@ -164,5 +176,14 @@ fun ListsRoute(
                 onDismiss = { dialog = null },
             )
         null -> Unit
+    }
+
+    if (importState != ListImportUiState.Closed) {
+        ImportRemoteListDialog(
+            state = importState,
+            onImport = viewModel::importList,
+            onRetry = viewModel::openImport,
+            onDismiss = viewModel::closeImport,
+        )
     }
 }

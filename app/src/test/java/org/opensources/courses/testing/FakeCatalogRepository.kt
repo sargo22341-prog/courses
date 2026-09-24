@@ -80,6 +80,16 @@ class FakeCatalogRepository(
         return created
     }
 
+    /** Products whose deletion was asked, in order. */
+    val deletionRequests = mutableListOf<String>()
+
+    /** The fake knows no list item: a custom product is deleted when it has no usage. */
+    override suspend fun deleteUnusedCustomProduct(productId: String) {
+        deletionRequests += productId
+        if ((usage[productId] ?: 0) == 0) candidates.removeAll { it.product.id == productId && it.product.source == CatalogSource.CUSTOM }
+        count.value = candidates.size
+    }
+
     override suspend fun recordUsage(productId: String) {
         usage[productId] = (usage[productId] ?: 0) + 1
         usageVersion.value++
@@ -115,6 +125,11 @@ class FakeCatalogRepository(
 
     override suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef> =
         refs().filter { it.normalizedName in normalizedNames }
+
+    override suspend fun findByNormalizedAliases(normalizedAliases: Set<String>): List<CatalogProductRef> =
+        candidates.flatMap { candidate ->
+            candidate.normalizedAliases.filter { it in normalizedAliases }.map { CatalogProductRef(candidate.product.id, it, candidate.product.source) }
+        }
 
     override suspend fun findByIds(ids: Set<String>): List<CatalogProductRef> = refs().filter { it.id in ids }
 

@@ -41,6 +41,7 @@ décision, ses conséquences et les alternatives écartées.
 | [0023](0023-synchronisation-periodique-au-premier-plan.md) | Synchronisation périodique au premier plan seulement | acceptée |
 | [0024](0024-synchronisation-ciblee.md) | Synchronisation ciblée : listes relues seulement si nécessaire | acceptée |
 | [0025](0025-catalogue-genere-a-la-compilation.md) | Catalogue OpenFoodFacts généré avant la compilation | acceptée |
+| [0026](0026-listes-mealie.md) | Listes Mealie : texte lu comme quantité + aliment, intégration demandée au registre | acceptée |
 
 ## Modèle
 

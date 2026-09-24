@@ -12,7 +12,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import org.opensources.courses.core.sync.ImportableLists
 import org.opensources.courses.core.sync.RemoteChange
+import org.opensources.courses.core.sync.RemoteListChoice
+import org.opensources.courses.core.sync.RemoteListImport
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncCoordinator
 import org.opensources.courses.core.sync.SyncOutcome
@@ -70,6 +73,17 @@ class FakeHaListLinkRepository : HaListLinkRepository {
         linked[listId] = entityId
     }
 
+    /** Home Assistant lists imported, by entity id, with the name given. */
+    val imported = linkedMapOf<String, String>()
+
+    override suspend fun importList(
+        entityId: String,
+        remoteName: String,
+    ): String {
+        imported.putIfAbsent(entityId, remoteName)
+        return "imported:$entityId"
+    }
+
     override suspend fun createInHomeAssistant(listId: String) {
         created += listId
     }
@@ -84,5 +98,23 @@ class FakeHaListLinkRepository : HaListLinkRepository {
 
     override suspend fun unlinkAll() {
         unlinkedAll = true
+    }
+}
+
+/** Remote lists offered by the test: [result] answers every reading, held while [pause] is set. */
+class FakeRemoteListImport : RemoteListImport {
+    override val isAvailable = MutableStateFlow(true)
+    var result: ImportableLists = ImportableLists.Loaded(emptyList())
+    var pause: CompletableDeferred<Unit>? = null
+    val imported = mutableListOf<RemoteListChoice>()
+
+    override suspend fun importableLists(): ImportableLists {
+        pause?.await()
+        return result
+    }
+
+    override suspend fun importList(list: RemoteListChoice): String {
+        imported += list
+        return "imported:${list.remoteId}"
     }
 }

@@ -55,7 +55,8 @@ Funcionalidades principais:
 - **organização por secção** (frutas e legumes, padaria, laticínios…), opcional;
 - **seis idiomas**: francês, inglês, alemão, espanhol, italiano, português;
 - **Home Assistant (opcional)**: sincronização nos dois sentidos, em tempo real com a aplicação
-  aberta, sem perder as alterações feitas offline;
+  aberta, sem perder as alterações feitas offline, listas de compras do **Mealie** incluídas
+  (quantidades e produtos lidos no texto do Mealie, sem estragar a lista no Mealie);
 - tema claro, escuro ou do sistema, Material 3;
 - **sem conta, sem análises, sem dependência dos serviços Google Play**: funciona no GrapheneOS.
 
@@ -93,7 +94,8 @@ Detalhes, verificações e release assinada: [Desenvolvimento](docs/developpemen
    aplicação pode lê-lo como código QR).
 2. Na aplicação: Definições → Home Assistant → endereço, token, **Testar a ligação**.
 3. Escolher para cada lista: criá-la no Home Assistant, associá-la a uma lista existente ou
-   mantê-la local.
+   mantê-la local. **As minhas listas → Nova lista → Importar uma lista do Home Assistant**
+   acrescenta uma lista existente (uma lista do Mealie, por exemplo), associada.
 
 O token é cifrado pelo Keystore do Android e nunca volta a ser mostrado. Guia completo:
 [Home Assistant](docs/home-assistant.md).

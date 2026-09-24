@@ -70,3 +70,12 @@ Le produit donne à l'article son rayon et sa catégorie OpenFoodFacts (identifi
 renommé entre-temps : ce n'est pas une modification synchronisée, rien n'est envoyé à Home
 Assistant. Renommer un article (dans l'application ou dans Home Assistant) retire son lien, sauf si
 seules la casse, les accents ou la ponctuation changent ; il est retrouvé au rattachement suivant.
+
+**Articles des listes Mealie** : leur texte enveloppe l'aliment dans des mots de recette (« gousse
+ail », « graines de sésame ou selon le goût »). À la synchronisation, ils sont rattachés au produit
+du catalogue de base ou OpenFoodFacts que nomme la plus longue suite de mots de leur texte, par son
+nom ou un alias, au singulier ou au pluriel (`FindProductInTextUseCase`, `ProductNameWindows`) ; un
+produit personnalisé n'est jamais choisi ainsi. Leur nom ne portant pas celui du produit, ils sont
+rangés par le produit associé ([Rangement d'un article](#rangement-dun-article), étape 2). Un
+article Mealie encore rattaché à un produit personnalisé est de nouveau cherché à chaque
+synchronisation ([Home Assistant](home-assistant.md#listes-mealie)).

@@ -12,6 +12,18 @@ interface HaListLinkRepository {
         entityId: String,
     )
 
+    /**
+     * Adds to the app, linked, the Home Assistant list [entityId] under its name [remoteName] (or a
+     * free variant, « Courses 2 ») and returns the id of the new list. Its items arrive with the next
+     * synchronisation. It is not an "all lists" import: it stays when that mode is left, and deleting
+     * it in the app keeps it in Home Assistant, unless this app created it there. A deletion of that
+     * list not sent yet is cancelled. A list already linked to [entityId] is returned instead, unchanged.
+     */
+    suspend fun importList(
+        entityId: String,
+        remoteName: String,
+    ): String
+
     /** Queues the creation of a Home Assistant list for [listId]. */
     suspend fun createInHomeAssistant(listId: String)
 
@@ -26,7 +38,8 @@ interface HaListLinkRepository {
 
     /**
      * Home Assistant is forgotten: every list stays on this phone, unlinked, and every pending
-     * operation is dropped. Lists are not marked as ignored, so connecting again offers them anew.
+     * operation is dropped, as is the integration known of each Home Assistant list (another server
+     * may use the same entity ids). Lists are not marked as ignored, so connecting again offers them anew.
      */
     suspend fun unlinkAll()
 }

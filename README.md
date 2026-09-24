@@ -53,7 +53,8 @@ Main features:
 - **sorting by aisle** (fruit and vegetables, bakery, dairy…), optional;
 - **six languages**: French, English, German, Spanish, Italian, Portuguese;
 - **Home Assistant (optional)**: two-way sync, in real time while the app is open, without losing
-  changes made offline;
+  changes made offline, including **Mealie** shopping lists (quantities and products read from
+  Mealie's text, without breaking the list in Mealie);
 - light, dark or system theme, Material 3;
 - **no account, no analytics, no dependency on Google Play services**: works on GrapheneOS.
 
@@ -91,7 +92,8 @@ Details, checks and signed release: [Development](docs/developpement.md).
    scan it as a QR code).
 2. In the app: Settings → Home Assistant → address, token, **Test connection**.
 3. For each list, choose: create it in Home Assistant, link it to an existing list, or keep it
-   local.
+   local. **My lists → New list → Import a Home Assistant list** brings an existing list (a Mealie
+   list, for instance) into the app, linked.
 
 The token is encrypted by the Android Keystore and is never shown again. Full guide:
 [Home Assistant](docs/home-assistant.md).

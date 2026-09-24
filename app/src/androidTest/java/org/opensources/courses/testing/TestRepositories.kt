@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import org.opensources.courses.core.database.CoursesDatabase
 import org.opensources.courses.core.database.RoomTransactionRunner
+import org.opensources.courses.core.sync.ImportableLists
 import org.opensources.courses.core.sync.RemoteChange
+import org.opensources.courses.core.sync.RemoteListChoice
+import org.opensources.courses.core.sync.RemoteListImport
 import org.opensources.courses.core.sync.RemoteSyncEngine
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
@@ -30,11 +33,11 @@ class TestRepositories(
     private val transactions = RoomTransactionRunner(database)
     private val listDao = database.shoppingListDao()
     private val itemDao = database.shoppingItemDao()
-    private val writer = HaLocalListWriter(listDao, itemDao, database.haIgnoredListDao(), queue, clock)
+    private val writer = HaLocalListWriter(listDao, itemDao, database.haIgnoredListDao(), database.haTrackedListDao(), queue, clock)
     val lists = ShoppingListRepositoryImpl(listDao, queue, remoteSync, transactions, clock)
     val items = ShoppingItemRepositoryImpl(itemDao, listDao, queue, transactions, clock)
-    val links = HaListLinkRepositoryImpl(listDao, itemDao, database.haTrackedListDao(), writer, queue, transactions, clock)
-    val syncStore = RoomSyncLocalStore(listDao, itemDao, database.haTrackedListDao(), writer, queue, transactions, clock)
+    val links = HaListLinkRepositoryImpl(listDao, itemDao, database.haTrackedListDao(), database.haListIntegrationDao(), writer, queue, transactions, clock)
+    val syncStore = RoomSyncLocalStore(listDao, itemDao, database.haTrackedListDao(), database.haListIntegrationDao(), writer, queue, transactions, clock)
     val catalog = CatalogRepositoryImpl(database.catalogDao(), transactions, clock)
 
     companion object {
@@ -60,4 +63,20 @@ class FakeRemoteSyncEngine(
     override suspend fun synchronizesNewLists(): Boolean = newListsSynchronized
 
     override suspend fun synchronize(request: SyncRequest): SyncOutcome = SyncOutcome.Skipped
+}
+
+/**
+ * Home Assistant lists offered for import by the test; the chosen one is imported by the real
+ * [HaListLinkRepositoryImpl], on Room.
+ */
+class TestRemoteListImport(
+    private val links: HaListLinkRepositoryImpl,
+    available: Boolean,
+    var lists: List<RemoteListChoice> = emptyList(),
+) : RemoteListImport {
+    override val isAvailable: Flow<Boolean> = flowOf(available)
+
+    override suspend fun importableLists(): ImportableLists = ImportableLists.Loaded(lists)
+
+    override suspend fun importList(list: RemoteListChoice): String = links.importList(list.remoteId, list.name)
 }

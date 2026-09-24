@@ -4,10 +4,13 @@ import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.data.local.HaIgnoredListDao
 import org.opensources.courses.feature.homeassistant.data.local.HaIgnoredListEntity
+import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
+import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.lists.data.ShoppingListDao
 import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.data.ShoppingItemDao
 import java.time.Clock
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -20,9 +23,44 @@ class HaLocalListWriter
         private val listDao: ShoppingListDao,
         private val itemDao: ShoppingItemDao,
         private val ignoredDao: HaIgnoredListDao,
+        private val trackedDao: HaTrackedListDao,
         private val queue: SyncQueue,
         private val clock: Clock,
     ) {
+        /**
+         * Adds a list linked to the Home Assistant list [entityId], named [remoteName] or a free variant
+         * of it (« Courses 2 »), and returns its id. Its items arrive with the next synchronisation. A
+         * list [importedFromRemote] was added by the "all lists" mode: its name follows Home Assistant
+         * and it leaves the phone with that mode.
+         */
+        suspend fun insertLinkedList(
+            entityId: String,
+            remoteName: String,
+            importedFromRemote: Boolean,
+        ): String {
+            val lists = listDao.getAll()
+            val tracked = trackedDao.getByEntityId(entityId)
+            val now = clock.millis()
+            val list =
+                ShoppingListEntity(
+                    localId = UUID.randomUUID().toString(),
+                    name = HaListNameAllocator.uniqueName(remoteName, lists.map { it.name }),
+                    isDefault = lists.none { it.isDefault },
+                    createdAt = now,
+                    updatedAt = now,
+                    remoteId = entityId,
+                    // A list this app created and that the user deletes is still deleted in Home Assistant.
+                    remoteEntryId = tracked?.configEntryId,
+                    createdByApp = tracked != null,
+                    importedFromRemote = importedFromRemote,
+                    remoteName = remoteName.takeIf { importedFromRemote },
+                    syncStatus = SyncStatus.SYNCED,
+                    position = listDao.nextPosition(),
+                )
+            listDao.insert(list)
+            return list.localId
+        }
+
         /** Stops synchronising the list; it stays on this phone with its items. */
         suspend fun unlink(list: ShoppingListEntity) {
             detachItems(list.localId, SyncStatus.LOCAL_ONLY)

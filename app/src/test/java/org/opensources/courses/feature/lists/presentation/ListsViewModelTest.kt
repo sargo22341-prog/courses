@@ -1,5 +1,6 @@
 package org.opensources.courses.feature.lists.presentation
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -8,6 +9,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.opensources.courses.core.sync.ImportableLists
+import org.opensources.courses.core.sync.RemoteListChoice
+import org.opensources.courses.core.sync.SyncFailure
+import org.opensources.courses.testing.FakeRemoteListImport
 import org.opensources.courses.testing.FakeShoppingListRepository
 import org.opensources.courses.testing.MainDispatcherRule
 
@@ -16,8 +21,10 @@ class ListsViewModelTest {
     val main = MainDispatcherRule()
 
     private val repository = FakeShoppingListRepository()
+    private val remoteImport = FakeRemoteListImport()
+
     // Created once the rule installed the main dispatcher.
-    private val viewModel by lazy { ListsViewModel(repository) }
+    private val viewModel by lazy { ListsViewModel(repository, remoteImport) }
 
     @Test
     fun `a created list is offered to be opened once`() =
@@ -77,5 +84,56 @@ class ListsViewModelTest {
 
             viewModel.lastListWarningShown()
             assertFalse(viewModel.lastListWarning.value)
+        }
+
+    @Test
+    fun `the import is offered only when the remote allows it`() =
+        runTest {
+            backgroundScope.launch(main.dispatcher) { viewModel.canImportRemoteList.collect {} }
+            assertTrue(viewModel.canImportRemoteList.value)
+
+            remoteImport.isAvailable.value = false
+            assertFalse(viewModel.canImportRemoteList.value)
+        }
+
+    @Test
+    fun `an imported list is offered to be opened once and the dialog closes`() =
+        runTest {
+            val mealie = RemoteListChoice("todo.mealie", "Mealie")
+            remoteImport.result = ImportableLists.Loaded(listOf(mealie))
+
+            viewModel.openImport()
+            assertEquals(ListImportUiState.Choosing(listOf(mealie)), viewModel.importState.value)
+
+            viewModel.importList(mealie)
+            assertEquals(listOf(mealie), remoteImport.imported)
+            assertEquals("imported:todo.mealie", viewModel.createdListId.value)
+            assertEquals(ListImportUiState.Closed, viewModel.importState.value)
+        }
+
+    @Test
+    fun `a failed reading is shown and can be retried`() =
+        runTest {
+            remoteImport.result = ImportableLists.Failed(SyncFailure.UNREACHABLE)
+            viewModel.openImport()
+            assertEquals(ListImportUiState.Failed(SyncFailure.UNREACHABLE), viewModel.importState.value)
+
+            remoteImport.result = ImportableLists.Loaded(emptyList())
+            viewModel.openImport()
+            assertEquals(ListImportUiState.Choosing(emptyList()), viewModel.importState.value)
+        }
+
+    @Test
+    fun `a reading answered after the dialog was closed does not open it again`() =
+        runTest {
+            remoteImport.pause = CompletableDeferred()
+            viewModel.openImport()
+            assertEquals(ListImportUiState.Loading, viewModel.importState.value)
+
+            viewModel.closeImport()
+            remoteImport.pause?.complete(Unit)
+
+            assertEquals(ListImportUiState.Closed, viewModel.importState.value)
+            assertTrue(remoteImport.imported.isEmpty())
         }
 }

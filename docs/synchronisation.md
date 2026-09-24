@@ -69,6 +69,10 @@ liste est en attente ou si une liste liée n'y figure pas. La première requête
 des articles, qui vérifie le token tout autant. Des listes reprises n'importent ni ne retirent
 jamais de liste.
 
+Les articles de chaque liste sont lus et écrits dans le format de celle-ci (`HaItemFormat`) :
+quantité dans la description (Local To-do), quantité en tête du texte (listes Mealie, reconnues
+par le registre des entités de Home Assistant, [ADR 0026](adr/0026-listes-mealie.md)) ou nom seul.
+
 Liste par liste :
 
 1. créer la liste distante si un `CREATE_LIST` est en attente ;

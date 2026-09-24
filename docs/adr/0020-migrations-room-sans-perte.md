@@ -23,6 +23,8 @@ Historique :
 | 2 | `catalog_products.groceryCategory` (rayons) |
 | 3 | `shopping_lists.importedFromRemote`, `shopping_lists.remoteName`, table `ha_ignored_lists` |
 | 4 | colonnes jamais lues supprimées sur place (`ALTER TABLE … DROP COLUMN`) : `catalog_products.brand` et `parentId`, `shopping_items.version`, `sync_operations.lastError`, `ha_tracked_lists.name` et `createdAt` |
+| 5 | `shopping_lists.position` (ordre choisi par l'utilisateur) |
+| 6 | table `ha_list_integrations` (intégration de chaque liste Home Assistant sans description, [ADR 0026](0026-listes-mealie.md)) |
 
 ## Conséquences
 

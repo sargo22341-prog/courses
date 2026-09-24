@@ -56,6 +56,8 @@ class CatalogRepositoryImpl
                         .toDomain()
             }
 
+        override suspend fun deleteUnusedCustomProduct(productId: String) = dao.deleteUnusedCustomProduct(productId)
+
         override suspend fun recordUsage(productId: String) = dao.recordUsage(productId, clock.millis())
 
         override fun observeFrequentProducts(limit: Int): Flow<List<ProductSuggestion>> =
@@ -69,6 +71,9 @@ class CatalogRepositoryImpl
 
         override suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef> =
             if (normalizedNames.isEmpty()) emptyList() else dao.findRefsByNormalizedNames(normalizedNames.toList()).map { it.toDomain() }
+
+        override suspend fun findByNormalizedAliases(normalizedAliases: Set<String>): List<CatalogProductRef> =
+            if (normalizedAliases.isEmpty()) emptyList() else dao.findRefsByNormalizedAliases(normalizedAliases.toList()).map { it.toDomain() }
 
         override suspend fun findByIds(ids: Set<String>): List<CatalogProductRef> =
             if (ids.isEmpty()) emptyList() else dao.findRefsByIds(ids.toList()).map { it.toDomain() }

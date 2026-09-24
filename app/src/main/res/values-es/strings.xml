@@ -10,6 +10,7 @@
     <string name="action_clear">Borrar</string>
     <string name="action_close">Cerrar</string>
     <string name="action_undo">Deshacer</string>
+    <string name="action_retry">Reintentar</string>
     <string name="open_app_settings">Abrir los ajustes de la aplicación</string>
 
     <!-- Escáner de código QR -->
@@ -100,6 +101,13 @@
     <string name="lists_actions">Acciones para %1$s</string>
     <string name="lists_move_up">Subir</string>
     <string name="lists_move_down">Bajar</string>
+    <string name="lists_import_action">Importar una lista de Home Assistant</string>
+    <string name="lists_import_title">Importar desde Home Assistant</string>
+    <string name="lists_import_intro">La lista sigue vinculada: los cambios se sincronizan en ambos sentidos.</string>
+    <string name="lists_import_empty">No queda ninguna lista de Home Assistant por importar.</string>
+    <string name="lists_import_error_unreachable">No se puede acceder a Home Assistant.\nTus listas siguen disponibles en este teléfono.</string>
+    <string name="lists_import_error_unauthorized">Home Assistant ha rechazado el token.\nTus listas siguen disponibles en este teléfono.</string>
+    <string name="lists_import_error">No se han podido leer las listas de Home Assistant.\nTus listas siguen disponibles en este teléfono.</string>
 
     <!-- Ajustes -->
     <string name="settings_title">Ajustes</string>

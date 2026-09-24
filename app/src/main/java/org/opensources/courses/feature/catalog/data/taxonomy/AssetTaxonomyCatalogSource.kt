@@ -45,7 +45,7 @@ class AssetTaxonomyCatalogSource
              * it must be imported. `scripts/generate-catalog.py` reads this line and increases it,
              * here and in the files it writes, when the products it generates really changed.
              */
-            const val VERSION = 1
+            const val VERSION = 2
 
             fun assetPath(language: AppLanguage): String = "catalog/taxonomy-${language.tag}.json"
         }

@@ -11,21 +11,18 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.opensources.courses.core.sync.RemoteChange
+import org.opensources.courses.feature.homeassistant.data.remote.HaWebSocketProtocol.string
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
@@ -97,9 +94,9 @@ class HomeAssistantWebSocketClient
                             webSocket: WebSocket,
                             text: String,
                         ) {
-                            val message = parse(text) ?: return
+                            val message = HaWebSocketProtocol.parse(json, text) ?: return
                             when (message.string("type")) {
-                                "auth_required" -> webSocket.send(authMessage(credentials.token))
+                                "auth_required" -> webSocket.send(HaWebSocketProtocol.authMessage(credentials.token))
                                 "auth_ok" -> entityBySubscription.forEach { (id, entityId) -> webSocket.send(subscribeMessage(id, entityId)) }
                                 "auth_invalid" -> close(HomeAssistantException(HaErrorKind.UNAUTHORIZED))
                                 "event" -> trySend(RemoteChange.ItemsChanged(changedLists(message, entityBySubscription)))
@@ -122,14 +119,8 @@ class HomeAssistantWebSocketClient
                             close(HomeAssistantException(HaErrorKind.UNREACHABLE, t))
                         }
                     }
-                val request =
-                    try {
-                        Request.Builder().url(credentials.baseUrl.trimEnd('/') + WEBSOCKET_PATH).build()
-                    } catch (exception: IllegalArgumentException) {
-                        throw HomeAssistantException(HaErrorKind.INVALID_URL, exception)
-                    }
-                val socket = socketClient.newWebSocket(request, listener)
-                awaitClose { socket.close(NORMAL_CLOSURE, null) }
+                val socket = socketClient.newWebSocket(HaWebSocketProtocol.request(credentials), listener)
+                awaitClose { socket.close(HaWebSocketProtocol.NORMAL_CLOSURE, null) }
             }.buffer(Channel.UNLIMITED)
         }
 
@@ -141,24 +132,6 @@ class HomeAssistantWebSocketClient
             val entityId = (event["id"] as? JsonPrimitive)?.intOrNull?.let(entityBySubscription::get)
             return if (entityId != null) setOf(entityId) else entityBySubscription.values.toSet()
         }
-
-        /** A frame that is not a JSON object cannot announce a to-do change: it is ignored. */
-        private fun parse(text: String): JsonObject? =
-            try {
-                json.parseToJsonElement(text).jsonObject
-            } catch (_: SerializationException) {
-                null
-            } catch (_: IllegalArgumentException) {
-                null
-            }
-
-        private fun JsonObject.string(key: String): String? = (get(key) as? JsonPrimitive)?.contentOrNull
-
-        private fun authMessage(token: String): String =
-            buildJsonObject {
-                put("type", "auth")
-                put("access_token", token)
-            }.toString()
 
         private fun subscribeMessage(
             id: Int,
@@ -173,8 +146,6 @@ class HomeAssistantWebSocketClient
         private fun retryDelayMillis(failures: Int): Long = (FIRST_RETRY_MILLIS shl failures.coerceAtMost(MAX_BACKOFF_STEPS)).coerceAtMost(MAX_RETRY_MILLIS)
 
         private companion object {
-            const val WEBSOCKET_PATH = "/api/websocket"
-            const val NORMAL_CLOSURE = 1000
             const val FIRST_SUBSCRIPTION_ID = 1
             const val PING_INTERVAL_SECONDS = 30L
             const val FIRST_RETRY_MILLIS = 5_000L

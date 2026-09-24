@@ -8,11 +8,12 @@ import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.feature.homeassistant.data.HaLocalListWriter
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationDao
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationEntity
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListEntity
 import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.lists.data.ShoppingListDao
-import org.opensources.courses.feature.lists.data.ShoppingListEntity
 import org.opensources.courses.feature.shopping.data.ShoppingItemDao
 import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
 import org.opensources.courses.feature.shopping.data.renamed
@@ -28,6 +29,7 @@ class RoomSyncLocalStore
         private val listDao: ShoppingListDao,
         private val itemDao: ShoppingItemDao,
         private val trackedDao: HaTrackedListDao,
+        private val integrationDao: HaListIntegrationDao,
         private val writer: HaLocalListWriter,
         private val queue: SyncQueue,
         private val transactions: TransactionRunner,
@@ -43,7 +45,7 @@ class RoomSyncLocalStore
 
         override suspend fun items(listLocalId: String): List<SyncItemRef> =
             itemDao.getAllForList(listLocalId).map {
-                SyncItemRef(it.localId, it.listLocalId, it.name, it.quantity, it.unit, it.isChecked, it.remoteId, it.isDeleted, it.syncStatus)
+                SyncItemRef(it.localId, it.listLocalId, it.name, it.quantity, it.unit, it.isChecked, it.remoteId, it.isDeleted, it.syncStatus, it.catalogProductId)
             }
 
         override suspend fun setListRemote(
@@ -67,31 +69,20 @@ class RoomSyncLocalStore
 
         override suspend fun ignoreList(entityId: String) = writer.ignore(entityId)
 
+        override suspend fun knownIntegrations(entityIds: Collection<String>): Map<String, String?> =
+            if (entityIds.isEmpty()) emptyMap() else integrationDao.getByEntityIds(entityIds.distinct()).associate { it.entityId to it.integration }
+
+        override suspend fun saveIntegrations(integrations: Map<String, String?>) {
+            if (integrations.isNotEmpty()) integrationDao.upsert(integrations.map { (entityId, integration) -> HaListIntegrationEntity(entityId, integration) })
+        }
+
         override suspend fun importList(
             entityId: String,
             remoteName: String,
         ) {
             transactions.inTransaction {
-                val lists = listDao.getAll()
-                if (lists.any { it.remoteId == entityId } || entityId in writer.ignoredEntityIds()) return@inTransaction
-                val tracked = trackedDao.getByEntityId(entityId)
-                val now = clock.millis()
-                listDao.insert(
-                    ShoppingListEntity(
-                        localId = UUID.randomUUID().toString(),
-                        name = HaListNameAllocator.uniqueName(remoteName, lists.map { it.name }),
-                        isDefault = lists.none { it.isDefault },
-                        createdAt = now,
-                        updatedAt = now,
-                        remoteId = entityId,
-                        remoteEntryId = tracked?.configEntryId,
-                        createdByApp = tracked != null,
-                        importedFromRemote = true,
-                        remoteName = remoteName,
-                        syncStatus = SyncStatus.SYNCED,
-                        position = listDao.nextPosition(),
-                    ),
-                )
+                if (listDao.getAll().any { it.remoteId == entityId } || entityId in writer.ignoredEntityIds()) return@inTransaction
+                writer.insertLinkedList(entityId, remoteName, importedFromRemote = true)
             }
         }
 
@@ -181,9 +172,12 @@ class RoomSyncLocalStore
             quantity: Double,
             unit: String?,
             checked: Boolean,
+            catalogProductId: String?,
         ) = withoutPendingChanges(itemLocalId) { item ->
+            val renamed = item.renamed(name)
             itemDao.update(
-                item.renamed(name).copy(
+                renamed.copy(
+                    catalogProductId = catalogProductId ?: renamed.catalogProductId,
                     quantity = quantity,
                     unit = unit,
                     isChecked = checked,
@@ -219,6 +213,12 @@ class RoomSyncLocalStore
                 ),
             )
         }
+
+        override suspend fun linkItemToProduct(
+            itemLocalId: String,
+            expectedName: String,
+            catalogProductId: String,
+        ): Boolean = itemDao.updateCatalogProduct(itemLocalId, expectedName, catalogProductId) > 0
 
         override suspend fun requeueCreation(itemLocalId: String) {
             transactions.inTransaction {

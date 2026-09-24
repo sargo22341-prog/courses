@@ -62,6 +62,10 @@ visibles viennent des ressources (six langues, voir [Langues](langues.md)).
 
 - Toucher une liste l'ouvre ; son menu propose Renommer, Définir par défaut, Monter, Descendre et
   Supprimer.
+- **Nouvelle liste** demande un nom. Avec Home Assistant configuré en mode « Uniquement les listes
+  créées par cette application », la boîte propose aussi « Importer une liste de Home Assistant » :
+  choisir une liste de Home Assistant (une liste Mealie par exemple) l'ajoute liée et l'ouvre
+  ([Home Assistant](home-assistant.md#liaison-des-listes)).
 - **Réordonner** : glisser une liste par sa poignée (deux barres, à gauche). La liste tenue se
   soulève (ombre) et suit le doigt ; les autres s'écartent ; un léger retour haptique marque la
   prise et chaque liste dépassée. L'ordre n'est écrit qu'au lâcher. « Monter » et « Descendre »

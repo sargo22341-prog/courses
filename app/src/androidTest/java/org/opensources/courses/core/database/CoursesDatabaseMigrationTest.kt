@@ -139,6 +139,27 @@ class CoursesDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun version5DataSurvivesAndNoListIntegrationIsKnownYet() {
+        helper.createDatabase(DB_NAME_V5, 5).use { db ->
+            db.execSQL(
+                "INSERT INTO shopping_lists (localId, name, isDefault, createdAt, updatedAt, remoteId, remoteEntryId, createdByApp, syncStatus, " +
+                    "importedFromRemote, remoteName, position) VALUES ('l1', 'Mealie', 1, 0, 0, 'todo.mealie', NULL, 0, 'SYNCED', 0, NULL, 3)",
+            )
+            db.execSQL(
+                "INSERT INTO shopping_items (localId, listLocalId, name, quantity, unit, isChecked, catalogProductId, createdAt, updatedAt, " +
+                    "remoteId, syncStatus, isDeleted) VALUES ('i1', 'l1', '250 grammes Pâtes', 1.0, NULL, 0, 'custom:1', 5, 6, 'uid-1', 'SYNCED', 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME_V5, 6, true, *CoursesDatabaseMigrations.ALL).use { db ->
+            db.assertRow("SELECT name, remoteId, position FROM shopping_lists", "Mealie", "todo.mealie", "3")
+            db.assertRow("SELECT name, quantity, catalogProductId, remoteId FROM shopping_items", "250 grammes Pâtes", "1", "custom:1", "uid-1")
+            db.assertRow("SELECT COUNT(*) FROM ha_list_integrations", "0")
+            assertEquals(setOf("entityId", "integration"), db.columns("ha_list_integrations"))
+        }
+    }
+
     /** The query returns exactly one row, whose columns read as [expected]. */
     private fun SupportSQLiteDatabase.assertRow(
         sql: String,
@@ -162,5 +183,6 @@ class CoursesDatabaseMigrationTest {
         const val DB_NAME_V2 = "migration-test-v2.db"
         const val DB_NAME_V3 = "migration-test-v3.db"
         const val DB_NAME_V4 = "migration-test-v4.db"
+        const val DB_NAME_V5 = "migration-test-v5.db"
     }
 }

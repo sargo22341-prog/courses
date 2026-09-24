@@ -168,6 +168,9 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
   `README.md` et ses traductions `README.<langue>.md` si la présentation de l'application
   change ; l'anglais est le README par défaut). Un choix structurant nouveau ou
   remplacé : une ADR dans `docs/adr/`.
+- Toute modification de l'application (fonctionnalité, correction, comportement, dépendance) :
+  ajouter dans `RELEASE_NOTES.md`, sous la ligne `<!-- notes -->`, une ligne `- …` par changement,
+  en français, courte et compréhensible par un utilisateur (procédure : `docs/release.md`).
 - Ne jamais annoncer comme vérifié ce qui ne l'a pas été (ex. synchronisation avec une vraie
   instance Home Assistant).
 

@@ -18,6 +18,12 @@ interface CatalogRepository {
     /** Existing product with the same normalized name, or a new custom product. */
     suspend fun getOrCreateCustomProduct(name: String): CatalogProduct
 
+    /**
+     * Removes the custom product [productId] when nothing refers to it any more: no list item and no
+     * past addition. Products of the catalog, and custom products still in use, are kept.
+     */
+    suspend fun deleteUnusedCustomProduct(productId: String)
+
     suspend fun recordUsage(productId: String)
 
     /**
@@ -43,6 +49,12 @@ interface CatalogRepository {
 
     /** Every product, of any source, named exactly like one of [normalizedNames]. */
     suspend fun findByNormalizedNames(normalizedNames: Set<String>): List<CatalogProductRef>
+
+    /**
+     * Every product having one of [normalizedAliases] as alias; the [CatalogProductRef.normalizedName]
+     * of each is the alias matched ("Graines de sésame" for "Sésame").
+     */
+    suspend fun findByNormalizedAliases(normalizedAliases: Set<String>): List<CatalogProductRef>
 
     /** The products of [ids] that still exist. */
     suspend fun findByIds(ids: Set<String>): List<CatalogProductRef>

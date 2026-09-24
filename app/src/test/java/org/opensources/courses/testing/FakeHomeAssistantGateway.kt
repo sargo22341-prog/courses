@@ -27,6 +27,9 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
     /** What Home Assistant stores for a text sent by `add_item` (some integrations rewrite it). */
     var storedSummary: (String) -> String = { it }
 
+    /** Every `update_item` accepted, in order. */
+    val updates = mutableListOf<ItemUpdate>()
+
     /** Number of `get_items` calls. */
     var itemReads = 0
         private set
@@ -98,6 +101,7 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         val index = list.indexOfFirst { it.uid == uid }
         if (index < 0) throw HomeAssistantException(HaErrorKind.REJECTED)
         val current = list[index]
+        updates += ItemUpdate(uid, summary, completed, description.takeIf { sendDescription }, sendDescription)
         list[index] =
             current.copy(
                 summary = summary ?: current.summary,
@@ -138,3 +142,12 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         lists.remove(configEntryId.removePrefix("entry-"))
     }
 }
+
+/** What an `update_item` call asked: null [summary] or [completed] leave the field as it is. */
+data class ItemUpdate(
+    val uid: String,
+    val summary: String?,
+    val completed: Boolean?,
+    val description: String?,
+    val sendDescription: Boolean,
+)

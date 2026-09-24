@@ -56,6 +56,16 @@ interface CatalogDao {
     @Insert
     suspend fun insertProduct(product: CatalogProductEntity)
 
+    /** Only a custom product that no list item and no past addition refers to. */
+    @Query(
+        """
+        DELETE FROM catalog_products WHERE id = :productId AND source = 'CUSTOM'
+          AND NOT EXISTS (SELECT 1 FROM shopping_items WHERE catalogProductId = :productId)
+          AND NOT EXISTS (SELECT 1 FROM product_usage WHERE productId = :productId)
+        """,
+    )
+    suspend fun deleteUnusedCustomProduct(productId: String)
+
     @Upsert
     suspend fun upsertProducts(products: List<CatalogProductEntity>)
 
@@ -116,6 +126,16 @@ interface CatalogDao {
 
     @Query("SELECT id, normalizedName, source FROM catalog_products WHERE normalizedName IN (:normalizedNames)")
     suspend fun findRefsByNormalizedNames(normalizedNames: List<String>): List<ProductRefRow>
+
+    /** [ProductRefRow.normalizedName] is the alias matched, not the name of the product. */
+    @Query(
+        """
+        SELECT p.id, a.normalizedAlias AS normalizedName, p.source
+        FROM catalog_aliases a JOIN catalog_products p ON p.id = a.productId
+        WHERE a.normalizedAlias IN (:normalizedAliases)
+        """,
+    )
+    suspend fun findRefsByNormalizedAliases(normalizedAliases: List<String>): List<ProductRefRow>
 
     @Query("SELECT id, normalizedName, source FROM catalog_products WHERE id IN (:ids)")
     suspend fun findRefsByIds(ids: List<String>): List<ProductRefRow>

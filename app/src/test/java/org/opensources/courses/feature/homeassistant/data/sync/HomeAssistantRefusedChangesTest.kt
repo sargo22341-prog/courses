@@ -15,6 +15,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.testing.FakeAppLanguageRepository
 import org.opensources.courses.testing.FakeCatalogRepository
 import org.opensources.courses.testing.FakeHaConfigRepository
+import org.opensources.courses.testing.FakeHaEntityRegistry
 import org.opensources.courses.testing.FakeHaLiveUpdates
 import org.opensources.courses.testing.FakeHomeAssistantGateway
 import org.opensources.courses.testing.FakeSyncLocalStore
@@ -28,7 +29,16 @@ class HomeAssistantRefusedChangesTest {
     private val store = FakeSyncLocalStore(queue).apply { lists[LIST] = SyncListRef(LIST, "Courses", ENTITY) }
     private val gateway = FakeHomeAssistantGateway().apply { lists[ENTITY] = HaTodoList(ENTITY, "Courses", supportsDescription = true) }
     private val engine =
-        HomeAssistantSyncEngine(FakeHaConfigRepository(), gateway, store, queue, FakeCatalogRepository(), FakeHaLiveUpdates(), FakeAppLanguageRepository())
+        HomeAssistantSyncEngine(
+            FakeHaConfigRepository(),
+            gateway,
+            store,
+            queue,
+            FakeCatalogRepository(),
+            FakeHaLiveUpdates(),
+            FakeAppLanguageRepository(),
+            FakeHaEntityRegistry(),
+        )
 
     private fun localItem(
         id: String,

@@ -12,12 +12,16 @@ import org.opensources.courses.feature.homeassistant.data.sync.SyncItemRef
 import org.opensources.courses.feature.homeassistant.data.sync.SyncListRef
 import org.opensources.courses.feature.homeassistant.data.sync.SyncLocalStore
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
+import org.opensources.courses.feature.catalog.domain.TextNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
+import org.opensources.courses.feature.homeassistant.domain.HaEntityRegistry
+import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
+import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
 
 class FakeHaConfigRepository(
     var storedCredentials: HaCredentials? = HaCredentials("http://ha.local:8123", "token"),
@@ -79,6 +83,25 @@ class FakeHaLiveUpdates : HaLiveUpdates {
     ): Flow<RemoteChange> = changes.onStart { observedEntityIds = entityIds }
 }
 
+/** Entity registry of a simulated Home Assistant: [integrations] by entity id, [failure] thrown when set. */
+class FakeHaEntityRegistry(
+    val integrations: MutableMap<String, String> = mutableMapOf(),
+) : HaEntityRegistry {
+    var failure: HaErrorKind? = null
+
+    /** Entity ids asked, one list per question. */
+    val questions = mutableListOf<List<String>>()
+
+    override suspend fun integrations(
+        credentials: HaCredentials,
+        entityIds: Collection<String>,
+    ): Map<String, String?> {
+        questions += entityIds.toList()
+        failure?.let { throw HomeAssistantException(it) }
+        return entityIds.associateWith { integrations[it] }
+    }
+}
+
 /** Same contract as the Room store, including "never overwrite an item with pending operations". */
 class FakeSyncLocalStore(
     private val queue: SyncQueue,
@@ -90,6 +113,7 @@ class FakeSyncLocalStore(
     val unlinked = mutableSetOf<String>()
     val ignored = mutableSetOf<String>()
     val removedLists = mutableSetOf<String>()
+    val integrations = mutableMapOf<String, String?>()
     private var nextId = 1
 
     /** Number of transactions opened. */
@@ -107,6 +131,12 @@ class FakeSyncLocalStore(
 
     override suspend fun ignoreList(entityId: String) {
         ignored += entityId
+    }
+
+    override suspend fun knownIntegrations(entityIds: Collection<String>): Map<String, String?> = integrations.filterKeys { it in entityIds }
+
+    override suspend fun saveIntegrations(integrations: Map<String, String?>) {
+        this.integrations += integrations
     }
 
     override suspend fun importList(
@@ -213,9 +243,15 @@ class FakeSyncLocalStore(
         quantity: Double,
         unit: String?,
         checked: Boolean,
+        catalogProductId: String?,
     ) {
         if (queue.hasPendingForItem(itemLocalId)) return
-        items[itemLocalId] = items.getValue(itemLocalId).copy(name = name, quantity = quantity, unit = unit, isChecked = checked)
+        val item = items.getValue(itemLocalId)
+        // As a rename in Room: the link goes unless only case, accents or punctuation changed.
+        val kept = item.catalogProductId.takeIf { TextNormalizer.normalize(name) == TextNormalizer.normalize(item.name) }
+        val productId = catalogProductId ?: kept
+        items[itemLocalId] = item.copy(name = name, quantity = quantity, unit = unit, isChecked = checked, catalogProductId = productId)
+        catalogProductIds[itemLocalId] = productId
     }
 
     override suspend fun insertRemoteItem(
@@ -228,8 +264,19 @@ class FakeSyncLocalStore(
         catalogProductId: String?,
     ) {
         val id = "pulled${nextId++}"
-        items[id] = SyncItemRef(id, listLocalId, name, quantity, unit, checked, remoteId, isDeleted = false)
+        items[id] = SyncItemRef(id, listLocalId, name, quantity, unit, checked, remoteId, isDeleted = false, catalogProductId = catalogProductId)
         catalogProductIds[id] = catalogProductId
+    }
+
+    override suspend fun linkItemToProduct(
+        itemLocalId: String,
+        expectedName: String,
+        catalogProductId: String,
+    ): Boolean {
+        val item = items[itemLocalId]?.takeIf { it.name == expectedName } ?: return false
+        items[itemLocalId] = item.copy(catalogProductId = catalogProductId)
+        catalogProductIds[itemLocalId] = catalogProductId
+        return true
     }
 
     override suspend fun requeueCreation(itemLocalId: String) {

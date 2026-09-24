@@ -1,5 +1,7 @@
 package org.opensources.courses.feature.homeassistant.domain
 
+import org.opensources.courses.core.sync.SyncFailure
+
 /** Every call throws [HomeAssistantException] on failure. */
 interface HomeAssistantGateway {
     suspend fun testConnection(credentials: HaCredentials)
@@ -61,6 +63,14 @@ enum class HaErrorKind {
     NOT_FOUND,
     REJECTED,
     PROTOCOL,
+    ;
+
+    fun toSyncFailure(): SyncFailure =
+        when (this) {
+            UNREACHABLE, INVALID_URL -> SyncFailure.UNREACHABLE
+            UNAUTHORIZED -> SyncFailure.UNAUTHORIZED
+            NOT_FOUND, REJECTED, PROTOCOL -> SyncFailure.PROTOCOL
+        }
 }
 
 class HomeAssistantException(

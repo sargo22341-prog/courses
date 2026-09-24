@@ -9,8 +9,9 @@ data class LocalItemState(
     val isDeleted: Boolean,
 )
 
+/** @property name the article named by the remote item, read in the format of its list ([HaItemFormat]). */
 data class RemoteItemState(
-    val summary: String,
+    val name: String,
     val completed: Boolean,
     val quantity: Double,
     val unit: String?,
@@ -88,7 +89,7 @@ object ConflictResolver {
         remote: RemoteItemState,
         compareQuantity: Boolean,
     ): Boolean =
-        local.name == remote.summary &&
+        local.name == remote.name &&
             local.checked == remote.completed &&
             (!compareQuantity || (local.quantity == remote.quantity && local.unit.orEmpty() == remote.unit.orEmpty()))
 }

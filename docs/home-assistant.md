@@ -82,6 +82,19 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
   existait déjà et n'est pas synchronisée est proposée tour à tour (créer dans Home Assistant, lier
   à une liste existante, ne pas synchroniser, ou « Plus tard »). Cette question n'est posée qu'une
   fois (`lists_setup_done` dans DataStore).
+- **Importer une liste de Home Assistant** (mode « Uniquement les listes créées par cette
+  application ») : dans **Mes listes → Nouvelle liste**, « Importer une liste de Home Assistant »
+  propose, au lieu d'un nom, les listes `todo.*` modifiables, disponibles et pas encore liées (une
+  liste Mealie par exemple). La liste choisie est ajoutée **liée**, sous son nom Home Assistant (ou
+  « Mealie 2 » si ce nom est déjà pris dans l'application), s'ouvre aussitôt et ses articles
+  arrivent à la synchronisation demandée dans la foulée ; elle se synchronise ensuite dans les deux
+  sens comme toute liste liée. Ce n'est pas une copie du mode « Toutes les listes » : elle reste si
+  l'on quitte ce mode, son nom ne suit pas les renommages faits dans Home Assistant, et la supprimer
+  dans l'application la laisse dans Home Assistant (sauf si l'application l'y avait créée). Une
+  liste ignorée ou dont la suppression n'était pas encore envoyée redevient synchronisée. Seule
+  étape réseau de l'écran : si Home Assistant ne répond pas, un message le dit et les listes locales
+  restent utilisables ; « Réessayer » relit les listes. Absent sans Home Assistant configuré et
+  activé, et en mode « Toutes les listes » (qui importe déjà tout).
 - **Pour chaque liste locale** : lier à une liste `todo.*` existante (toutes les listes de Home
   Assistant sont proposées, quel que soit le mode ; une copie importée de cette liste est alors
   remplacée), **créer** la liste dans Home Assistant (intégration *Local To-do*, créée par
@@ -91,6 +104,42 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
   `HaListNameAllocator`) ; le nom local ne change pas. Si *Local To-do* refuse quand même le nom
   (`already_configured`, liste masquée), le numéro suivant est essayé.
 - Synchronisation automatique et « Synchroniser maintenant ».
+
+## Listes Mealie
+
+L'intégration [Mealie](https://www.home-assistant.io/integrations/mealie/) expose chaque liste de
+courses Mealie comme une liste `todo.*`, sans description, dont chaque article est le texte affiché
+par Mealie : quantité, unité, aliment et note (« 250 grammes Pâtes », « 1 gousse ail », « ½
+cuillère à café sel »). Elle est reconnue et lue autrement
+([ADR 0026](adr/0026-listes-mealie.md)) :
+
+- **Reconnaissance** : pour une liste sans description, l'application demande une fois au registre
+  des entités de Home Assistant (WebSocket, `config/entity_registry/get_entries`, sans droits
+  d'administrateur) l'intégration qui la fournit, et la garde (`ha_list_integrations`). Si le
+  registre ne répond pas, la liste est lue comme une liste ordinaire pour cette fois et la question
+  est reposée à la synchronisation suivante ; un Home Assistant trop ancien pour répondre n'est plus
+  interrogé.
+- **Lecture** : mêmes règles que le champ d'ajout ([Interface](interface.md)) : « 250 grammes
+  Pâtes » devient « Pâtes », 250 g ; « 1 mangue » devient « mangue » × 1 ; les fractions de Mealie
+  (« 1/2 », « 1 ½ », « ½ ») sont comprises ; un mot de liaison laissé en fin de texte (« crevettes
+  décortiquées de ») est retiré. Un texte sans quantité en tête (« graines de sésame ou selon le
+  goût ») garde la quantité du téléphone. Un article modifié dans Mealie est relu.
+- **Produits du catalogue** : l'article est rattaché au produit du catalogue de base ou
+  OpenFoodFacts que nomme son texte, par son nom ou un alias, au singulier ou au pluriel, la plus
+  longue suite de mots gagnant (« gousse ail » → Ail, « oignon rouge » → Oignons rouges, « graines
+  de sésame ou selon le goût » → Sésame), sinon à un produit personnalisé. Il est ainsi rangé dans
+  son rayon ([Catégories](categories.md#rattachement-des-articles)). Tout est fait hors ligne, dans
+  le catalogue embarqué.
+- **Articles lus avant ce support** : ils sont relus à la première synchronisation (« 250 grammes
+  Pâtes » × 1 devient « Pâtes » 250 g) et rattachés à leur produit ; les produits personnalisés qui
+  ne portaient que l'ancien texte disparaissent de l'autocomplétion s'ils ne servent plus (aucun
+  article, aucun ajout dans l'historique). Rien n'est renvoyé à Mealie.
+- **Ne pas casser Mealie** : Mealie transforme en simple note tout article dont on change le texte
+  (il perd l'aliment et la quantité). L'application n'envoie donc que l'état coché quand on coche
+  ou décoche, et n'envoie le texte qu'à la création d'un article ou après une modification de son
+  nom ou de sa quantité, et seulement s'il diffère de ce que Mealie affiche déjà. Le texte envoyé met
+  la quantité en tête (« 500 g Pâtes », « 2 Pain », rien pour une quantité de 1 sans unité), pour
+  être relu tel quel.
 
 ## Suivi des changements faits dans Home Assistant
 
@@ -120,11 +169,13 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
 | --- | --- |
 | REST | `GET /api/`, `GET /api/states` (seulement quand les listes doivent être relues), `POST /api/services/todo/get_items?return_response`, `todo.add_item`, `todo.update_item`, `todo.remove_item` (réponse ignorée) |
 | Configuration | `POST /api/config/config_entries/flow` (création *Local To-do*), `DELETE /api/config/config_entries/entry/{id}` |
-| WebSocket | `auth`, `todo/item/subscribe` |
+| WebSocket | `auth`, `todo/item/subscribe`, `config/entity_registry/get_entries` (intégration d'une liste sans description, une fois par liste) |
 
 **Quantités** : Home Assistant n'a pas de champ quantité. Pour les listes qui acceptent une
 description (Local To-do), la quantité y est écrite (`2`, `1,5 kg`) ; une quantité de 1 sans unité
-laisse la description vide.
+laisse la description vide. Pour les listes Mealie, elle est en tête du texte de l'article
+([Listes Mealie](#listes-mealie)). Pour les autres listes sans description, elle reste sur le
+téléphone.
 
 Voir aussi : [Synchronisation](synchronisation.md), [Stratégie de conflit](conflits.md),
 [Limites connues](limites-connues.md#home-assistant).

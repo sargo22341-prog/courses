@@ -55,7 +55,8 @@ Funzioni principali:
 - **ordinamento per reparto** (frutta e verdura, panetteria, latticini…), facoltativo;
 - **sei lingue**: francese, inglese, tedesco, spagnolo, italiano, portoghese;
 - **Home Assistant (facoltativo)**: sincronizzazione bidirezionale, in tempo reale quando l'app è
-  aperta, senza perdere le modifiche fatte offline;
+  aperta, senza perdere le modifiche fatte offline, liste della spesa di **Mealie** comprese
+  (quantità e prodotti letti dal testo di Mealie, senza rovinare la lista in Mealie);
 - tema chiaro, scuro o di sistema, Material 3;
 - **nessun account, nessuna analisi, nessuna dipendenza dai servizi Google Play**: funziona su
   GrapheneOS.
@@ -94,7 +95,8 @@ Dettagli, verifiche e release firmata: [Sviluppo](docs/developpement.md).
    (l'app può scansionarlo come codice QR).
 2. Nell'app: Impostazioni → Home Assistant → indirizzo, token, **Verifica connessione**.
 3. Per ogni lista scegli: crearla in Home Assistant, collegarla a una lista esistente o tenerla
-   locale.
+   locale. **Le mie liste → Nuova lista → Importa una lista di Home Assistant** aggiunge una lista
+   esistente (una lista di Mealie, per esempio), collegata.
 
 Il token è cifrato dal Keystore di Android e non viene mai più mostrato. Guida completa:
 [Home Assistant](docs/home-assistant.md).

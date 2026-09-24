@@ -12,11 +12,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.opensources.courses.core.model.SyncStatus
+import org.opensources.courses.core.sync.RemoteListChoice
 import org.opensources.courses.testing.FrenchCoursesTheme
+import org.opensources.courses.testing.TestRemoteListImport
 import org.opensources.courses.testing.TestRepositories
 
 @RunWith(AndroidJUnit4::class)
@@ -34,7 +38,7 @@ class ListsRouteTest {
     @Test
     fun aCreatedListIsOpenedOnce() {
         val opened = mutableListOf<String>()
-        val viewModel = ListsViewModel(repositories.lists)
+        val viewModel = ListsViewModel(repositories.lists, TestRemoteListImport(repositories.links, available = false))
         composeRule.setContent {
             FrenchCoursesTheme { ListsRoute(onBack = {}, onOpenList = { opened += it }, viewModel = viewModel) }
         }
@@ -53,7 +57,7 @@ class ListsRouteTest {
 
     @Test
     fun aListMovedUpFromItsMenuKeepsItsNewPlace() {
-        val viewModel = ListsViewModel(repositories.lists)
+        val viewModel = ListsViewModel(repositories.lists, TestRemoteListImport(repositories.links, available = false))
         runBlocking {
             repositories.lists.createList("Courses")
             repositories.lists.createList("BBQ")
@@ -74,7 +78,44 @@ class ListsRouteTest {
         composeRule.onNodeWithText("Descendre").assertIsDisplayed()
     }
 
+    @Test
+    fun aHomeAssistantListImportedFromTheNewListDialogIsLinkedAndOpened() {
+        val opened = mutableListOf<String>()
+        val remote = TestRemoteListImport(repositories.links, available = true, lists = listOf(RemoteListChoice(MEALIE_ENTITY, "Mealie")))
+        val viewModel = ListsViewModel(repositories.lists, remote)
+        composeRule.setContent {
+            FrenchCoursesTheme { ListsRoute(onBack = {}, onOpenList = { opened += it }, viewModel = viewModel) }
+        }
+
+        composeRule.onNodeWithContentDescription("Nouvelle liste").performClick()
+        composeRule.onNodeWithText("Importer une liste de Home Assistant").performClick()
+        composeRule.onNodeWithText("Mealie").performClick()
+        composeRule.waitUntil(TIMEOUT_MILLIS) { opened.isNotEmpty() }
+        composeRule.waitForIdle()
+
+        val imported = runBlocking { repositories.database.shoppingListDao().getAll() }.single()
+        assertEquals("Mealie", imported.name)
+        assertEquals(MEALIE_ENTITY, imported.remoteId)
+        assertEquals(SyncStatus.SYNCED, imported.syncStatus)
+        // Not an "all lists" import: leaving that mode would remove it.
+        assertFalse(imported.importedFromRemote)
+        assertEquals(listOf(imported.localId), opened)
+    }
+
+    @Test
+    fun withoutHomeAssistantTheNewListDialogOffersNoImport() {
+        val viewModel = ListsViewModel(repositories.lists, TestRemoteListImport(repositories.links, available = false))
+        composeRule.setContent {
+            FrenchCoursesTheme { ListsRoute(onBack = {}, onOpenList = {}, viewModel = viewModel) }
+        }
+
+        composeRule.onNodeWithContentDescription("Nouvelle liste").performClick()
+        composeRule.onNodeWithText("Nom de la liste").assertIsDisplayed()
+        composeRule.onNodeWithText("Importer une liste de Home Assistant").assertDoesNotExist()
+    }
+
     private companion object {
+        const val MEALIE_ENTITY = "todo.mealie_courses"
         const val TIMEOUT_MILLIS = 5_000L
     }
 }

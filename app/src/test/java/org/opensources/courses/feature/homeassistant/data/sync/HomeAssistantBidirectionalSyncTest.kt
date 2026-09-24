@@ -17,6 +17,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.testing.FakeAppLanguageRepository
 import org.opensources.courses.testing.FakeCatalogRepository
 import org.opensources.courses.testing.FakeHaConfigRepository
+import org.opensources.courses.testing.FakeHaEntityRegistry
 import org.opensources.courses.testing.FakeHaLiveUpdates
 import org.opensources.courses.testing.FakeHomeAssistantGateway
 import org.opensources.courses.testing.FakeSyncLocalStore
@@ -34,7 +35,17 @@ class HomeAssistantBidirectionalSyncTest {
     private val gateway = FakeHomeAssistantGateway().apply { lists[ENTITY] = HaTodoList(ENTITY, "Courses", supportsDescription = true) }
     private val catalog = FakeCatalogRepository(listOf(product("Tomates")))
     private val liveUpdates = FakeHaLiveUpdates()
-    private val engine = HomeAssistantSyncEngine(FakeHaConfigRepository(), gateway, store, queue, catalog, liveUpdates, FakeAppLanguageRepository())
+    private val engine =
+        HomeAssistantSyncEngine(
+            FakeHaConfigRepository(),
+            gateway,
+            store,
+            queue,
+            catalog,
+            liveUpdates,
+            FakeAppLanguageRepository(),
+            FakeHaEntityRegistry(),
+        )
 
     private fun localItem(
         id: String,

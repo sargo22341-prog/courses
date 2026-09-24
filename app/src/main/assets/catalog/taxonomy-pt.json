@@ -1,8 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "language": "pt",
   "source": "OpenFoodFacts categories taxonomy (ODbL)",
-  "generated": "2026-09-17",
+  "generated": "2026-09-24",
   "products": [
     {"id": "de:deutsche-spirituosen", "name": "Bebidas espirituosas alemãs", "score": 0, "category": "Bebidas", "section": "DRINKS"},
     {"id": "en:absinthe", "name": "Absinto", "score": 2, "category": "Bebidas", "section": "DRINKS"},
@@ -179,7 +179,7 @@
     {"id": "en:chestnut-spreads", "name": "Creme de castanha", "score": 2, "category": "Alimentos à base de plantas", "section": "SAVORY_GROCERY"},
     {"id": "en:chestnut-syrups", "name": "Xaropes de castanha", "score": 2, "category": "Preparações de bebidas", "section": "DRINKS"},
     {"id": "en:chestnut-yogurts", "name": "Iogurtes de castanha", "score": 0, "category": "Sobremesas de laticínios", "section": "DAIRY_EGGS"},
-    {"id": "en:chewing-gum", "name": "Pastilhas elásticas", "score": 2, "category": "Lanches doces", "section": "SWEET_GROCERY"},
+    {"id": "en:chewing-gums", "name": "Pastilhas elásticas", "score": 2, "category": "Lanches doces", "section": "SWEET_GROCERY"},
     {"id": "en:chia", "name": "Sementes de chia", "score": 2, "category": "Alimentos à base de plantas", "section": "SAVORY_GROCERY"},
     {"id": "en:chicken-breasts", "name": "Peitos de frango", "score": 2, "section": "MEAT_FISH"},
     {"id": "en:chicken-eggs", "name": "Ovos de galinha", "score": 3, "category": "Ovos", "section": "DAIRY_EGGS"},
@@ -205,7 +205,7 @@
     {"id": "en:chocolates", "name": "Chocolates", "score": 4, "category": "Cacau e derivados", "section": "SWEET_GROCERY"},
     {"id": "en:chocolates-with-almonds", "name": "Chocolates com amêndoas", "score": 3, "category": "Chocolates", "section": "SWEET_GROCERY"},
     {"id": "en:chocolates-with-hazelnuts", "name": "Chocolates com avelãs", "score": 3, "category": "Chocolates", "section": "SWEET_GROCERY"},
-    {"id": "en:chorizo", "name": "Chouriço", "score": 2, "category": "Carnes preparadas", "section": "MEAT_FISH"},
+    {"id": "en:chorizos", "name": "Chouriço", "score": 2, "category": "Carnes preparadas", "section": "MEAT_FISH"},
     {"id": "en:christmas-chocolates", "name": "Chocolates de Natal", "score": 3, "category": "Alimentos e bebidas de natal", "section": "SWEET_GROCERY"},
     {"id": "en:christmas-sweets", "name": "Doces de natal", "score": 3, "category": "Alimentos e bebidas de natal", "section": "SWEET_GROCERY"},
     {"id": "en:cigarettes", "name": "Cigarros", "score": 2, "category": "Produtos não alimentares"},

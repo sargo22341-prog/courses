@@ -1,5 +1,7 @@
 package org.opensources.courses.feature.lists.presentation
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -14,9 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.dp
 import org.opensources.courses.R
 import org.opensources.courses.feature.lists.domain.ListNameRules
 
+/** [onImport], when given, offers to import a Home Assistant list instead of naming a new one. */
 @Composable
 fun ListNameDialog(
     title: String,
@@ -24,6 +28,7 @@ fun ListNameDialog(
     confirmLabel: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
+    onImport: (() -> Unit)? = null,
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     val valid = ListNameRules.sanitize(name) != null
@@ -31,14 +36,17 @@ fun ListNameDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { if (it.length <= ListNameRules.MAX_LENGTH) name = it },
-                label = { Text(stringResource(R.string.lists_name_label)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (valid) onConfirm(name) }),
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { if (it.length <= ListNameRules.MAX_LENGTH) name = it },
+                    label = { Text(stringResource(R.string.lists_name_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { if (valid) onConfirm(name) }),
+                )
+                onImport?.let { TextButton(onClick = it) { Text(stringResource(R.string.lists_import_action)) } }
+            }
         },
         confirmButton = { TextButton(onClick = { onConfirm(name) }, enabled = valid) { Text(confirmLabel) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },

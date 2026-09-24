@@ -10,6 +10,7 @@
     <string name="action_clear">Effacer</string>
     <string name="action_close">Fermer</string>
     <string name="action_undo">Annuler</string>
+    <string name="action_retry">Réessayer</string>
     <string name="open_app_settings">Ouvrir les paramètres de l’application</string>
 
     <!-- Scanner de QR code -->
@@ -100,6 +101,13 @@
     <string name="lists_actions">Actions pour %1$s</string>
     <string name="lists_move_up">Monter</string>
     <string name="lists_move_down">Descendre</string>
+    <string name="lists_import_action">Importer une liste de Home Assistant</string>
+    <string name="lists_import_title">Importer depuis Home Assistant</string>
+    <string name="lists_import_intro">La liste reste liée : les modifications sont synchronisées dans les deux sens.</string>
+    <string name="lists_import_empty">Aucune liste Home Assistant à importer.</string>
+    <string name="lists_import_error_unreachable">Home Assistant est injoignable.\nVos listes restent disponibles sur ce téléphone.</string>
+    <string name="lists_import_error_unauthorized">Token refusé par Home Assistant.\nVos listes restent disponibles sur ce téléphone.</string>
+    <string name="lists_import_error">Impossible de lire les listes de Home Assistant.\nVos listes restent disponibles sur ce téléphone.</string>
 
     <!-- Réglages -->
     <string name="settings_title">Réglages</string>

@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import org.opensources.courses.core.sync.SyncOperationDao
 import org.opensources.courses.feature.catalog.data.local.CatalogDao
 import org.opensources.courses.feature.homeassistant.data.local.HaIgnoredListDao
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationDao
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
 import org.opensources.courses.feature.lists.data.ShoppingListDao
 import org.opensources.courses.feature.shopping.data.ShoppingItemDao
@@ -48,4 +49,7 @@ object DatabaseModule {
 
     @Provides
     fun haIgnoredListDao(database: CoursesDatabase): HaIgnoredListDao = database.haIgnoredListDao()
+
+    @Provides
+    fun haListIntegrationDao(database: CoursesDatabase): HaListIntegrationDao = database.haListIntegrationDao()
 }

@@ -10,16 +10,18 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.opensources.courses.core.sync.RemoteChange
 import org.opensources.courses.core.sync.RemoteSyncEngine
-import org.opensources.courses.core.sync.SyncFailure
 import org.opensources.courses.core.sync.SyncOperation
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.core.sync.SyncQueue
 import org.opensources.courses.core.sync.SyncRequest
 import org.opensources.courses.feature.catalog.domain.CatalogRepository
+import org.opensources.courses.feature.catalog.domain.FindProductInTextUseCase
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
+import org.opensources.courses.feature.homeassistant.domain.HaEntityRegistry
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaItemFormat
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
@@ -45,7 +47,8 @@ import javax.inject.Singleton
  * Assistant leaves the app; in "lists created by the app" mode, lists imported earlier are removed
  * and a list deleted in Home Assistant is only unlinked.
  *
- * Then, for each synchronised list (only those of [SyncRequest.remoteListIds] when given):
+ * Then, for each synchronised list (only those of [SyncRequest.remoteListIds] when given), its items
+ * being read and written in the [HaItemFormat] of the list ([HaListFormats]: Mealie lists differ):
  * 1. create the remote list if a `CREATE_LIST` operation is pending;
  * 2. read remote items and give local items without uid the uid of a same-named remote item;
  * 3. push pending item operations ([HaItemPusher]);
@@ -68,9 +71,11 @@ class HomeAssistantSyncEngine
         catalog: CatalogRepository,
         private val liveUpdates: HaLiveUpdates,
         languages: AppLanguageRepository,
+        registry: HaEntityRegistry,
     ) : RemoteSyncEngine {
         private val pusher = HaItemPusher(gateway, store, queue, languages)
-        private val reconciler = HaItemReconciler(store, queue, catalog)
+        private val reconciler = HaItemReconciler(store, queue, catalog, FindProductInTextUseCase(catalog, languages))
+        private val listFormats = HaListFormats(registry, store)
         private val listsCache = RemoteListsCache()
 
         override val isEnabled: Flow<Boolean> = config.config.map { it.enabled && it.isConfigured }.distinctUntilChanged()
@@ -113,15 +118,17 @@ class HomeAssistantSyncEngine
                 sendListDeletions(credentials, pending.filter { it.type == SyncOperationType.DELETE_LIST }, tally)
                 if (importsAllLists && remoteLists.areFresh) importMissingLists(remoteLists.byEntityId.values, pending)
                 val pendingByList = pending.groupBy { it.listLocalId }
-                for (list in store.synchronizedLists()) {
-                    if (request.remoteListIds != null && list.remoteId !in request.remoteListIds) continue
+                val lists = store.synchronizedLists().filter { request.remoteListIds == null || it.remoteId in request.remoteListIds }
+                val formats = listFormats.of(credentials, lists.mapNotNull { list -> list.remoteId?.let(remoteLists.byEntityId::get) })
+                for (list in lists) {
                     // Its integration is stopped: nothing can be read, nothing is unlinked or lost.
                     if (list.remoteId?.let(remoteLists.byEntityId::get)?.isAvailable == false) {
                         tally.unavailable++
                         continue
                     }
                     try {
-                        synchronizeList(credentials, list, pendingByList[list.localId].orEmpty(), remoteLists, importsAllLists, tally)
+                        val listOperations = pendingByList[list.localId].orEmpty()
+                        synchronizeList(credentials, list, listOperations, remoteLists, formats, importsAllLists, tally)
                     } catch (exception: HomeAssistantException) {
                         // A list that cannot be read is retried as a whole at the next synchronisation.
                         if (exception.isFatal) throw exception
@@ -159,19 +166,22 @@ class HomeAssistantSyncEngine
             list: SyncListRef,
             listOperations: List<SyncOperation>,
             remoteLists: RemoteLists,
+            formats: Map<String, HaItemFormat>,
             importsAllLists: Boolean,
             tally: SyncTally,
         ) {
             val remoteList = resolveRemoteList(credentials, list, listOperations, remoteLists, importsAllLists, tally) ?: return
+            // A list created by this synchronisation is a Local To-do list, which takes descriptions.
+            val format = formats[remoteList.entityId] ?: HaItemFormat.of(remoteList, integration = null)
             if (list.importedFromRemote && list.remoteName != remoteList.name) store.applyRemoteListName(list.localId, remoteList.name)
             queue.complete(listOperations.filter { it.type == SyncOperationType.UPDATE_LIST }.map { it.id })
             val itemOperations = listOperations.filter { it.type.isItemOperation }
             val remoteItems = gateway.getItems(credentials, remoteList.entityId)
-            reconciler.adoptByName(list.localId, remoteItems)
-            pusher.push(credentials, remoteList, list.localId, itemOperations, remoteItems, tally)
+            reconciler.adoptByName(list.localId, remoteItems, format)
+            pusher.push(credentials, remoteList, format, list.localId, itemOperations, remoteItems, tally)
             // Nothing sent: what was read is still what Home Assistant holds.
             val latest = if (itemOperations.isEmpty()) remoteItems else gateway.getItems(credentials, remoteList.entityId)
-            reconciler.reconcile(list.localId, latest, remoteList.supportsDescription)
+            reconciler.reconcile(list.localId, latest, format)
             store.markListSynced(list.localId)
         }
 
@@ -242,13 +252,6 @@ class HomeAssistantSyncEngine
                 queue.complete(listOf(operation.id))
             }
         }
-
-        private fun HaErrorKind.toSyncFailure(): SyncFailure =
-            when (this) {
-                HaErrorKind.UNREACHABLE, HaErrorKind.INVALID_URL -> SyncFailure.UNREACHABLE
-                HaErrorKind.UNAUTHORIZED -> SyncFailure.UNAUTHORIZED
-                HaErrorKind.NOT_FOUND, HaErrorKind.REJECTED, HaErrorKind.PROTOCOL -> SyncFailure.PROTOCOL
-            }
 
         /** The Home Assistant lists by entity id; [areFresh] when read by this synchronisation. */
         private class RemoteLists(

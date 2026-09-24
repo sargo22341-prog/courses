@@ -4,6 +4,7 @@ import org.opensources.courses.core.database.TransactionRunner
 import org.opensources.courses.core.model.SyncStatus
 import org.opensources.courses.core.sync.SyncOperationType
 import org.opensources.courses.core.sync.SyncQueue
+import org.opensources.courses.feature.homeassistant.data.local.HaListIntegrationDao
 import org.opensources.courses.feature.homeassistant.data.local.HaTrackedListDao
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
 import org.opensources.courses.feature.lists.data.ShoppingListDao
@@ -17,6 +18,7 @@ class HaListLinkRepositoryImpl
         private val listDao: ShoppingListDao,
         private val itemDao: ShoppingItemDao,
         private val trackedDao: HaTrackedListDao,
+        private val integrationDao: HaListIntegrationDao,
         private val writer: HaLocalListWriter,
         private val queue: SyncQueue,
         private val transactions: TransactionRunner,
@@ -56,6 +58,21 @@ class HaListLinkRepositoryImpl
                 enqueueItemCreations(listId)
             }
         }
+
+        override suspend fun importList(
+            entityId: String,
+            remoteName: String,
+        ): String =
+            transactions.inTransaction {
+                listDao.getAll().firstOrNull { it.remoteId == entityId }?.localId
+                    ?: run {
+                        // Chosen by the user: a deletion of this list still waiting to be sent is cancelled,
+                        // and the "all lists" mode may bring it back if it was ignored.
+                        queue.complete(queue.pending().filter { it.type == SyncOperationType.DELETE_LIST && it.remoteListId == entityId }.map { it.id })
+                        writer.stopIgnoring(entityId)
+                        writer.insertLinkedList(entityId, remoteName, importedFromRemote = false)
+                    }
+            }
 
         override suspend fun createInHomeAssistant(listId: String) {
             transactions.inTransaction {
@@ -97,6 +114,7 @@ class HaListLinkRepositoryImpl
                 listDao.getAll().filter { it.remoteId != null || it.syncStatus != SyncStatus.LOCAL_ONLY }.forEach { writer.unlink(it) }
                 // Also the deletions of lists already gone from this phone.
                 queue.clear()
+                integrationDao.deleteAll()
             }
         }
 

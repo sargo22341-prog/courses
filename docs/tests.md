@@ -47,7 +47,7 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Ordre des listes (glisser-déposer, Monter / Descendre, nouvelles listes à la fin, rien à synchroniser) | `ListsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ListsRouteTest` |
 | Historique (ordre, produits déjà dans la liste exclus, réglage, vidage) | `ProductHistoryUseCaseTest`, `ShoppingViewModelTest`, `SettingsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ShoppingScreenTest`, `HistorySectionTest` |
 | Création, coche/décoche, suppression, file (Room réel) | `RoomRepositoriesTest` |
-| Migrations Room (données des versions 1 à 4 conservées, ordre des listes gardé) | `CoursesDatabaseMigrationTest` |
+| Migrations Room (données des versions 1 à 5 conservées, ordre des listes gardé, table des intégrations vide) | `CoursesDatabaseMigrationTest` |
 | File de synchronisation | `SyncQueueTest` |
 | Refus, abandon des opérations, lecture unique de la file, texte modifié par Home Assistant, token non administrateur | `HomeAssistantRefusedChangesTest`, `HomeAssistantClientTest`, `HaGivenUpChangesRoomTest` (Room réel) |
 | Synchronisation périodique au premier plan seulement (10 min en temps réel), demandes fusionnées, exécution exclusive | `SyncCoordinatorTest`, `ForgetHomeAssistantUseCaseTest` |
@@ -62,6 +62,8 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Modes des listes (import, noms, renommage, suppression, listes ignorées, retour au mode par défaut) | `HomeAssistantListImportTest`, `HaListImportRoomTest` (Room réel), `HaListModeCardTest`, `HomeAssistantClientTest`, `CoursesDatabaseMigrationTest` |
 | Changements des deux côtés, catalogue, liste indisponible | `HomeAssistantBidirectionalSyncTest`, `ConflictResolverTest`, `HaListPickerDialogTest` |
 | Temps réel (liste de chaque événement, connexion perdue, token refusé sans nouvel essai), synchronisation à l'ouverture, tirer pour actualiser | `HomeAssistantWebSocketClientTest` (MockWebServer), `SyncCoordinatorTest`, `ShoppingScreenTest` |
+| Listes Mealie (reconnaissance par le registre, gardée ou redemandée, lecture des textes réels, fractions, texte écrit relu, coche sans renommage, quantité dans le texte, adoption sans renommage, anciens articles relus, produit trouvé dans le texte ou ses alias, produits personnalisés orphelins supprimés) | `HomeAssistantMealieSyncTest`, `MealieItemTextTest`, `HaItemFormatTest`, `FindProductInTextUseCaseTest`, `HomeAssistantEntityRegistryClientTest` (MockWebServer), `CatalogCleanupAndAliasRoomTest` (Room réel), `HaChosenListImportRoomTest` (Room réel) |
+| Importer une liste de Home Assistant depuis « Nouvelle liste » (proposée selon le mode, listes offertes, erreurs, liste liée et ouverte, suppression en attente annulée) | `HaRemoteListImportTest`, `ListsViewModelTest`, `ListsRouteTest`, `HaChosenListImportRoomTest` (Room réel) |
 | Version et langue des catalogues embarqués, fichier lu seulement s'il doit l'être | `CatalogImporterTest` |
 | Catalogue généré (six fichiers réels : version, noms, doublons, alias, rayons) | `AssetTaxonomyCatalogTest` |
 | Réimport du catalogue dans une autre langue (aucun produit de l'ancienne langue ne reste) | `RoomRepositoriesTest` (Room réel) |

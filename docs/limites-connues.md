@@ -10,7 +10,8 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   de renommer une entité `todo`. L'opération `UPDATE_LIST` est retirée de la file sans appel
   (le nom local change) ; l'écran Home Assistant le signale.
 - **Quantités** : synchronisées seulement pour les listes qui acceptent une description (Local
-  To-do). Pour l'intégration « Shopping list » historique, elles restent locales. Écrire la
+  To-do) et pour les listes Mealie (en tête du texte). Pour l'intégration « Shopping list »
+  historique, elles restent locales. Écrire la
   quantité dans la description remplace une description saisie à la main dans Home Assistant.
 - **Identifiant après création** : `todo.add_item` ne renvoie pas l'identifiant du nouvel article ;
   il est retrouvé par nom. Si Home Assistant modifie le texte, l'article n'est pas renvoyé : la
@@ -45,6 +46,28 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   retirée de l'application ; une intégration simplement arrêtée (`unavailable`) ne retire rien. Un
   renommage fait dans Home Assistant remplace un renommage local antérieur. Une liste ignorée ne
   réapparaît qu'en la liant avec « Choisir » ; il n'y a pas d'écran listant les listes ignorées.
+- **Listes Mealie** ([Home Assistant](home-assistant.md#listes-mealie)) :
+  - Modifier dans l'application le nom ou la quantité d'un article Mealie en fait une simple note
+    dans Mealie (texte « 300 g Pâtes ») : l'intégration de Home Assistant ne sait pas changer
+    l'aliment ni la quantité structurés de Mealie. Cocher, décocher et supprimer ne changent rien
+    d'autre.
+  - Seules les unités de poids et de volume sont reconnues, comme au champ d'ajout : « 1 gousse
+    ail » devient « gousse ail » × 1, « ½ cuillère à café sel » devient « cuillère à café sel »
+    × 0,5. Un nom écrit de façon à commencer par un nombre suivi d'un espace est lu comme une
+    quantité.
+  - Le produit du catalogue est cherché dans le texte par suites de mots, la plus longue puis la
+    première l'emportant : un texte ambigu peut être rattaché à un produit voisin, donc rangé dans
+    son rayon ; l'article garde son nom.
+  - La reconnaissance d'une liste Mealie passe par le WebSocket de Home Assistant. S'il est bloqué
+    (proxy), la liste est lue comme une liste ordinaire (texte entier comme nom, quantité locale) et
+    la question est reposée à chaque synchronisation.
+  - Vérifié sur le téléphone contre une vraie liste Mealie : reconnaissance par le registre,
+    lecture des articles et rattachement au catalogue, sans rien renvoyer. Cocher, modifier et
+    ajouter un article dans une vraie liste Mealie n'ont été vérifiés que contre le code de
+    l'intégration et un Home Assistant simulé.
+- **Liste importée depuis « Nouvelle liste »** : son nom ne suit pas un renommage fait ensuite dans
+  Home Assistant (contrairement au mode « Toutes les listes ») ; le choix des listes nécessite le
+  réseau.
 - **Vérifiée surtout par tests automatisés** (moteur avec un Home Assistant simulé en mémoire,
   client HTTP contre MockWebServer). Les requêtes brutes ont été vérifiées contre une instance
   réelle (création *Local To-do*, refus `already_configured` d'un nom déjà pris, `add_item` avec

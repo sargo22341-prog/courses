@@ -15,7 +15,10 @@ data class SyncListRef(
     val remoteName: String? = null,
 )
 
-/** @property syncStatus as stored; [SyncStatus.PENDING] when not known, which never skips a write. */
+/**
+ * @property syncStatus as stored; [SyncStatus.PENDING] when not known, which never skips a write.
+ * @property catalogProductId the catalog product the item stands for, if any.
+ */
 data class SyncItemRef(
     val localId: String,
     val listLocalId: String,
@@ -26,6 +29,7 @@ data class SyncItemRef(
     val remoteId: String?,
     val isDeleted: Boolean,
     val syncStatus: SyncStatus = SyncStatus.PENDING,
+    val catalogProductId: String? = null,
 )
 
 /**
@@ -57,6 +61,14 @@ interface SyncLocalStore {
     suspend fun ignoredEntityIds(): Set<String>
 
     suspend fun ignoreList(entityId: String)
+
+    /**
+     * Integrations already known of [entityIds] ([saveIntegrations]); an entity not asked yet is
+     * absent, one Home Assistant could not tell maps to null.
+     */
+    suspend fun knownIntegrations(entityIds: Collection<String>): Map<String, String?>
+
+    suspend fun saveIntegrations(integrations: Map<String, String?>)
 
     /**
      * "All lists" mode: adds the Home Assistant list to the app, linked, under its Home Assistant name
@@ -112,12 +124,17 @@ interface SyncLocalStore {
 
     suspend fun removeRemotelyDeletedItem(itemLocalId: String)
 
+    /**
+     * Takes the remote values. A new name drops the catalog link as any rename does, unless
+     * [catalogProductId] tells the product the new name stands for.
+     */
     suspend fun applyRemoteItem(
         itemLocalId: String,
         name: String,
         quantity: Double,
         unit: String?,
         checked: Boolean,
+        catalogProductId: String? = null,
     )
 
     suspend fun insertRemoteItem(
@@ -129,6 +146,16 @@ interface SyncLocalStore {
         checked: Boolean,
         catalogProductId: String?,
     )
+
+    /**
+     * Links the item to the catalog product [catalogProductId], if it is still named [expectedName].
+     * Local only, like any catalog link: nothing is sent. Returns whether the link was written.
+     */
+    suspend fun linkItemToProduct(
+        itemLocalId: String,
+        expectedName: String,
+        catalogProductId: String,
+    ): Boolean
 
     /** Deleted remotely while modified locally: queue its creation again. */
     suspend fun requeueCreation(itemLocalId: String)

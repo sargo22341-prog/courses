@@ -10,6 +10,7 @@
     <string name="action_clear">Limpar</string>
     <string name="action_close">Fechar</string>
     <string name="action_undo">Anular</string>
+    <string name="action_retry">Tentar novamente</string>
     <string name="open_app_settings">Abrir as definições da aplicação</string>
 
     <!-- Leitor de código QR -->
@@ -100,6 +101,13 @@
     <string name="lists_actions">Ações para %1$s</string>
     <string name="lists_move_up">Mover para cima</string>
     <string name="lists_move_down">Mover para baixo</string>
+    <string name="lists_import_action">Importar uma lista do Home Assistant</string>
+    <string name="lists_import_title">Importar do Home Assistant</string>
+    <string name="lists_import_intro">A lista fica ligada: as alterações são sincronizadas nos dois sentidos.</string>
+    <string name="lists_import_empty">Não há mais listas do Home Assistant para importar.</string>
+    <string name="lists_import_error_unreachable">Não é possível contactar o Home Assistant.\nAs suas listas continuam disponíveis neste telefone.</string>
+    <string name="lists_import_error_unauthorized">Token recusado pelo Home Assistant.\nAs suas listas continuam disponíveis neste telefone.</string>
+    <string name="lists_import_error">Não foi possível ler as listas do Home Assistant.\nAs suas listas continuam disponíveis neste telefone.</string>
 
     <!-- Definições -->
     <string name="settings_title">Definições</string>

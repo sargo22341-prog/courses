@@ -44,7 +44,8 @@ Data (Room, DataStore, Retrofit, implémentations des dépôts)
 - La logique métier (classement des suggestions, conflits, import du catalogue, fusion des
   doublons, catégories…) vit dans des classes pures du domaine, testées sans Android.
 - Les détails Home Assistant ne sortent pas de `feature/homeassistant` : `core/sync` ne connaît
-  que l'interface `RemoteSyncEngine`.
+  que les interfaces `RemoteSyncEngine` et `RemoteListImport` (import d'une liste depuis l'écran
+  « Mes listes »).
 
 ## Flux de données
 
@@ -76,10 +77,10 @@ org.opensources.courses
 │   ├── permission/    permissions d'exécution (explication, renvoi vers les paramètres)
 │   ├── scanner/       scanner de QR code (CameraX + ZXing)
 │   ├── security/      SecretStore chiffré par le Keystore
-│   └── sync/          SyncQueue, SyncOperation, SyncCoordinator, RemoteSyncEngine
+│   └── sync/          SyncQueue, SyncOperation, SyncCoordinator, RemoteSyncEngine, RemoteListImport
 └── feature/
     ├── shopping/      articles : CRUD, ajout intelligent, rangement par catégorie, écran principal
-    ├── lists/         listes : créer, renommer, supprimer, liste par défaut
+    ├── lists/         listes : créer, importer de Home Assistant, renommer, supprimer, liste par défaut
     ├── catalog/       catalogue embarqué, autocomplétion, catégories, import dans Room
     ├── homeassistant/ configuration, client REST et WebSocket, liaison des listes, moteur de sync
     ├── settings/      écran des réglages et préférences (thème, masquage des achetés, rangement)
@@ -104,12 +105,12 @@ Aucun fichier source ne dépasse 600 lignes.
 ## Base Room
 
 - `CoursesDatabase` est la **seule source de vérité** de l'interface.
-- Schéma exporté dans `app/schemas`, version 5 (2 et 3 par `AutoMigration` :
+- Schéma exporté dans `app/schemas`, version 6 (2 et 3 par `AutoMigration` :
   `catalog_products.groceryCategory` ; `shopping_lists.importedFromRemote`,
   `shopping_lists.remoteName` et table `ha_ignored_lists`. 4 par `CoursesDatabaseMigrations` :
   suppression sur place des colonnes jamais lues. 5 par `AutoMigration` :
   `shopping_lists.position`, l'ordre choisi par l'utilisateur, à 0 pour les listes existantes qui
-  gardent leur ordre).
+  gardent leur ordre. 6 par `AutoMigration` : table `ha_list_integrations`, vide au départ).
 - Toute évolution du schéma incrémente la version et fournit une migration testée contre
   `app/schemas` (`CoursesDatabaseMigrationTest`). Jamais de migration destructive
   ([ADR 0020](adr/0020-migrations-room-sans-perte.md)).
@@ -122,6 +123,7 @@ Aucun fichier source ne dépasse 600 lignes.
 | `catalog_products`, `catalog_aliases` | catalogue alimentaire (base + taxonomie + personnalisés) |
 | `product_usage` | habitudes d'ajout, séparées du catalogue |
 | `ha_tracked_lists`, `ha_ignored_lists` | listes créées par l'application / listes à ne plus importer |
+| `ha_list_integrations` | intégration de chaque liste Home Assistant sans description (`mealie`…), demandée une fois au registre |
 
 Les préférences (thème, réglages de la liste, versions du catalogue importées, configuration
 Home Assistant)

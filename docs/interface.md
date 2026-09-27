@@ -121,6 +121,12 @@ téléphone les coupe). Aucune bibliothèque ajoutée.
   couleurs en 400 ms au lieu de basculer d'un coup (`animatedColorScheme`). Changer de langue
   recrée l'activité (Android) : pas d'animation propre à l'application.
 
+## Orientation
+
+Portrait uniquement : l'écran ne pivote pas quand on tourne le téléphone
+([ADR 0027](adr/0027-portrait-uniquement.md)). Android ignore ce verrou sur les grands écrans
+(tablettes, pliables ouverts), où les écrans suivent la taille de la fenêtre.
+
 ## Barres système
 
 L'heure, le réseau, la batterie et la barre de navigation suivent le thème **choisi dans

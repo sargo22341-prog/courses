@@ -37,6 +37,11 @@ Zéro erreur, zéro test en échec, Lint au vert (ses avertissements sont des er
 annonces de nouvelles versions de dépendances, vues avec `dependencyUpdates`), aucun nouvel
 avertissement Kotlin ou Compose, aucun fichier source de plus de 600 lignes. Détail des suites : [Tests](tests.md).
 
+Seul avertissement restant : `Configuration.setVisible(boolean) method has been deprecated` (avec
+`--warning-mode all`). Il est émis par AGP 9.4.1 lui-même (`BasePlugin.apply`) sous Gradle 9.8,
+quel que soit le script du projet ; il disparaîtra avec une version stable d'AGP qui ne l'appelle
+plus.
+
 ## Vérifier les mises à jour des dépendances
 
 ```powershell

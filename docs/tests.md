@@ -73,6 +73,7 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Fonctionnement hors ligne (redémarrages) | `OfflineScenarioTest` |
 | Parcours UI (affichés en français quelle que soit la langue du téléphone, `FrenchCoursesTheme`) | `ShoppingScreenTest` (dont suppression des achetés avec confirmation, glissement et « Annuler »), `WelcomeScreenTest` (choix de la langue), `HaConnectionCardTest` (connexion repliée, oubli, avertissement `http://`), `HaListPickerDialogTest` (zones de 48 dp), `ListsRouteTest`, `ThemeModeSelectorTest` |
 | Transitions entre écrans | `NavigationTransitionsTest` |
+| Écran verrouillé en portrait | `ScreenOrientationTest` |
 | Icônes des barres système selon le thème choisi, palette sombre reconnue | `SystemBarsAppearanceTest`, `ThemePaletteTest` |
 | QR code du token (décodage ZXing du carré central, codes inversés une image sur deux, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
 | Certificats CA utilisateur, trafic local, clair refusé vers OpenFoodFacts | `NetworkSecurityConfigTest` (le test CA ne s'exécute que si une CA utilisateur est installée) |

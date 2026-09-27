@@ -130,3 +130,10 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
 - **Certificats utilisateur** : leur prise en compte est vérifiée automatiquement
   (`NetworkSecurityConfigTest`), mais le test complet n'est effectif que sur un appareil où une
   autorité de certification utilisateur est installée ; il est ignoré sinon.
+
+## Interface
+
+- **Portrait non garanti sur grand écran** : sur une tablette, un pliable ouvert ou une fenêtre de
+  bureau (plus petite largeur ≥ 600 dp), Android 16 et plus ignorent le verrou en portrait
+  ([ADR 0027](adr/0027-portrait-uniquement.md)) ; l'application s'y affiche aussi en paysage, sans
+  mise en page dédiée. Non vérifié sur ce type d'appareil.

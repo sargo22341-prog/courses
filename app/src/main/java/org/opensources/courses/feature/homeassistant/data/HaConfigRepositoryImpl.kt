@@ -33,7 +33,7 @@ class HaConfigRepositoryImpl
                     enabled = preferences[ENABLED] ?: false,
                     baseUrl = preferences[BASE_URL].orEmpty(),
                     hasToken = preferences[HAS_TOKEN] ?: false,
-                    listMode = preferences[LIST_MODE]?.let { runCatching { HaListMode.valueOf(it) }.getOrNull() } ?: HaListMode.APP_CREATED_ONLY,
+                    listMode = preferences[LIST_MODE]?.let { stored -> HaListMode.entries.firstOrNull { it.name == stored } } ?: HaListMode.APP_CREATED_ONLY,
                     autoSync = preferences[AUTO_SYNC] ?: true,
                     autoCreateLists = preferences[AUTO_CREATE_LISTS] ?: true,
                     listsSetupDone = preferences[LISTS_SETUP_DONE] ?: false,

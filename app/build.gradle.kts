@@ -73,6 +73,13 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        // AGENTS.md rule 10: a Kotlin warning fails the build, like a Lint warning.
+        allWarningsAsErrors = true
+    }
+}
+
 room {
     // Exported schemas are the reference for future migrations (see docs/adr/0020-migrations-room-sans-perte.md).
     schemaDirectory("$projectDir/schemas")

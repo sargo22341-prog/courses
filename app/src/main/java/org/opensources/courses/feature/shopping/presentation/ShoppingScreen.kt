@@ -9,31 +9,20 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -44,17 +33,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.opensources.courses.R
-import org.opensources.courses.core.designsystem.component.SyncIndicator
 import org.opensources.courses.feature.catalog.domain.ProductSuggestion
 import org.opensources.courses.feature.shopping.domain.ShoppingItem
 import org.opensources.courses.feature.shopping.presentation.components.AddItemField
@@ -64,6 +50,7 @@ import org.opensources.courses.feature.shopping.presentation.components.HistoryP
 import org.opensources.courses.feature.shopping.presentation.components.ItemRowActions
 import org.opensources.courses.feature.shopping.presentation.components.PurchasedFooter
 import org.opensources.courses.feature.shopping.presentation.components.ShoppingListContent
+import org.opensources.courses.feature.shopping.presentation.components.ShoppingTopBar
 import org.opensources.courses.feature.shopping.presentation.components.SuggestionsPanel
 
 @Composable
@@ -124,7 +111,6 @@ class ShoppingActions(
     val onOpenSettings: () -> Unit = {},
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingScreen(
     state: ShoppingUiState,
@@ -148,29 +134,7 @@ fun ShoppingScreen(
     BackHandler(enabled = showsHistory) { focusManager.clearFocus() }
     state.pendingDeletion?.let { DeletionUndoOffer(it, snackbarHostState, actions) }
     Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-                title = {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.ShoppingCart, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(10.dp))
-                            Text(state.listName, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                        SyncIndicator(state.sync)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = actions.onOpenLists) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.shopping_open_lists))
-                    }
-                    IconButton(onClick = actions.onOpenSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.shopping_open_settings))
-                    }
-                },
-            )
-        },
+        topBar = { ShoppingTopBar(state.listName, state.sync, actions.onOpenLists, actions.onOpenSettings) },
         bottomBar = {
             AnimatedVisibility(visible = state.purchased.isNotEmpty() && !searching && !showsHistory) {
                 PurchasedFooter(
@@ -192,45 +156,7 @@ fun ShoppingScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 onFocusChange = { fieldFocused = it },
             )
-            val panel =
-                when {
-                    showsHistory -> Panel.HISTORY
-                    searching -> Panel.SUGGESTIONS
-                    else -> Panel.LIST
-                }
-            AnimatedContent(
-                targetState = panel,
-                transitionSpec = { fadeIn(tween(PANEL_FADE_MILLIS)) togetherWith fadeOut(tween(PANEL_FADE_MILLIS)) },
-                label = "panel",
-            ) { shown ->
-                when (shown) {
-                    // The field keeps the focus: several products can be picked in a row.
-                    Panel.HISTORY -> HistoryPanel(history = state.history, onProductSelected = actions.onSuggestionSelected)
-                    Panel.SUGGESTIONS ->
-                        SuggestionsPanel(
-                            entry = state.searchedEntry,
-                            suggestions = state.suggestions,
-                            offersCustomItem = state.offersCustomItem,
-                            onSuggestionSelected = actions.onSuggestionSelected,
-                            onAddCustomItem = actions.onAddCustomItem,
-                        )
-                    Panel.LIST ->
-                        RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
-                            ShoppingListContent(
-                                isLoading = state.isLoading,
-                                toBuy = state.toBuy,
-                                toBuySections = state.toBuySections,
-                                purchased = state.purchased,
-                                hidePurchased = state.hidePurchased,
-                                actions = rowActions,
-                                onRequestDeletePurchased = { confirmDeletePurchased = true },
-                                highlightedItemId = state.highlightedItemId,
-                                onHighlightShown = actions.onHighlightShown,
-                                listState = listState,
-                            )
-                        }
-                }
-            }
+            PanelContent(panelFor(showsHistory, searching), state, actions, rowActions, listState, onRequestDeletePurchased = { confirmDeletePurchased = true })
         }
     }
     EditItemDialogHost(state, editedItemId, actions, onClose = { editedItemId = null })
@@ -245,10 +171,65 @@ fun ShoppingScreen(
     }
 }
 
-/** What the space under the field shows; switching fades one into the other. */
+/** What the space under the field shows. */
 private enum class Panel { HISTORY, SUGGESTIONS, LIST }
 
 private const val PANEL_FADE_MILLIS = 150
+
+private fun panelFor(
+    showsHistory: Boolean,
+    searching: Boolean,
+): Panel =
+    when {
+        showsHistory -> Panel.HISTORY
+        searching -> Panel.SUGGESTIONS
+        else -> Panel.LIST
+    }
+
+/** The [panel] under the field; switching fades one into the other. */
+@Composable
+private fun PanelContent(
+    panel: Panel,
+    state: ShoppingUiState,
+    actions: ShoppingActions,
+    rowActions: ItemRowActions,
+    listState: LazyListState,
+    onRequestDeletePurchased: () -> Unit,
+) {
+    AnimatedContent(
+        targetState = panel,
+        transitionSpec = { fadeIn(tween(PANEL_FADE_MILLIS)) togetherWith fadeOut(tween(PANEL_FADE_MILLIS)) },
+        label = "panel",
+    ) { shown ->
+        when (shown) {
+            // The field keeps the focus: several products can be picked in a row.
+            Panel.HISTORY -> HistoryPanel(history = state.history, onProductSelected = actions.onSuggestionSelected)
+            Panel.SUGGESTIONS ->
+                SuggestionsPanel(
+                    entry = state.searchedEntry,
+                    suggestions = state.suggestions,
+                    offersCustomItem = state.offersCustomItem,
+                    onSuggestionSelected = actions.onSuggestionSelected,
+                    onAddCustomItem = actions.onAddCustomItem,
+                )
+            Panel.LIST ->
+                RefreshableContent(enabled = state.sync.remoteEnabled, isRefreshing = state.isRefreshing, onRefresh = actions.onRefresh) {
+                    ShoppingListContent(
+                        isLoading = state.isLoading,
+                        toBuy = state.toBuy,
+                        toBuySections = state.toBuySections,
+                        purchased = state.purchased,
+                        hidePurchased = state.hidePurchased,
+                        actions = rowActions,
+                        onRequestDeletePurchased = onRequestDeletePurchased,
+                        highlightedItemId = state.highlightedItemId,
+                        onHighlightShown = actions.onHighlightShown,
+                        listState = listState,
+                    )
+                }
+        }
+    }
+}
 
 /**
  * "« Lait » supprimé · Annuler". Leaving the composition (undone, or replaced by another deletion)

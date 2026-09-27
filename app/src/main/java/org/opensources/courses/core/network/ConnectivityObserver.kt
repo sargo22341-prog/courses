@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import org.opensources.courses.core.common.ApplicationScope
@@ -57,7 +58,10 @@ class AndroidConnectivityObserver
                     }
                 manager.registerDefaultNetworkCallback(callback)
                 awaitClose { manager.unregisterNetworkCallback(callback) }
-            }.distinctUntilChanged()
+            }
+                // Only the latest state matters: conflated, trySend above can never be refused.
+                .conflate()
+                .distinctUntilChanged()
                 .stateIn(scope, SharingStarted.Eagerly, currentlyOnline())
 
         private fun currentlyOnline(): Boolean =

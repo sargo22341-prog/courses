@@ -3,6 +3,7 @@ package org.opensources.courses.feature.homeassistant.data.remote
 import dagger.Lazy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -60,7 +62,8 @@ class HomeAssistantWebSocketClient
         ): Flow<RemoteChange> =
             flow {
                 var failures = 0
-                while (true) {
+                // Ends with the collector (the app leaves the foreground) or on a refusal below.
+                while (currentCoroutineContext().isActive) {
                     var lost = true
                     emitAll(
                         connect(credentials, entityIds)

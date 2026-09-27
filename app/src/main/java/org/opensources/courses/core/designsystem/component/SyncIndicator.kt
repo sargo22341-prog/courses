@@ -108,5 +108,5 @@ private fun errorLabel(failure: SyncFailure?): Int =
     when (failure) {
         SyncFailure.LIST_UNAVAILABLE -> R.string.sync_list_unavailable
         SyncFailure.REJECTED -> R.string.sync_changes_rejected
-        else -> R.string.sync_error
+        SyncFailure.UNREACHABLE, SyncFailure.UNAUTHORIZED, SyncFailure.PROTOCOL, null -> R.string.sync_error
     }

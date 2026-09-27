@@ -7,4 +7,4 @@ liste des commits. Détails : [docs/release.md](docs/release.md).
 
 <!-- notes -->
 - L'écran reste en mode portrait : il ne pivote plus quand on tourne le téléphone.
-
+- Une requête vers Home Assistant qui ne répond pas est abandonnée au bout de 90 secondes au plus, puis réessayée plus tard.

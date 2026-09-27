@@ -11,6 +11,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -52,16 +53,7 @@ fun ShoppingItemRow(
     highlighted: Boolean = false,
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
-    val currentItem by rememberUpdatedState(item)
-    val currentOnDelete by rememberUpdatedState(onDelete)
-    LaunchedEffect(dismissState) {
-        // The state is saved under the item's key: a row shown again after "Annuler" comes back
-        // swiped away. It is put back first, so only a new swipe deletes the item.
-        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismissState.snapTo(SwipeToDismissBoxValue.Settled)
-        snapshotFlow { dismissState.currentValue }
-            .filter { it == SwipeToDismissBoxValue.EndToStart }
-            .collect { currentOnDelete(currentItem) }
-    }
+    DeleteWhenSwiped(dismissState, item, onDelete)
     val haptics = LocalHapticFeedback.current
     val toggle = {
         haptics.performHapticFeedback(if (item.isChecked) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
@@ -112,6 +104,26 @@ fun ShoppingItemRow(
 }
 
 private const val CHECK_MILLIS = 250
+
+/**
+ * Deletes [item] once its row is swiped away. The state is saved under the item's key: a row shown
+ * again after "Annuler" comes back swiped away. It is put back first, so only a new swipe deletes it.
+ */
+@Composable
+private fun DeleteWhenSwiped(
+    dismissState: SwipeToDismissBoxState,
+    item: ShoppingItem,
+    onDelete: (ShoppingItem) -> Unit,
+) {
+    val currentItem by rememberUpdatedState(item)
+    val currentOnDelete by rememberUpdatedState(onDelete)
+    LaunchedEffect(dismissState) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        snapshotFlow { dismissState.currentValue }
+            .filter { it == SwipeToDismissBoxValue.EndToStart }
+            .collect { currentOnDelete(currentItem) }
+    }
+}
 
 /** What the rows of a list do, gathered in one stable object rather than passed row by row. */
 @Immutable

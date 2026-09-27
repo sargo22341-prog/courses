@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
+import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.util.Base64
 import javax.crypto.Cipher
@@ -34,7 +35,7 @@ class KeystoreSecretStore
 
         override suspend fun read(name: String): String? {
             val encoded = dataStore.data.first()[stringPreferencesKey(name)] ?: return null
-            return runCatching { decrypt(encoded) }.getOrElse {
+            return decrypt(encoded) ?: run {
                 remove(name)
                 null
             }
@@ -60,12 +61,22 @@ class KeystoreSecretStore
             return encoder.encodeToString(cipher.iv) + SEPARATOR + encoder.encodeToString(encrypted)
         }
 
-        private fun decrypt(encoded: String): String {
-            val (iv, payload) = encoded.split(SEPARATOR).map { Base64.getDecoder().decode(it) }
-            val key = keyStore.getKey(KEY_ALIAS, null) as? SecretKey ?: error("Missing key")
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv))
-            return String(cipher.doFinal(payload), Charsets.UTF_8)
+        /** Null when the value cannot be decrypted: malformed, or its key lost after a restore. */
+        private fun decrypt(encoded: String): String? {
+            val parts = encoded.split(SEPARATOR)
+            if (parts.size != 2) return null
+            return try {
+                val (iv, payload) = parts.map { Base64.getDecoder().decode(it) }
+                val key = keyStore.getKey(KEY_ALIAS, null) as? SecretKey ?: return null
+                val cipher = Cipher.getInstance(TRANSFORMATION)
+                cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv))
+                String(cipher.doFinal(payload), Charsets.UTF_8)
+            } catch (_: GeneralSecurityException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                // Not Base64.
+                null
+            }
         }
 
         private fun getOrCreateKey(): SecretKey =

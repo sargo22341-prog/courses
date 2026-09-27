@@ -87,15 +87,15 @@ class HaItemPusher(
             when {
                 operations.none { it.isLastAttempt } -> {
                     queue.fail(ids)
-                    tally.retried++
+                    tally.recordRetried()
                 }
                 item == null -> {
                     queue.complete(ids)
-                    tally.abandoned++
+                    tally.recordAbandoned()
                 }
                 else -> {
                     store.abandonItemChanges(item.localId, ids)
-                    tally.abandoned++
+                    tally.recordAbandoned()
                 }
             }
         }

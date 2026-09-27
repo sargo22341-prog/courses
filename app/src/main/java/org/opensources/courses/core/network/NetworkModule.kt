@@ -27,9 +27,13 @@ object NetworkModule {
             .Builder()
             .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            // Bounds a whole request, redirects and slow bodies included. A WebSocket leaves it once
+            // connected: the live connection is not cut.
+            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor(UserAgentInterceptor())
             .build()
 
     private const val CONNECT_TIMEOUT_SECONDS = 10L
     private const val READ_TIMEOUT_SECONDS = 60L
+    private const val CALL_TIMEOUT_SECONDS = 90L
 }

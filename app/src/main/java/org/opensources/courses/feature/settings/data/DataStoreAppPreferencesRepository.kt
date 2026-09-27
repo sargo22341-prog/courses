@@ -35,7 +35,7 @@ class DataStoreAppPreferencesRepository
         override val preferences: Flow<AppPreferences> =
             dataStore.data.map { preferences ->
                 AppPreferences(
-                    themeMode = preferences[THEME_MODE]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
+                    themeMode = preferences[THEME_MODE]?.let { stored -> ThemeMode.entries.firstOrNull { it.name == stored } } ?: ThemeMode.SYSTEM,
                     onboardingCompleted = preferences[ONBOARDING_COMPLETED] ?: false,
                     hidePurchased = preferences[HIDE_PURCHASED] ?: false,
                     groupByCategory = preferences[GROUP_BY_CATEGORY] ?: false,

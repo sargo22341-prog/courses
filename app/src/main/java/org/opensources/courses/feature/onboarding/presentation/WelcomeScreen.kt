@@ -70,57 +70,63 @@ fun WelcomeScreen(
 ) {
     // Surface (not a plain background) so texts get the theme's content colour in dark mode.
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
-    Box(
-        modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        // Scrollable: the language choice must not push the buttons off small or zoomed screens.
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()).padding(vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        Box(
+            modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 32.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = null,
-                modifier =
-                    Modifier
-                        .size(128.dp)
-                        .clip(RoundedCornerShape(36.dp))
-                        .background(colorResource(R.color.launcher_background)),
-            )
-            Spacer(Modifier.height(32.dp))
-            Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.headlineLarge)
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = stringResource(R.string.welcome_subtitle),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(32.dp))
-            Text(stringResource(R.string.welcome_language), style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            LanguageSelector(
-                selected = language,
-                onSelect = onLanguageSelected,
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            )
-            Spacer(Modifier.height(32.dp))
-            Button(onClick = onStart, enabled = enabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                Text(stringResource(R.string.welcome_start), style = MaterialTheme.typography.titleMedium)
+            // Scrollable: the language choice must not push the buttons off small or zoomed screens.
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                WelcomeHeader()
+                Spacer(Modifier.height(32.dp))
+                Text(stringResource(R.string.welcome_language), style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(8.dp))
+                LanguageSelector(
+                    selected = language,
+                    onSelect = onLanguageSelected,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                )
+                Spacer(Modifier.height(32.dp))
+                Button(onClick = onStart, enabled = enabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+                    Text(stringResource(R.string.welcome_start), style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = onConnectHomeAssistant, enabled = enabled) {
+                    Text(stringResource(R.string.welcome_connect_ha))
+                }
+                Text(
+                    text = stringResource(R.string.welcome_ha_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
             }
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onConnectHomeAssistant, enabled = enabled) {
-                Text(stringResource(R.string.welcome_connect_ha))
-            }
-            Text(
-                text = stringResource(R.string.welcome_ha_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
         }
     }
-    }
+}
+
+/** The app icon, its name and what it is for. */
+@Composable
+private fun WelcomeHeader() {
+    Image(
+        painter = painterResource(R.drawable.ic_launcher_foreground),
+        contentDescription = null,
+        modifier =
+            Modifier
+                .size(128.dp)
+                .clip(RoundedCornerShape(36.dp))
+                .background(colorResource(R.color.launcher_background)),
+    )
+    Spacer(Modifier.height(32.dp))
+    Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.headlineLarge)
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = stringResource(R.string.welcome_subtitle),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
 }

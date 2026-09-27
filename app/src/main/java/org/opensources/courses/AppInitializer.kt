@@ -1,5 +1,6 @@
 package org.opensources.courses
 
+import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
@@ -41,14 +42,22 @@ class AppInitializer
             syncCoordinator.start()
         }
 
-        /** A failed background refresh must never crash the app: the local data stays usable. */
+        /**
+         * A failed background refresh must never crash the app: the local data stays usable and the
+         * work is retried at the next start. The failure is still reported in the system log.
+         */
         private suspend fun ignoringFailures(block: suspend () -> Unit) {
             try {
                 block()
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (_: Exception) {
-                // Retried at the next start.
+            } catch (exception: Exception) {
+                // Catalog files and local lists only: no secret can appear in this message.
+                Log.w(TAG, "Background start-up work failed", exception)
             }
+        }
+
+        private companion object {
+            const val TAG = "AppInitializer"
         }
     }

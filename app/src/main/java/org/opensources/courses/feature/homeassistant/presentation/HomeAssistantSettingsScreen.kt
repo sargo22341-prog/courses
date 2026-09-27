@@ -68,17 +68,7 @@ fun HomeAssistantRoute(
         }
     }
     if (scanningToken) {
-        QrCodeScannerDialog(
-            onScanned = { scanned ->
-                scanningToken = false
-                viewModel.onTokenScanned(scanned)
-            },
-            onCameraUnavailable = {
-                scanningToken = false
-                viewModel.onScannerUnavailable()
-            },
-            onDismiss = { scanningToken = false },
-        )
+        TokenScanner(onClose = { scanningToken = false }, onScanned = viewModel::onTokenScanned, onUnavailable = viewModel::onScannerUnavailable)
     }
     state.pickerList?.let { list ->
         HaListPickerDialog(
@@ -90,6 +80,26 @@ fun HomeAssistantRoute(
             onDismiss = { viewModel.closePicker(list.id) },
         )
     }
+}
+
+/** Reads the token from a QR code; [onClose] closes the scanner before the result is handled. */
+@Composable
+private fun TokenScanner(
+    onClose: () -> Unit,
+    onScanned: (String) -> Unit,
+    onUnavailable: () -> Unit,
+) {
+    QrCodeScannerDialog(
+        onScanned = { scanned ->
+            onClose()
+            onScanned(scanned)
+        },
+        onCameraUnavailable = {
+            onClose()
+            onUnavailable()
+        },
+        onDismiss = onClose,
+    )
 }
 
 @Composable

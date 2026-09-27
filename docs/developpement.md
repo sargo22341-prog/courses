@@ -34,8 +34,10 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 ```
 
 Zéro erreur, zéro test en échec, Lint au vert (ses avertissements sont des erreurs, sauf les
-annonces de nouvelles versions de dépendances, vues avec `dependencyUpdates`), aucun nouvel
-avertissement Kotlin ou Compose, aucun fichier source de plus de 600 lignes. Détail des suites : [Tests](tests.md).
+annonces de nouvelles versions de dépendances, vues avec `dependencyUpdates`), aucun avertissement
+Kotlin ou Compose (`allWarningsAsErrors` : un avertissement du compilateur fait échouer le build),
+aucun fichier source de plus de 600 lignes ni fonction de plus de ~60 lignes (règles de base
+d'`AGENTS.md`). Détail des suites : [Tests](tests.md).
 
 Seul avertissement restant : `Configuration.setVisible(boolean) method has been deprecated` (avec
 `--warning-mode all`). Il est émis par AGP 9.4.1 lui-même (`BasePlugin.apply`) sous Gradle 9.8,

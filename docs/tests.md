@@ -75,6 +75,7 @@ Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 | Transitions entre écrans | `NavigationTransitionsTest` |
 | Écran verrouillé en portrait | `ScreenOrientationTest` |
 | Icônes des barres système selon le thème choisi, palette sombre reconnue | `SystemBarsAppearanceTest`, `ThemePaletteTest` |
+| Token chiffré par le Keystore (relu tel quel, valeur illisible supprimée et lue comme absente) | `KeystoreSecretStoreTest` (Keystore réel, DataStore de test) |
 | QR code du token (décodage ZXing du carré central, codes inversés une image sur deux, validation) | `QrCodeDecoderTest`, `HaTokenParserTest` |
 | Certificats CA utilisateur, trafic local, clair refusé vers OpenFoodFacts | `NetworkSecurityConfigTest` (le test CA ne s'exécute que si une CA utilisateur est installée) |
 | Traductions (placeholders, pluriels `many`) | `StringResourcesTest` |

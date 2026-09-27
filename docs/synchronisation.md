@@ -102,7 +102,9 @@ Liste par liste :
   retrouvé par nom) : l'article n'est pas renvoyé, ce qui créerait un doublon ; la copie de Home
   Assistant le remplace localement à la réconciliation qui suit.
 - Serveur injoignable ou token refusé : la synchronisation s'arrête, tout reste en file sans que
-  la tentative compte, nouvel essai plus tard.
+  la tentative compte, nouvel essai plus tard. Une requête qui ne se termine pas compte comme
+  serveur injoignable : connexion 10 s, lecture 15 s, requête entière 90 s au plus (la connexion
+  temps réel n'a que le délai de connexion : une fois ouverte, des pings détectent sa perte).
 - Un token valide mais **non administrateur** ne peut pas créer ni supprimer de liste : Home
   Assistant répond 401, ce qui n'est traité comme « token refusé » que si `/api/` le refuse aussi ;
   sinon seule la demande est refusée.

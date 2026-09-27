@@ -123,7 +123,7 @@ class HomeAssistantSyncEngine
                 for (list in lists) {
                     // Its integration is stopped: nothing can be read, nothing is unlinked or lost.
                     if (list.remoteId?.let(remoteLists.byEntityId::get)?.isAvailable == false) {
-                        tally.unavailable++
+                        tally.recordUnavailable()
                         continue
                     }
                     try {
@@ -132,7 +132,7 @@ class HomeAssistantSyncEngine
                     } catch (exception: HomeAssistantException) {
                         // A list that cannot be read is retried as a whole at the next synchronisation.
                         if (exception.isFatal) throw exception
-                        tally.retried++
+                        tally.recordRetried()
                     }
                 }
                 tally.outcome().also { outcome ->
@@ -211,10 +211,10 @@ class HomeAssistantSyncEngine
                     if (creation.isLastAttempt) {
                         // Given up: the list stays on this phone, the user can link it by hand.
                         store.unlinkList(list.localId)
-                        tally.abandoned++
+                        tally.recordAbandoned()
                     } else {
                         queue.fail(listOf(creation.id))
-                        tally.retried++
+                        tally.recordRetried()
                     }
                     return null
                 }
@@ -229,29 +229,42 @@ class HomeAssistantSyncEngine
             tally: SyncTally,
         ) {
             for (operation in deletions) {
-                var abandoned = false
-                try {
-                    operation.remoteEntryId?.let { gateway.deleteList(credentials, it) }
-                } catch (exception: HomeAssistantException) {
-                    if (exception.isFatal) throw exception
-                    if (exception.kind != HaErrorKind.NOT_FOUND) {
-                        if (!operation.isLastAttempt) {
-                            queue.fail(listOf(operation.id))
-                            tally.retried++
-                            continue
-                        }
-                        abandoned = true
-                        tally.abandoned++
+                val deletion = deleteRemotely(credentials, operation)
+                when (deletion) {
+                    ListDeletion.RETRY_LATER -> {
+                        queue.fail(listOf(operation.id))
+                        tally.recordRetried()
+                        continue
                     }
+                    ListDeletion.GIVEN_UP -> tally.recordAbandoned()
+                    ListDeletion.DONE -> Unit
                 }
                 operation.remoteListId?.let { entityId ->
                     store.forgetTrackedList(entityId)
                     // Not deleted remotely (created elsewhere, or refused): the "all lists" mode must not bring it back.
-                    if (operation.remoteEntryId == null || abandoned) store.ignoreList(entityId)
+                    if (operation.remoteEntryId == null || deletion == ListDeletion.GIVEN_UP) store.ignoreList(entityId)
                 }
                 queue.complete(listOf(operation.id))
             }
         }
+
+        /** A list already gone from Home Assistant, or created elsewhere (no config entry), is done. */
+        private suspend fun deleteRemotely(
+            credentials: HaCredentials,
+            operation: SyncOperation,
+        ): ListDeletion {
+            val entryId = operation.remoteEntryId ?: return ListDeletion.DONE
+            try {
+                gateway.deleteList(credentials, entryId)
+            } catch (exception: HomeAssistantException) {
+                if (exception.isFatal) throw exception
+                if (exception.kind == HaErrorKind.NOT_FOUND) return ListDeletion.DONE
+                return if (operation.isLastAttempt) ListDeletion.GIVEN_UP else ListDeletion.RETRY_LATER
+            }
+            return ListDeletion.DONE
+        }
+
+        private enum class ListDeletion { DONE, RETRY_LATER, GIVEN_UP }
 
         /** The Home Assistant lists by entity id; [areFresh] when read by this synchronisation. */
         private class RemoteLists(

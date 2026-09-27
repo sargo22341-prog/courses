@@ -6,13 +6,25 @@ import org.opensources.courses.core.sync.SyncOutcome
 /** What went wrong during one synchronisation, without stopping it. */
 class SyncTally {
     /** Changes refused this time; they stay queued for a later retry. */
-    var retried = 0
+    private var retried = 0
 
     /** Changes refused too many times, given up. */
-    var abandoned = 0
+    private var abandoned = 0
 
     /** Linked lists that Home Assistant reports as unavailable; their changes stay queued. */
-    var unavailable = 0
+    private var unavailable = 0
+
+    fun recordRetried() {
+        retried++
+    }
+
+    fun recordAbandoned() {
+        abandoned++
+    }
+
+    fun recordUnavailable() {
+        unavailable++
+    }
 
     /** Given-up changes come first: the user must learn that they will never reach Home Assistant. */
     fun outcome(): SyncOutcome =

@@ -260,6 +260,32 @@ class HomeAssistantClientTest {
         }
 
     @Test
+    fun `a server restarting behind a proxy is unreachable, not a refusal`() =
+        runTest {
+            for (code in listOf(429, 502, 503, 504)) {
+                respond("""{"message":"unavailable"}""", code = code)
+                assertErrorKind(HaErrorKind.UNREACHABLE) { client.testConnection(credentials) }
+            }
+            respond("""{"message":"error"}""", code = 500)
+            assertErrorKind(HaErrorKind.PROTOCOL) { client.testConnection(credentials) }
+        }
+
+    @Test
+    fun `attributes of an unexpected type are read as absent`() =
+        runTest {
+            respond(
+                """
+                [{"entity_id":"todo.courses","state":"0","attributes":{"friendly_name":{"fr":"Courses"},"supported_features":[7]}}]
+                """.trimIndent(),
+            )
+
+            val list = client.getTodoLists(credentials).single()
+
+            assertEquals("todo.courses", list.name)
+            assertFalse(list.isEditable)
+        }
+
+    @Test
     fun `malformed address is reported as invalid before any request`() =
         runTest {
             assertErrorKind(HaErrorKind.INVALID_URL) { client.testConnection(HaCredentials("https://ha nas.home", "secret-token")) }

@@ -10,7 +10,9 @@ import javax.inject.Singleton
  * Persistent, ordered queue of local changes to push to the remote.
  *
  * Writers enqueue inside the same Room transaction as the change itself, so a change and its
- * operation are always persisted together — even with no network at all.
+ * operation are always persisted together — even with no network at all. An operation replaces
+ * those it supersedes ([SyncOperationType.supersedes]) in that transaction: the queue does not grow
+ * with each tap while the remote is unreachable.
  */
 @Singleton
 class SyncQueue
@@ -27,6 +29,7 @@ class SyncQueue
             remoteItemId: String? = null,
             remoteEntryId: String? = null,
         ) {
+            if (type.supersedes.isNotEmpty()) dao.deleteSuperseded(listLocalId, itemLocalId, type.supersedes.toList())
             dao.insert(
                 SyncOperationEntity(
                     type = type,

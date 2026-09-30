@@ -10,6 +10,14 @@ interface SyncOperationDao {
     @Insert
     suspend fun insert(operation: SyncOperationEntity): Long
 
+    /** `IS` also matches the null item of list operations. */
+    @Query("DELETE FROM sync_operations WHERE listLocalId = :listLocalId AND itemLocalId IS :itemLocalId AND type IN (:types)")
+    suspend fun deleteSuperseded(
+        listLocalId: String,
+        itemLocalId: String?,
+        types: List<SyncOperationType>,
+    )
+
     @Query("SELECT * FROM sync_operations ORDER BY id ASC")
     suspend fun getAll(): List<SyncOperationEntity>
 

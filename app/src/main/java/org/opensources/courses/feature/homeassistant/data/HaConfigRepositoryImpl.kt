@@ -13,6 +13,7 @@ import org.opensources.courses.core.security.SecretStore
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaCredentials
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
+import org.opensources.courses.feature.homeassistant.domain.HaSaveResult
 import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
 import javax.inject.Inject
@@ -44,7 +45,7 @@ class HaConfigRepositoryImpl
         override suspend fun credentials(): HaCredentials? {
             val current = config.first()
             if (!current.enabled || !current.isConfigured) return null
-            val token = secrets.read(TOKEN_SECRET) ?: return null
+            val token = storedToken(current) ?: return null
             return HaCredentials(current.baseUrl, token)
         }
 
@@ -53,17 +54,22 @@ class HaConfigRepositoryImpl
             typedToken: String,
         ): HaCredentials? {
             val url = HaUrlNormalizer.normalize(baseUrl) ?: return null
-            val token = typedToken.trim().ifEmpty { secrets.read(TOKEN_SECRET) } ?: return null
+            val token = typedToken.trim().ifEmpty { storedTokenFor(url) } ?: return null
             return HaCredentials(url, token)
         }
 
         override suspend fun saveConnection(
             baseUrl: String,
             token: String,
-        ): Boolean {
-            val url = HaUrlNormalizer.normalize(baseUrl) ?: return false
+        ): HaSaveResult {
+            val url = HaUrlNormalizer.normalize(baseUrl) ?: return HaSaveResult.INVALID_URL
             val cleanToken = token.trim()
-            if (cleanToken.isNotEmpty()) secrets.write(TOKEN_SECRET, cleanToken)
+            if (cleanToken.isEmpty()) {
+                val current = config.first()
+                if (current.hasToken && !HaUrlNormalizer.sameHost(url, current.baseUrl)) return HaSaveResult.TOKEN_REQUIRED
+            } else {
+                secrets.write(TOKEN_SECRET, cleanToken)
+            }
             dataStore.edit { preferences ->
                 preferences[BASE_URL] = url
                 if (cleanToken.isNotEmpty()) {
@@ -71,7 +77,29 @@ class HaConfigRepositoryImpl
                     preferences[TOKEN_VERSION] = (preferences[TOKEN_VERSION] ?: 0) + 1
                 }
             }
-            return true
+            return HaSaveResult.SAVED
+        }
+
+        /** The stored token, only for the server it was saved for. */
+        private suspend fun storedTokenFor(url: String): String? {
+            val current = config.first()
+            return if (HaUrlNormalizer.sameHost(url, current.baseUrl)) storedToken(current) else null
+        }
+
+        /**
+         * A token that can no longer be decrypted (Keystore key lost, corrupted data) is removed by the
+         * [SecretStore]: the settings stop claiming one, so Home Assistant shows as not configured and
+         * the token is asked again, instead of synchronisations being skipped without any sign. A token
+         * saved meanwhile has another version and is left alone.
+         */
+        private suspend fun storedToken(current: HomeAssistantConfig): String? {
+            if (!current.hasToken) return null
+            return secrets.read(TOKEN_SECRET) ?: run {
+                dataStore.edit { preferences ->
+                    if ((preferences[TOKEN_VERSION] ?: 0) == current.tokenVersion) preferences[HAS_TOKEN] = false
+                }
+                null
+            }
         }
 
         override suspend fun forgetConnection() {

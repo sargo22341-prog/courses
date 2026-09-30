@@ -48,21 +48,28 @@ class RoomSyncLocalStore
                 SyncItemRef(it.localId, it.listLocalId, it.name, it.quantity, it.unit, it.isChecked, it.remoteId, it.isDeleted, it.syncStatus, it.catalogProductId)
             }
 
-        override suspend fun setListRemote(
+        override suspend fun linkCreatedList(
             listLocalId: String,
             entityId: String,
             configEntryId: String?,
-        ) {
+        ): Boolean =
             transactions.inTransaction {
-                val list = listDao.getById(listLocalId) ?: return@inTransaction
+                val list = listDao.getById(listLocalId)
+                if (list == null) {
+                    queue.enqueue(SyncOperationType.DELETE_LIST, listLocalId, remoteListId = entityId, remoteEntryId = configEntryId)
+                    return@inTransaction false
+                }
                 listDao.update(list.copy(remoteId = entityId, remoteEntryId = configEntryId, createdByApp = true, syncStatus = SyncStatus.SYNCED))
                 trackedDao.upsert(HaTrackedListEntity(entityId, configEntryId))
+                true
             }
-        }
 
+        // Read and written in one transaction: a rename made in between must not be overwritten.
         override suspend fun markListSynced(listLocalId: String) {
-            val list = listDao.getById(listLocalId) ?: return
-            if (list.remoteId != null && list.syncStatus == SyncStatus.PENDING) listDao.update(list.copy(syncStatus = SyncStatus.SYNCED))
+            transactions.inTransaction {
+                val list = listDao.getById(listLocalId) ?: return@inTransaction
+                if (list.remoteId != null && list.syncStatus == SyncStatus.PENDING) listDao.update(list.copy(syncStatus = SyncStatus.SYNCED))
+            }
         }
 
         override suspend fun ignoredEntityIds(): Set<String> = writer.ignoredEntityIds()
@@ -130,6 +137,44 @@ class RoomSyncLocalStore
                 val item = itemDao.getById(itemLocalId) ?: return@inTransaction
                 itemDao.update(item.copy(remoteId = remoteId))
             }
+        }
+
+        override suspend fun linkCreatedItem(
+            item: SyncItemRef,
+            uid: String,
+        ): Boolean =
+            transactions.inTransaction {
+                itemDao.getById(item.localId)?.let { current ->
+                    itemDao.update(current.copy(remoteId = uid))
+                    return@inTransaction true
+                }
+                // Its whole list was deleted: the deletion of the list takes care of Home Assistant.
+                if (listDao.getById(item.listLocalId) == null) return@inTransaction false
+                itemDao.insert(createdTombstone(item, uid))
+                queue.enqueue(SyncOperationType.DELETE_ITEM, item.listLocalId, item.localId, remoteItemId = uid)
+                false
+            }
+
+        /** Home Assistant always creates an item unchecked. */
+        private fun createdTombstone(
+            item: SyncItemRef,
+            uid: String,
+        ): ShoppingItemEntity {
+            val now = clock.millis()
+            return ShoppingItemEntity(
+                localId = item.localId,
+                listLocalId = item.listLocalId,
+                name = item.name,
+                quantity = item.quantity,
+                unit = item.unit,
+                isChecked = false,
+                catalogProductId = item.catalogProductId,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = uid,
+                syncStatus = SyncStatus.PENDING,
+                isDeleted = true,
+            )
         }
 
         override suspend fun purgeItem(itemLocalId: String) = itemDao.delete(itemLocalId)

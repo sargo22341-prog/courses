@@ -43,6 +43,7 @@ décision, ses conséquences et les alternatives écartées.
 | [0025](0025-catalogue-genere-a-la-compilation.md) | Catalogue OpenFoodFacts généré avant la compilation | acceptée |
 | [0026](0026-listes-mealie.md) | Listes Mealie : texte lu comme quantité + aliment, intégration demandée au registre | acceptée |
 | [0027](0027-portrait-uniquement.md) | Interface en portrait uniquement | acceptée |
+| [0028](0028-base-exclue-des-sauvegardes-cloud.md) | Listes et historique exclus des sauvegardes cloud, gardés en transfert d'appareil | acceptée |
 
 ## Modèle
 

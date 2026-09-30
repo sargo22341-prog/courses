@@ -9,8 +9,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.opensources.courses.feature.homeassistant.domain.HaCreatedList
@@ -40,10 +38,11 @@ class HomeAssistantClient
             call { api.states(credentials.url("/api/states"), credentials.bearer()) }
                 .filter { it.entityId.startsWith(TODO_DOMAIN) }
                 .map { state ->
-                    val features = state.attributes["supported_features"]?.jsonPrimitive?.intOrNull ?: 0
+                    // Attributes are free JSON: one of another type than expected is read as absent.
+                    val features = (state.attributes["supported_features"] as? JsonPrimitive)?.intOrNull ?: 0
                     HaTodoList(
                         entityId = state.entityId,
-                        name = state.attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: state.entityId,
+                        name = (state.attributes["friendly_name"] as? JsonPrimitive)?.contentOrNull ?: state.entityId,
                         supportsDescription = features and FEATURE_SET_DESCRIPTION != 0,
                         isAvailable = state.state != STATE_UNAVAILABLE,
                         isEditable = features and FEATURE_EDIT_ITEMS == FEATURE_EDIT_ITEMS,
@@ -141,7 +140,7 @@ class HomeAssistantClient
                     return@repeat
                 }
                 if (created.type != FLOW_CREATE_ENTRY) throw HomeAssistantException(HaErrorKind.REJECTED)
-                val entryId = (created.result as? JsonObject)?.get("entry_id")?.jsonPrimitive?.contentOrNull
+                val entryId = ((created.result as? JsonObject)?.get("entry_id") as? JsonPrimitive)?.contentOrNull
                 return HaCreatedList(awaitNewEntity(credentials, existing), entryId, candidate)
             }
             throw HomeAssistantException(HaErrorKind.REJECTED)
@@ -244,6 +243,9 @@ class HomeAssistantClient
                 401, 403 -> HaErrorKind.UNAUTHORIZED
                 404 -> HaErrorKind.NOT_FOUND
                 400 -> HaErrorKind.REJECTED
+                // Home Assistant restarting behind a proxy, or asking to slow down: nothing was refused,
+                // so nothing counts as a refusal and the synchronisation is retried later.
+                429, 502, 503, 504 -> HaErrorKind.UNREACHABLE
                 else -> HaErrorKind.PROTOCOL
             }
 

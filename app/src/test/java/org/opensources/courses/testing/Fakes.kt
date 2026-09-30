@@ -6,6 +6,7 @@ import org.opensources.courses.core.network.ConnectivityObserver
 import org.opensources.courses.core.security.SecretStore
 import org.opensources.courses.core.sync.SyncOperationDao
 import org.opensources.courses.core.sync.SyncOperationEntity
+import org.opensources.courses.core.sync.SyncOperationType
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -40,6 +41,15 @@ class FakeSyncOperationDao : SyncOperationDao {
         rows += stored
         publish()
         return stored.id
+    }
+
+    override suspend fun deleteSuperseded(
+        listLocalId: String,
+        itemLocalId: String?,
+        types: List<SyncOperationType>,
+    ) {
+        rows.removeAll { it.listLocalId == listLocalId && it.itemLocalId == itemLocalId && it.type in types }
+        publish()
     }
 
     override suspend fun getAll(): List<SyncOperationEntity> {

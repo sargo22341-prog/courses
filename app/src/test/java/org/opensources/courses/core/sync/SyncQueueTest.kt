@@ -29,6 +29,30 @@ class SyncQueueTest {
         }
 
     @Test
+    fun `only the latest change of a kind is kept, per item and per list`() =
+        runTest {
+            queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")
+            repeat(5) { queue.enqueue(SyncOperationType.UPDATE_ITEM, "list", "a") }
+            queue.enqueue(SyncOperationType.CHECK_ITEM, "list", "a")
+            queue.enqueue(SyncOperationType.UNCHECK_ITEM, "list", "a")
+            queue.enqueue(SyncOperationType.CHECK_ITEM, "list", "a")
+            queue.enqueue(SyncOperationType.UPDATE_ITEM, "list", "b")
+            queue.enqueue(SyncOperationType.UPDATE_LIST, "list")
+            queue.enqueue(SyncOperationType.UPDATE_LIST, "list")
+
+            assertEquals(
+                listOf(
+                    SyncOperationType.CREATE_ITEM to "a",
+                    SyncOperationType.UPDATE_ITEM to "a",
+                    SyncOperationType.CHECK_ITEM to "a",
+                    SyncOperationType.UPDATE_ITEM to "b",
+                    SyncOperationType.UPDATE_LIST to null,
+                ),
+                queue.pending().map { it.type to it.itemLocalId },
+            )
+        }
+
+    @Test
     fun `failed operations are kept with their attempt count`() =
         runTest {
             queue.enqueue(SyncOperationType.CREATE_ITEM, "list", "a")

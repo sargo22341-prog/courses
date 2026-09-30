@@ -175,9 +175,28 @@ class HomeAssistantWebSocketClientTest {
             assertEquals(RemoteChange.Disconnected, change)
         }
 
+    @Test
+    fun `a redirect is not followed, so the token never goes elsewhere`() =
+        runTest {
+            val elsewhere = MockWebServer().apply { start() }
+            elsewhere.enqueue(MockResponse.Builder().webSocketUpgrade(homeAssistant).build())
+            server.enqueue(MockResponse.Builder().code(MOVED_PERMANENTLY).addHeader("Location", elsewhere.url("/api/websocket").toString()).build())
+            val credentials = HaCredentials(server.url("/").toString().trimEnd('/'), "secret-token")
+
+            val change =
+                withContext(Dispatchers.Default) {
+                    withTimeout(TIMEOUT_MILLIS) { client.observeItemChanges(credentials, setOf("todo.courses")).first() }
+                }
+
+            assertEquals(RemoteChange.Disconnected, change)
+            assertEquals(0, elsewhere.requestCount)
+            elsewhere.close()
+        }
+
     private companion object {
         const val TIMEOUT_MILLIS = 10_000L
         const val NORMAL_CLOSURE = 1000
         const val GOING_AWAY = 1001
+        const val MOVED_PERMANENTLY = 301
     }
 }

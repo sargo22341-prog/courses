@@ -26,7 +26,10 @@ l'interrupteur est coupé : désactiver la synchronisation ne déconnecte pas Ho
   « Connecté » déplie l'adresse, le token, le scan et les boutons. Une première configuration reste
   dépliée après « Enregistrer » pour pouvoir tester la connexion ;
 - **adresse** (`http://homeassistant.local:8123`, `https://ha.nas.home`…, le schéma est ajouté si
-  absent ; la correction automatique du clavier est désactivée sur ce champ) ;
+  absent ; la correction automatique du clavier est désactivée sur ce champ). Une adresse avec
+  identifiants, requête ou fragment est refusée. Passer à un **autre serveur** demande de saisir à
+  nouveau le token : le token enregistré n'est jamais envoyé ailleurs qu'à son serveur (passer de
+  `http://` à `https://` sur le même hôte le garde) ;
 - **token d'accès longue durée** (stocké chiffré, jamais réaffiché), saisi à la main ou **scanné** :
   Home Assistant affiche le token en QR code (Profil → Sécurité → Jetons d'accès longue durée →
   Générer un QR code). « Scanner le QR code du token » ouvre un scanner intégré (CameraX + ZXing,

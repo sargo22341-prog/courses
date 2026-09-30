@@ -218,8 +218,10 @@ class HomeAssistantSyncEngine
                     }
                     return null
                 }
-            store.setListRemote(list.localId, created.entityId, created.configEntryId)
+            val linked = store.linkCreatedList(list.localId, created.entityId, created.configEntryId)
             queue.complete(listOf(creation.id))
+            // Deleted in the app meanwhile: the deletion of the new list was queued instead.
+            if (!linked) return null
             return HaTodoList(created.entityId, created.name, supportsDescription = true)
         }
 

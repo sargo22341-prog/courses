@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "language": "es",
   "source": "OpenFoodFacts categories taxonomy (ODbL)",
-  "generated": "2026-09-24",
+  "generated": "2026-09-30",
   "products": [
     {"id": "bg:фует", "name": "Fuet", "score": 1, "category": "Embutidos", "section": "MEAT_FISH"},
     {"id": "ca:cervesa-ipa", "name": "Cerveza IPA", "score": 0, "category": "Bebidas", "section": "DRINKS"},
@@ -150,7 +150,6 @@
     {"id": "en:beers-with-pear", "name": "Cervezas de pera", "score": 0, "category": "Bebidas", "section": "DRINKS"},
     {"id": "en:beers-without-gluten", "name": "Cervezas sin gluten", "score": 1, "category": "Bebidas", "section": "DRINKS"},
     {"id": "en:beetroot", "name": "Remolachas", "score": 0, "category": "Alimentos de origen vegetal", "section": "FRUITS_VEGETABLES"},
-    {"id": "en:beetroot-pickled", "name": "Remolacha encurtida", "score": 0, "category": "Alimentos de origen vegetal", "section": "SAVORY_GROCERY"},
     {"id": "en:belgian-beers", "name": "Cervezas belgas", "score": 0, "category": "Bebidas", "section": "DRINKS"},
     {"id": "en:belgian-cheeses", "name": "Quesos de Bélgica", "score": 2, "category": "Productos fermentados de la leche", "section": "DAIRY_EGGS", "aliases": ["Quesos Belgas"]},
     {"id": "en:belgian-endives", "name": "Endibias", "score": 0, "category": "Alimentos de origen vegetal", "section": "FRUITS_VEGETABLES", "aliases": ["Endivias"]},
@@ -1749,6 +1748,7 @@
     {"id": "en:perforate-st-john-s-wort", "name": "Hipérico", "score": 2, "category": "Preparaciones de bebidas", "section": "DRINKS", "aliases": ["Hierba de San Juan"]},
     {"id": "en:pestos", "name": "Pestos", "score": 3, "category": "Salsas", "section": "SAVORY_GROCERY", "aliases": ["Salsas Pesto", "Salsa pesto"]},
     {"id": "en:petits-suisses", "name": "Petit-suisse", "score": 2, "category": "Postres lácteos", "section": "DAIRY_EGGS"},
+    {"id": "en:pickled-beetroots", "name": "Remolacha encurtida", "score": 0, "category": "Alimentos de origen vegetal", "section": "SAVORY_GROCERY"},
     {"id": "en:pickled-caper-berries", "name": "Alcaparrones encurtidos", "score": 1, "category": "Alimentos de origen vegetal", "section": "SAVORY_GROCERY"},
     {"id": "en:pickled-capers", "name": "Alcaparras encurtidas", "score": 4, "category": "Condimentos", "section": "SAVORY_GROCERY", "aliases": ["Alcaparras en vinagre"]},
     {"id": "en:pickled-carrots", "name": "Zanahorias encurtidas", "score": 0, "category": "Alimentos de origen vegetal", "section": "SAVORY_GROCERY"},

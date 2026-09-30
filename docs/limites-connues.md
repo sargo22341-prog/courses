@@ -19,8 +19,13 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   n'ajouterait l'article qu'après la réponse le ferait disparaître jusqu'à la synchronisation
   suivante.
 - **Abandon après 10 refus** : une modification que Home Assistant refuse 10 fois est abandonnée ;
-  l'article reprend l'état de Home Assistant. Une panne passagère renvoyée comme erreur (502 d'un
-  proxy pendant un redémarrage) compte aussi comme refus, d'où un plafond large.
+  l'article reprend l'état de Home Assistant. Les réponses 429, 502, 503 et 504 (proxy pendant un
+  redémarrage) comptent comme serveur injoignable, pas comme refus ; une autre erreur serveur
+  passagère (500) compte encore comme refus, d'où un plafond large.
+- **Lecture de toutes les entités** : chaque synchronisation complète lit `/api/states` en entier
+  (l'API REST ne filtre pas par domaine) ; sur une grosse instance, cela fait plusieurs centaines
+  de kilo-octets à chaque retour dans l'application. Non mesuré ; les synchronisations ciblées
+  réutilisent déjà la dernière lecture ([ADR 0024](adr/0024-synchronisation-ciblee.md)).
 - **Création de liste interrompue** : si Home Assistant crée l'entrée *Local To-do* mais que son
   entité n'apparaît pas dans les 3 s, la création est réessayée et une seconde liste (« Courses 2 »)
   peut être créée.

@@ -160,6 +160,23 @@ class CoursesDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun version6IgnoredListsSurviveWithoutTheirUnreadDate() {
+        helper.createDatabase(DB_NAME_V6, 6).use { db ->
+            db.execSQL("INSERT INTO ha_ignored_lists (entityId, ignoredAt) VALUES ('todo.old', 2)")
+            db.execSQL(
+                "INSERT INTO shopping_lists (localId, name, isDefault, createdAt, updatedAt, remoteId, remoteEntryId, createdByApp, syncStatus, " +
+                    "importedFromRemote, remoteName, position) VALUES ('l1', 'Courses', 1, 0, 0, 'todo.courses', NULL, 0, 'SYNCED', 0, NULL, 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME_V6, 7, true, *CoursesDatabaseMigrations.ALL).use { db ->
+            db.assertRow("SELECT entityId FROM ha_ignored_lists", "todo.old")
+            db.assertRow("SELECT name, remoteId FROM shopping_lists", "Courses", "todo.courses")
+            assertEquals(setOf("entityId"), db.columns("ha_ignored_lists"))
+        }
+    }
+
     /** The query returns exactly one row, whose columns read as [expected]. */
     private fun SupportSQLiteDatabase.assertRow(
         sql: String,
@@ -184,5 +201,6 @@ class CoursesDatabaseMigrationTest {
         const val DB_NAME_V3 = "migration-test-v3.db"
         const val DB_NAME_V4 = "migration-test-v4.db"
         const val DB_NAME_V5 = "migration-test-v5.db"
+        const val DB_NAME_V6 = "migration-test-v6.db"
     }
 }

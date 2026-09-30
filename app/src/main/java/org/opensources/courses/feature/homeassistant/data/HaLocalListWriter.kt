@@ -118,7 +118,7 @@ class HaLocalListWriter
         suspend fun hasPendingItemChanges(listLocalId: String): Boolean = queue.pendingItemIds(listLocalId).isNotEmpty()
 
         /** The user parted with this Home Assistant list: the "all lists" mode must not bring it back. */
-        suspend fun ignore(entityId: String) = ignoredDao.upsert(HaIgnoredListEntity(entityId, clock.millis()))
+        suspend fun ignore(entityId: String) = ignoredDao.upsert(HaIgnoredListEntity(entityId))
 
         suspend fun stopIgnoring(entityId: String) = ignoredDao.delete(entityId)
 

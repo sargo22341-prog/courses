@@ -14,7 +14,6 @@ import androidx.room.Query
 @Entity(tableName = "ha_ignored_lists")
 data class HaIgnoredListEntity(
     @PrimaryKey val entityId: String,
-    val ignoredAt: Long,
 )
 
 @Dao

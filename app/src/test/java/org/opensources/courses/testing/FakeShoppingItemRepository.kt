@@ -15,6 +15,8 @@ class FakeShoppingItemRepository : ShoppingItemRepository {
 
     override suspend fun getItems(listId: String): List<ShoppingItem> = state.value.filter { it.listId == listId }
 
+    override suspend fun getItem(itemId: String): ShoppingItem? = state.value.firstOrNull { it.id == itemId }
+
     override suspend fun getAllItems(): List<ShoppingItem> = state.value
 
     override suspend fun addItem(item: NewShoppingItem): ShoppingItem {

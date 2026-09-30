@@ -5,6 +5,7 @@ import org.opensources.courses.R
 import org.opensources.courses.core.sync.SyncFailure
 import org.opensources.courses.core.sync.SyncOutcome
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
+import org.opensources.courses.feature.homeassistant.domain.HaSaveResult
 import org.opensources.courses.feature.homeassistant.domain.HaTodoList
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
 import org.opensources.courses.feature.lists.domain.ShoppingList
@@ -26,6 +27,7 @@ enum class HaMessage(
     ENABLE_REQUIRES_CONFIG(R.string.ha_enable_requires_config, true),
     INVALID_URL(R.string.ha_error_invalid_url, true),
     MISSING_TOKEN(R.string.ha_error_missing_token, true),
+    TOKEN_FOR_NEW_SERVER(R.string.ha_error_token_for_new_server, true),
     UNREACHABLE(R.string.ha_error_unreachable, true),
     UNAUTHORIZED(R.string.ha_error_unauthorized, true),
     NOT_FOUND(R.string.ha_error_not_found, true),
@@ -37,6 +39,13 @@ enum class HaMessage(
     ;
 
     companion object {
+        fun from(result: HaSaveResult): HaMessage =
+            when (result) {
+                HaSaveResult.SAVED -> SAVED
+                HaSaveResult.INVALID_URL -> INVALID_URL
+                HaSaveResult.TOKEN_REQUIRED -> TOKEN_FOR_NEW_SERVER
+            }
+
         fun from(kind: HaErrorKind): HaMessage =
             when (kind) {
                 HaErrorKind.INVALID_URL -> INVALID_URL

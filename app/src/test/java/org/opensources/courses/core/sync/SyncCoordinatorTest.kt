@@ -22,10 +22,14 @@ class SyncCoordinatorTest {
         val requests = mutableListOf<SyncRequest>()
         val synchronizations get() = requests.size
 
+        /** Thrown by the next synchronisations, as an error the engine did not expect would be. */
+        var unexpected: Exception? = null
+
         override suspend fun synchronizesNewLists(): Boolean = false
 
         override suspend fun synchronize(request: SyncRequest): SyncOutcome {
             requests += request
+            unexpected?.let { throw it }
             return SyncOutcome.Success
         }
     }
@@ -201,6 +205,28 @@ class SyncCoordinatorTest {
             settle()
 
             assertEquals(before + 1, engine.synchronizations)
+        }
+
+    @Test
+    fun `an unexpected error is a failed synchronisation, and the next ones still run`() =
+        runTest {
+            val coordinator = coordinator().apply { start() }
+            settle()
+            engine.unexpected = IllegalStateException("disk full")
+
+            assertEquals(SyncOutcome.Failure(SyncFailure.PROTOCOL), coordinator.syncNow())
+            settle()
+            assertEquals(SyncState.SYNC_ERROR, coordinator.snapshot.value.state)
+
+            coordinator.requestSync()
+            settle()
+            engine.unexpected = null
+            val before = engine.synchronizations
+            coordinator.requestSync()
+            settle()
+
+            assertEquals(before + 1, engine.synchronizations)
+            assertEquals(SyncState.ONLINE, coordinator.snapshot.value.state)
         }
 
     private companion object {

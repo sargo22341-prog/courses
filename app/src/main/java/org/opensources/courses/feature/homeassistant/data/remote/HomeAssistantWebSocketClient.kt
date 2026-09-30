@@ -47,10 +47,13 @@ class HomeAssistantWebSocketClient
         private val json: Json,
     ) : HaLiveUpdates {
         // Built on first use, not at start. No read timeout on an idle connection; pings detect a dead one.
+        // The token travels inside the connection, where a redirect cannot strip it as it strips a
+        // header: redirects are refused, a redirected connection is only a lost one.
         private val socketClient by lazy {
             client
                 .get()
                 .newBuilder()
+                .followRedirects(false)
                 .readTimeout(0, TimeUnit.MILLISECONDS)
                 .pingInterval(PING_INTERVAL_SECONDS, TimeUnit.SECONDS)
                 .build()

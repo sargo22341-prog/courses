@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "language": "it",
   "source": "OpenFoodFacts categories taxonomy (ODbL)",
-  "generated": "2026-09-24",
+  "generated": "2026-09-30",
   "products": [
     {"id": "bg:аматричана", "name": "Amatriciana", "score": 2, "category": "Salse a base di carne", "section": "MEAT_FISH", "aliases": ["Sugo all'amatriciana"]},
     {"id": "de:deutsche-spirituosen", "name": "Bevande alcoliche tedesche", "score": 0, "category": "Bevande", "section": "DRINKS"},
@@ -985,6 +985,7 @@
     {"id": "en:gummy-bears", "name": "Orsetti gommosi", "score": 0, "category": "Snack dolci", "section": "SWEET_GROCERY"},
     {"id": "en:haitian-rums", "name": "Rum haitiani", "score": 0, "category": "Bevande", "section": "DRINKS", "aliases": ["Rum da Haiti"]},
     {"id": "en:half-salted-butter", "name": "Burro semi-salato", "score": 2, "category": "Grassi animali", "section": "DAIRY_EGGS"},
+    {"id": "en:halkidiki-olives", "name": "Olive Halkidiki", "score": 0, "category": "Cibi a base vegetale", "section": "SAVORY_GROCERY"},
     {"id": "en:halva", "name": "Halva", "score": 2, "category": "Snack dolci", "section": "SWEET_GROCERY"},
     {"id": "en:ham-and-cheese-sandwiches", "name": "Panini prosciutto e formaggio", "score": 3, "category": "Panini al formaggio", "section": "DELI", "aliases": ["Sandwich prosciutto e formaggio", "Tramezzini prosciutto e formaggio"]},
     {"id": "en:ham-croissants", "name": "Cornetti al prosciutto", "score": 3, "category": "piatti pronti a base di pasta sfoglia", "section": "DELI"},

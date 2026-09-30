@@ -24,6 +24,10 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
     var failingRemovals: HaErrorKind? = null
     var failingListCreations: HaErrorKind? = null
 
+    /** Run while Home Assistant handles an `add_item` or a list creation: what the user does meanwhile. */
+    var duringAddition: (suspend () -> Unit)? = null
+    var duringListCreation: (suspend () -> Unit)? = null
+
     /** What Home Assistant stores for a text sent by `add_item` (some integrations rewrite it). */
     var storedSummary: (String) -> String = { it }
 
@@ -83,6 +87,7 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         check()
         failingAdditions?.let { throw HomeAssistantException(it) }
         addRemote(entityId, storedSummary(summary), description = description)
+        duringAddition?.invoke()
     }
 
     override suspend fun updateItem(
@@ -129,6 +134,7 @@ class FakeHomeAssistantGateway : HomeAssistantGateway {
         val unique = HaListNameAllocator.uniqueName(name, lists.values.map { it.name })
         val entityId = "todo.${unique.lowercase().replace(' ', '_')}"
         lists[entityId] = HaTodoList(entityId, unique, supportsDescription = true)
+        duringListCreation?.invoke()
         return HaCreatedList(entityId, "entry-$entityId", unique)
     }
 

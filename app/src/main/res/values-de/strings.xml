@@ -171,6 +171,7 @@
     <string name="ha_test_success">✓ Verbindung erfolgreich</string>
     <string name="ha_error_invalid_url">Ungültige Adresse.</string>
     <string name="ha_error_missing_token">Gib ein Zugriffstoken ein.</string>
+    <string name="ha_error_token_for_new_server">Anderer Server: Gib das Zugriffstoken erneut ein. Das gespeicherte Token wird nur an den Server gesendet, für den es gespeichert wurde.</string>
     <string name="ha_error_unreachable">Home Assistant ist nicht erreichbar.\nDeine lokale Liste bleibt verfügbar.</string>
     <string name="ha_error_unauthorized">Token von Home Assistant abgelehnt.</string>
     <string name="ha_error_not_found">Element in Home Assistant nicht gefunden.</string>

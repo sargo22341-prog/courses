@@ -19,6 +19,7 @@ import org.opensources.courses.feature.homeassistant.domain.ForgetHomeAssistantU
 import org.opensources.courses.feature.homeassistant.domain.HaConfigRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListLinkRepository
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
+import org.opensources.courses.feature.homeassistant.domain.HaSaveResult
 import org.opensources.courses.feature.homeassistant.domain.HaTokenParser
 import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantException
@@ -98,14 +99,13 @@ class HomeAssistantSettingsViewModel
                 return
             }
             viewModelScope.launch {
-                if (!configRepository.saveConnection(url, tokenInput)) {
-                    connection.value = HaActionStatus.Done(HaMessage.INVALID_URL)
-                    return@launch
+                val result = configRepository.saveConnection(url, tokenInput)
+                if (result == HaSaveResult.SAVED) {
+                    urlInput = url
+                    tokenInput = ""
+                    remoteLists.value = RemoteListsState.NotLoaded
                 }
-                urlInput = url
-                tokenInput = ""
-                remoteLists.value = RemoteListsState.NotLoaded
-                connection.value = HaActionStatus.Done(HaMessage.SAVED)
+                connection.value = HaActionStatus.Done(HaMessage.from(result))
             }
         }
 

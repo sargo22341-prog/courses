@@ -231,7 +231,7 @@ class ShoppingViewModel
         ) {
             viewModelScope.launch {
                 quantityChanges.withLock {
-                    val current = items.getItems(item.listId).firstOrNull { it.id == item.id } ?: return@withLock
+                    val current = items.getItem(item.id) ?: return@withLock
                     val quantity =
                         if (increase) {
                             QuantityStepper.increase(current.quantity, current.unit)

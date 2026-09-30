@@ -28,6 +28,15 @@ UI → ViewModel → Repository ──┬─ écrit l'article
   file, la liste n'est pas réimportée.
 - Une suppression d'article synchronisé laisse une **pierre tombale** (`isDeleted`) masquée à
   l'UI, purgée quand Home Assistant a confirmé.
+- **Seule la dernière modification d'un genre est gardée** : une nouvelle opération remplace,
+  dans la même transaction, celles qu'elle rend inutiles pour le même article ou la même liste
+  (`SyncOperationType.supersedes` : modification, coche/décoche, renommage de liste). Seul l'état
+  courant est envoyé de toute façon ; la file ne grossit donc pas à chaque appui tant que Home
+  Assistant est injoignable. Créations et suppressions ne sont jamais remplacées.
+- **Supprimé pendant sa création** : un article ou une liste supprimé dans l'application pendant
+  que Home Assistant le crée n'y reste pas. L'article revient en pierre tombale avec son
+  `DELETE_ITEM`, la liste laisse un `DELETE_LIST` : la copie créée est supprimée à la
+  synchronisation suivante et n'est jamais réimportée entre-temps.
 
 ## Quand synchroniser : `SyncCoordinator`
 
@@ -105,6 +114,11 @@ Liste par liste :
   la tentative compte, nouvel essai plus tard. Une requête qui ne se termine pas compte comme
   serveur injoignable : connexion 10 s, lecture 15 s, requête entière 90 s au plus (la connexion
   temps réel n'a que le délai de connexion : une fois ouverte, des pings détectent sa perte).
+- Les réponses **429, 502, 503 et 504** (Home Assistant qui redémarre derrière un proxy, ou qui
+  demande de ralentir) comptent comme serveur injoignable : aucune tentative n'est décomptée.
+- **Erreur inattendue** (disque plein, réponse illisible…) : la synchronisation échoue comme
+  une autre (« Synchronisation impossible », nouvel essai automatique) au lieu de faire planter
+  l'application ; les données locales restent intactes et utilisables.
 - Un token valide mais **non administrateur** ne peut pas créer ni supprimer de liste : Home
   Assistant répond 401, ce qui n'est traité comme « token refusé » que si `/api/` le refuse aussi ;
   sinon seule la demande est refusée.

@@ -7,6 +7,9 @@ interface ShoppingItemRepository {
 
     suspend fun getItems(listId: String): List<ShoppingItem>
 
+    /** The item, or null once it is deleted. */
+    suspend fun getItem(itemId: String): ShoppingItem?
+
     /** The items of every list. */
     suspend fun getAllItems(): List<ShoppingItem>
 

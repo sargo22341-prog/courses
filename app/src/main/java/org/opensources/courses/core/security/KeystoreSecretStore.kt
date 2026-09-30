@@ -32,11 +32,14 @@ class KeystoreSecretStore
         @SecretsDataStore private val dataStore: DataStore<Preferences>,
     ) : SecretStore {
         private val keyStore: KeyStore by lazy { KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) } }
+        private val keyLock = Any()
 
         override suspend fun read(name: String): String? {
-            val encoded = dataStore.data.first()[stringPreferencesKey(name)] ?: return null
+            val key = stringPreferencesKey(name)
+            val encoded = dataStore.data.first()[key] ?: return null
             return decrypt(encoded) ?: run {
-                remove(name)
+                // Only this unreadable value: one written meanwhile stays.
+                dataStore.edit { if (it[key] == encoded) it.remove(key) }
                 null
             }
         }
@@ -79,20 +82,23 @@ class KeystoreSecretStore
             }
         }
 
+        /** Two first writes at once must not each generate a key: the second would replace the first. */
         private fun getOrCreateKey(): SecretKey =
-            keyStore.getKey(KEY_ALIAS, null) as? SecretKey
-                ?: KeyGenerator
-                    .getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-                    .apply {
-                        init(
-                            KeyGenParameterSpec
-                                .Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                                .setKeySize(KEY_SIZE_BITS)
-                                .build(),
-                        )
-                    }.generateKey()
+            synchronized(keyLock) { keyStore.getKey(KEY_ALIAS, null) as? SecretKey ?: generateKey() }
+
+        private fun generateKey(): SecretKey =
+            KeyGenerator
+                .getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+                .apply {
+                    init(
+                        KeyGenParameterSpec
+                            .Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                            .setKeySize(KEY_SIZE_BITS)
+                            .build(),
+                    )
+                }.generateKey()
 
         private companion object {
             const val ANDROID_KEYSTORE = "AndroidKeyStore"

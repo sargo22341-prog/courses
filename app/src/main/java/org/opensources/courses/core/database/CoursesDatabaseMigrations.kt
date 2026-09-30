@@ -17,7 +17,15 @@ object CoursesDatabaseMigrations {
             }
         }
 
-    val ALL: Array<Migration> = arrayOf(FROM_3_TO_4)
+    /** 7: the date a Home Assistant list was ignored was written but never read. No row is touched. */
+    val FROM_6_TO_7: Migration =
+        object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `ha_ignored_lists` DROP COLUMN `ignoredAt`")
+            }
+        }
+
+    val ALL: Array<Migration> = arrayOf(FROM_3_TO_4, FROM_6_TO_7)
 
     private val DROPPED_IN_4 =
         listOf(

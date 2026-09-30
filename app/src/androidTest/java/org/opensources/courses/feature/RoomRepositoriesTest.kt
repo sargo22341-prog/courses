@@ -41,17 +41,35 @@ class RoomRepositoriesTest {
         }
 
     @Test
-    fun synchronisedListQueuesCreateCheckUncheckAndUpdate() =
+    fun renamingASynchronisedListTwiceQueuesOneRename() =
         runTest {
             val list = repositories.lists.createList("Courses")
             repositories.links.linkToExisting(list.id, "todo.courses")
             val item = repositories.items.addItem(NewShoppingItem(list.id, "Lait"))
             repositories.items.setChecked(item.id, true)
+
+            repositories.lists.renameList(list.id, "Courses de la semaine")
+            repositories.lists.renameList(list.id, "Courses du samedi")
+
+            assertEquals(
+                listOf(SyncOperationType.CREATE_ITEM to item.id, SyncOperationType.CHECK_ITEM to item.id, SyncOperationType.UPDATE_LIST to null),
+                repositories.queue.pending().map { it.type to it.itemLocalId },
+            )
+        }
+
+    @Test
+    fun synchronisedListQueuesTheCreationAndTheLatestChangeOfEachKind() =
+        runTest {
+            val list = repositories.lists.createList("Courses")
+            repositories.links.linkToExisting(list.id, "todo.courses")
+            val item = repositories.items.addItem(NewShoppingItem(list.id, "Lait"))
+            repositories.items.setChecked(item.id, true)
+            repositories.items.updateItem(item.id, "Lait demi-écrémé", 1.0, null)
             repositories.items.setChecked(item.id, false)
             repositories.items.updateItem(item.id, "Lait entier", 2.0, null)
 
             assertEquals(
-                listOf(SyncOperationType.CREATE_ITEM, SyncOperationType.CHECK_ITEM, SyncOperationType.UNCHECK_ITEM, SyncOperationType.UPDATE_ITEM),
+                listOf(SyncOperationType.CREATE_ITEM, SyncOperationType.UNCHECK_ITEM, SyncOperationType.UPDATE_ITEM),
                 repositories.queue.pending().map { it.type },
             )
             val stored = repositories.database.shoppingItemDao().getActiveForList(list.id).single()

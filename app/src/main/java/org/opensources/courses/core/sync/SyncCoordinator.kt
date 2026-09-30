@@ -1,5 +1,6 @@
 package org.opensources.courses.core.sync
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -180,12 +181,26 @@ class SyncCoordinator
                 if (!connectivity.isOnline.value) return@withLock SyncOutcome.Offline
                 running.value = true
                 try {
-                    engine.synchronize(request).also { outcome ->
+                    synchronizeSafely(request).also { outcome ->
                         lastFailure.value = (outcome as? SyncOutcome.Failure)?.reason
                     }
                 } finally {
                     running.value = false
                 }
+            }
+
+        /**
+         * An unexpected error (full disk, answer the engine could not read…) is a failed synchronisation
+         * like any other: shown by the indicator and retried later. Thrown further, it would kill the
+         * collector of the requests, or the whole app from the application scope.
+         */
+        private suspend fun synchronizeSafely(request: SyncRequest): SyncOutcome =
+            try {
+                engine.synchronize(request)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                SyncOutcome.Failure(SyncFailure.PROTOCOL)
             }
 
         private companion object {

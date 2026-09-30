@@ -1,7 +1,9 @@
 package org.opensources.courses.feature.homeassistant.domain
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HaUrlNormalizerTest {
@@ -21,5 +23,20 @@ class HaUrlNormalizerTest {
         assertNull(HaUrlNormalizer.normalize("   "))
         assertNull(HaUrlNormalizer.normalize("ftp://ha.nas.home"))
         assertNull(HaUrlNormalizer.normalize("https://"))
+    }
+
+    @Test
+    fun `credentials, query and fragment are rejected`() {
+        assertNull(HaUrlNormalizer.normalize("https://user:password@ha.nas.home"))
+        assertNull(HaUrlNormalizer.normalize("https://ha.nas.home/?x=1"))
+        assertNull(HaUrlNormalizer.normalize("https://ha.nas.home#top"))
+        assertEquals("https://ha.nas.home/ha", HaUrlNormalizer.normalize("https://ha.nas.home/ha/"))
+    }
+
+    @Test
+    fun `the same server whatever the scheme, port or case`() {
+        assertTrue(HaUrlNormalizer.sameHost("http://HA.nas.home:8123", "https://ha.nas.home"))
+        assertFalse(HaUrlNormalizer.sameHost("https://ha.nas.home", "https://ha-exemple.duckdns.org"))
+        assertFalse(HaUrlNormalizer.sameHost("https://ha.nas.home", ""))
     }
 }

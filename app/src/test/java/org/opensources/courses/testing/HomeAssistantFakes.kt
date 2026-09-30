@@ -18,6 +18,7 @@ import org.opensources.courses.feature.homeassistant.domain.HaEntityRegistry
 import org.opensources.courses.feature.homeassistant.domain.HaErrorKind
 import org.opensources.courses.feature.homeassistant.domain.HaListMode
 import org.opensources.courses.feature.homeassistant.domain.HaListNameAllocator
+import org.opensources.courses.feature.homeassistant.domain.HaSaveResult
 import org.opensources.courses.feature.homeassistant.domain.HaLiveUpdates
 import org.opensources.courses.feature.homeassistant.domain.HaUrlNormalizer
 import org.opensources.courses.feature.homeassistant.domain.HomeAssistantConfig
@@ -40,11 +41,12 @@ class FakeHaConfigRepository(
     override suspend fun saveConnection(
         baseUrl: String,
         token: String,
-    ): Boolean {
-        val url = HaUrlNormalizer.normalize(baseUrl) ?: return false
+    ): HaSaveResult {
+        val url = HaUrlNormalizer.normalize(baseUrl) ?: return HaSaveResult.INVALID_URL
+        if (token.isBlank() && config.value.hasToken && !HaUrlNormalizer.sameHost(url, config.value.baseUrl)) return HaSaveResult.TOKEN_REQUIRED
         if (token.isNotBlank()) storedCredentials = HaCredentials(url, token.trim())
         config.value = config.value.copy(baseUrl = url, hasToken = config.value.hasToken || token.isNotBlank())
-        return true
+        return HaSaveResult.SAVED
     }
 
     override suspend fun forgetConnection() {
@@ -182,13 +184,19 @@ class FakeSyncLocalStore(
 
     override suspend fun items(listLocalId: String): List<SyncItemRef> = items.values.filter { it.listLocalId == listLocalId }
 
-    override suspend fun setListRemote(
+    override suspend fun linkCreatedList(
         listLocalId: String,
         entityId: String,
         configEntryId: String?,
-    ) {
-        lists[listLocalId] = lists.getValue(listLocalId).copy(remoteId = entityId)
+    ): Boolean {
+        val list = lists[listLocalId]
+        if (list == null) {
+            queue.enqueue(SyncOperationType.DELETE_LIST, listLocalId, remoteListId = entityId, remoteEntryId = configEntryId)
+            return false
+        }
+        lists[listLocalId] = list.copy(remoteId = entityId)
         tracked += entityId
+        return true
     }
 
     override suspend fun markListSynced(listLocalId: String) = Unit
@@ -208,6 +216,20 @@ class FakeSyncLocalStore(
         remoteId: String?,
     ) {
         items[itemLocalId]?.let { items[itemLocalId] = it.copy(remoteId = remoteId) }
+    }
+
+    override suspend fun linkCreatedItem(
+        item: SyncItemRef,
+        uid: String,
+    ): Boolean {
+        items[item.localId]?.let {
+            items[item.localId] = it.copy(remoteId = uid)
+            return true
+        }
+        if (item.listLocalId !in lists) return false
+        items[item.localId] = item.copy(remoteId = uid, isChecked = false, isDeleted = true)
+        queue.enqueue(SyncOperationType.DELETE_ITEM, item.listLocalId, item.localId, remoteItemId = uid)
+        return false
     }
 
     override suspend fun purgeItem(itemLocalId: String) {

@@ -28,7 +28,7 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  * migration (or an `AutoMigration`) validated against the exported JSON.
  *
  * - 2: `catalog_products.groceryCategory` (shop sections), a nullable column filled by the next
- *   seed and OpenFoodFacts imports.
+ *   import of the bundled catalog.
  * - 3: `shopping_lists.importedFromRemote` and `remoteName` (lists imported from Home Assistant),
  *   table `ha_ignored_lists`. Existing lists are not imported ones.
  * - 4: columns never read are dropped ([CoursesDatabaseMigrations.FROM_3_TO_4]).
@@ -36,6 +36,7 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
  *   their former order (default list first, then by creation).
  * - 6: table `ha_list_integrations`, the integration of each Home Assistant list without description
  *   (Mealie lists are read differently). Empty at first: the entity registry is asked at the next sync.
+ * - 7: `ha_ignored_lists.ignoredAt`, never read, is dropped ([CoursesDatabaseMigrations.FROM_6_TO_7]).
  */
 @Database(
     entities = [
@@ -49,7 +50,7 @@ import org.opensources.courses.feature.shopping.data.ShoppingItemEntity
         HaIgnoredListEntity::class,
         HaListIntegrationEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),

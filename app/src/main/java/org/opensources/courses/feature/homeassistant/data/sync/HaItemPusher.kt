@@ -206,7 +206,11 @@ class HaItemPusher(
                 continue
             }
             // Linked before its state is sent: whatever happens next, it is never created twice.
-            store.setItemRemoteId(item.localId, match.uid)
+            if (!store.linkCreatedItem(item, match.uid)) {
+                // Deleted in the app meanwhile: its deletion was queued in its place.
+                queue.complete(ids)
+                continue
+            }
             refusable(item, operations, tally) {
                 if (item.isChecked) {
                     gateway.updateItem(credentials, remoteList.entityId, match.uid, null, completed = true, description = null, sendDescription = false)

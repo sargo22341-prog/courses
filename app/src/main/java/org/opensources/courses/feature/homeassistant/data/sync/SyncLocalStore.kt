@@ -49,11 +49,16 @@ interface SyncLocalStore {
     /** Items of the list, tombstones included. */
     suspend fun items(listLocalId: String): List<SyncItemRef>
 
-    suspend fun setListRemote(
+    /**
+     * Links the list to the Home Assistant list just created for it and returns true. A list deleted
+     * in the app while it was being created returns false: the deletion of the new Home Assistant list
+     * is queued instead, so it is neither left behind nor imported by the "all lists" mode.
+     */
+    suspend fun linkCreatedList(
         listLocalId: String,
         entityId: String,
         configEntryId: String?,
-    )
+    ): Boolean
 
     suspend fun markListSynced(listLocalId: String)
 
@@ -103,6 +108,17 @@ interface SyncLocalStore {
         itemLocalId: String,
         remoteId: String?,
     )
+
+    /**
+     * Links [item] to the Home Assistant item [uid] just created for it and returns true. An item
+     * deleted in the app while it was being created returns false: it comes back as a tombstone holding
+     * what Home Assistant now holds, with its deletion queued, so the new Home Assistant item is deleted
+     * rather than imported again as a new item.
+     */
+    suspend fun linkCreatedItem(
+        item: SyncItemRef,
+        uid: String,
+    ): Boolean
 
     /** Removes a tombstone whose deletion reached the remote. */
     suspend fun purgeItem(itemLocalId: String)

@@ -33,6 +33,8 @@ class ShoppingItemRepositoryImpl
 
         override suspend fun getItems(listId: String): List<ShoppingItem> = itemDao.getActiveForList(listId).map { it.toDomain() }
 
+        override suspend fun getItem(itemId: String): ShoppingItem? = itemDao.getById(itemId)?.takeUnless { it.isDeleted }?.toDomain()
+
         override suspend fun getAllItems(): List<ShoppingItem> = itemDao.getAllActive().map { it.toDomain() }
 
         override suspend fun addItem(item: NewShoppingItem): ShoppingItem =

@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "language": "de",
   "source": "OpenFoodFacts categories taxonomy (ODbL)",
-  "generated": "2026-09-24",
+  "generated": "2026-09-30",
   "products": [
     {"id": "de:austrian-weinbrand", "name": "Austrian Weinbrand", "score": 2, "category": "Getränke", "section": "DRINKS"},
     {"id": "de:bernerwurst", "name": "Bernerwurst", "score": 1, "category": "Zubereitetes Fleisch", "section": "MEAT_FISH"},
@@ -252,7 +252,6 @@
     {"id": "en:beers-with-pear", "name": "Birnenbier", "score": 0, "category": "Getränke", "section": "DRINKS"},
     {"id": "en:beers-without-gluten", "name": "Glutenfreies Bier", "score": 1, "category": "Getränke", "section": "DRINKS"},
     {"id": "en:beetroot", "name": "Rote Bete", "score": 0, "category": "Pflanzliche Lebensmittel", "section": "FRUITS_VEGETABLES"},
-    {"id": "en:beetroot-pickled", "name": "Eingelegte rote Bete", "score": 0, "category": "Pflanzliche Lebensmittel", "section": "SAVORY_GROCERY"},
     {"id": "en:beets-salads", "name": "Rüben-Salate", "score": 3, "category": "Fertigsalate", "section": "DELI", "aliases": ["Rübensalate"]},
     {"id": "en:belgian-beers", "name": "Belgische Biere", "score": 0, "category": "Getränke", "section": "DRINKS"},
     {"id": "en:belgian-endives", "name": "Chicorée Salat", "score": 0, "category": "Pflanzliche Lebensmittel", "section": "FRUITS_VEGETABLES"},
@@ -2135,6 +2134,7 @@
     {"id": "en:petit-beurre", "name": "Butterkekse", "score": 1, "category": "Süßer Snack", "section": "SWEET_GROCERY", "aliases": ["Butterkeks"]},
     {"id": "en:petits-suisses", "name": "Milchdesserts", "score": 2, "category": "Milchnachspeisen", "section": "DAIRY_EGGS"},
     {"id": "en:phanaeng-curry-pastes", "name": "Panaeng Currypasten", "score": 2, "category": "Gewürzmittelpasten", "section": "SAVORY_GROCERY", "aliases": ["Panaeng Currypaste", "Panang Currypasten", "Panang Currypaste"]},
+    {"id": "en:pickled-beetroots", "name": "Eingelegte rote Bete", "score": 0, "category": "Pflanzliche Lebensmittel", "section": "SAVORY_GROCERY"},
     {"id": "en:pickled-capers", "name": "Eingelegte Kapern", "score": 4, "category": "Gewürzmittel", "section": "SAVORY_GROCERY"},
     {"id": "en:pickled-cucumbers", "name": "Eingelegte Gurken", "score": 0, "category": "Pflanzliche Lebensmittel", "section": "SAVORY_GROCERY"},
     {"id": "en:pickled-garlic", "name": "Eingelegter Knoblauch", "score": 2, "category": "Eßbare Pflanzen", "section": "SAVORY_GROCERY"},

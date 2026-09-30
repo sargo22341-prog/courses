@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "language": "pt",
   "source": "OpenFoodFacts categories taxonomy (ODbL)",
-  "generated": "2026-09-24",
+  "generated": "2026-09-30",
   "products": [
     {"id": "de:deutsche-spirituosen", "name": "Bebidas espirituosas alemãs", "score": 0, "category": "Bebidas", "section": "DRINKS"},
     {"id": "en:absinthe", "name": "Absinto", "score": 2, "category": "Bebidas", "section": "DRINKS"},

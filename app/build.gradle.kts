@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -75,6 +76,8 @@ android {
 
 kotlin {
     compilerOptions {
+        // Keep Kotlin and Java bytecode aligned regardless of Android Studio's bundled JDK.
+        jvmTarget.set(JvmTarget.JVM_17)
         // AGENTS.md rule 10: a Kotlin warning fails the build, like a Lint warning.
         allWarningsAsErrors = true
     }

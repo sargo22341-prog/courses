@@ -1,4 +1,5 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -8,6 +9,20 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.gradle.versions)
+    alias(libs.plugins.version.catalog.update)
+}
+
+versionCatalogUpdate {
+    keep {
+        keepUnusedVersions.set(true)
+    }
+    // Never introduce a prerelease into this stable catalog.
+    versionSelector(VersionSelectors.STABLE)
+}
+
+tasks.named("versionCatalogUpdate") {
+    // The updater queries live repositories and accesses Project during execution.
+    notCompatibleWithConfigurationCache("Version catalog updates require live repository resolution.")
 }
 
 private fun String.isNonStableVersion(): Boolean {

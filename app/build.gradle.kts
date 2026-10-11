@@ -119,6 +119,9 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.compose)
     implementation(libs.zxing.core)
+    // The phone has no speech service: ship the offline engine and its native Android bridge.
+    implementation(libs.vosk.android) { artifact { type = "aar" } }
+    implementation(libs.jna.android) { artifact { type = "aar" } }
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 

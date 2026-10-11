@@ -46,6 +46,7 @@ vollständig optional.
 Wichtigste Funktionen:
 
 - **mehrere Listen**, mit Mengen und Einheiten (`12`, `1,5 kg`);
+- **Spracheingabe** durch Gedrückthalten der Mikrofontaste, mit bearbeitbarer Übersicht vor dem Hinzufügen; lokale Spracherkennung und Modelle für sechs Sprachen enthalten, ohne Netzwerk-Ausweichlösung;
 - **sofortige Offline-Autovervollständigung**, tolerant gegenüber Tippfehlern, die die am
   häufigsten gekauften Produkte lernt;
 - **Verlauf** der am häufigsten hinzugefügten Produkte, angeboten beim Antippen des leeren

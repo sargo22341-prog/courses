@@ -67,7 +67,8 @@ fun ShoppingListContent(
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        // Keep the last quantity controls reachable above the microphone button.
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         items(rows, key = { it.key }, contentType = { it.contentType }) { row ->

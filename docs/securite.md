@@ -76,3 +76,12 @@ refus définitif).
 
 Demandée uniquement à l'ouverture du scanner de QR code du token. Les images sont analysées en
 mémoire, jamais enregistrées ni envoyées.
+
+### Microphone
+
+Demandé uniquement pour la dictée des courses, après une explication. La capture est limitée
+à une minute, conservée en mémoire, jamais enregistrée sur disque ni envoyée à un service.
+Vosk et ses six modèles sont livrés avec l’application : aucun téléchargement ni service
+Google n’est requis. L’écoute s’annule en arrière-plan. Le modèle de la langue choisie est
+extrait dans le stockage privé exclu des sauvegardes. Les résultats ne deviennent des
+articles qu’après validation du récapitulatif. Voir [ADR 0029](adr/0029-dictee-locale-avec-validation.md).

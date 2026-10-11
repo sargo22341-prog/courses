@@ -156,6 +156,7 @@ class ShoppingViewModel
                 ShoppingUiState(
                     isLoading = shown.list == null,
                     listName = shown.list?.name.orEmpty(),
+                    listId = shown.list?.id,
                     toBuy = shown.toBuy,
                     toBuySections = shown.toBuySections,
                     purchased = shown.purchased,

@@ -44,6 +44,7 @@ listas `todo` de uma instância **Home Assistant** auto-hospedada. É totalmente
 Funcionalidades principais:
 
 - **várias listas**, com quantidades e unidades (`12`, `1,5 kg`);
+- **ditado por voz** mantendo premido o microfone, com resumo editável antes de adicionar; motor e modelos locais de seis idiomas incluídos, sem alternativa pela rede;
 - **preenchimento automático instantâneo e offline**, tolerante a erros de escrita, que aprende
   os produtos comprados com mais frequência;
 - **histórico** dos produtos mais adicionados, sugerido ao tocar no campo de pesquisa vazio

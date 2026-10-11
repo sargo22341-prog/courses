@@ -84,7 +84,9 @@ fun ShoppingRoute(
                 onOpenSettings = { currentOnOpenSettings() },
             )
         }
-    ShoppingScreen(state = state, query = viewModel.query, actions = actions)
+    ShoppingScreen(state = state, query = viewModel.query, actions = actions, voiceButton = {
+        org.opensources.courses.feature.voice.presentation.VoiceRoute(state.listId)
+    })
 }
 
 /**
@@ -116,6 +118,7 @@ fun ShoppingScreen(
     state: ShoppingUiState,
     query: String,
     actions: ShoppingActions,
+    voiceButton: @Composable () -> Unit = {},
 ) {
     var editedItemId by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmDeletePurchased by rememberSaveable { mutableStateOf(false) }
@@ -134,6 +137,7 @@ fun ShoppingScreen(
     BackHandler(enabled = showsHistory) { focusManager.clearFocus() }
     state.pendingDeletion?.let { DeletionUndoOffer(it, snackbarHostState, actions) }
     Scaffold(
+        floatingActionButton = voiceButton,
         topBar = { ShoppingTopBar(state.listName, state.sync, actions.onOpenLists, actions.onOpenSettings) },
         bottomBar = {
             AnimatedVisibility(visible = state.purchased.isNotEmpty() && !searching && !showsHistory) {

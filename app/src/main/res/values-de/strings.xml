@@ -212,4 +212,16 @@
     <string name="ha_sync_offline">Offline. Änderungen werden später gesendet.</string>
     <string name="ha_sync_skipped">Aktiviere und konfiguriere zuerst Home Assistant.</string>
     <string name="ha_rename_note">Das Umbenennen einer Liste ändert ihren Namen in Home Assistant nicht.</string>
+    <string name="voice_hold">Gedrückt halten, um Einkäufe zu diktieren</string>
+    <string name="voice_listening">Hört zu… Zum Prüfen loslassen</string>
+    <string name="voice_processing">Übersicht wird vorbereitet…</string>
+    <string name="voice_review">Diktierte Artikel prüfen</string>
+    <string name="voice_check">Prüfen Sie jeden Artikel. Erst nach Ihrer Bestätigung wird etwas hinzugefügt.</string>
+    <string name="voice_add">Zur Einkaufsliste hinzufügen</string>
+    <string name="voice_permission">Erlauben Sie den Mikrofonzugriff zum Diktieren auf diesem Gerät. Halten Sie danach die Taste erneut gedrückt. Ihre lokalen Daten bleiben verfügbar.</string>
+    <string name="voice_unavailable">Spracherkennung auf diesem Gerät ist nicht verfügbar. Sie können Ihre Einkäufe weiterhin eintippen. Ihre lokalen Daten bleiben verfügbar.</string>
+    <string name="voice_error">Die Sprache konnte nicht erkannt werden. Versuchen Sie es erneut oder tippen Sie Ihre Einkäufe ein. Ihre lokalen Daten bleiben verfügbar.</string>
+    <string name="voice_import_error">Einige Artikel konnten nicht hinzugefügt werden. Bereits hinzugefügte Zeilen wurden aus der Übersicht entfernt. Ihre lokalen Daten bleiben verfügbar.</string>
+    <string name="voice_continue">Weiter</string>
+    <string name="voice_unknown">Unbekanntes Wort</string>
 </resources>

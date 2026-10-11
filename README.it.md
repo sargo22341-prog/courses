@@ -44,6 +44,7 @@ liste `todo` di un'istanza **Home Assistant** self-hosted. È del tutto facoltat
 Funzioni principali:
 
 - **più liste**, con quantità e unità (`12`, `1,5 kg`);
+- **dettatura vocale** tenendo premuto il microfono, con riepilogo modificabile prima di aggiungere; motore e modelli locali di sei lingue inclusi, senza alternativa di rete;
 - **completamento automatico istantaneo e offline**, tollerante agli errori di battitura, che
   impara i prodotti acquistati più spesso;
 - **cronologia** dei prodotti aggiunti più spesso, proposta toccando il campo di ricerca vuoto

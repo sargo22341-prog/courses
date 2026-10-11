@@ -216,4 +216,16 @@
     <string name="ha_sync_offline">Offline. Le modifiche verranno inviate più tardi.</string>
     <string name="ha_sync_skipped">Attiva e configura prima Home Assistant.</string>
     <string name="ha_rename_note">Rinominare una lista non cambia il suo nome in Home Assistant.</string>
+    <string name="voice_hold">Tieni premuto per dettare la spesa</string>
+    <string name="voice_listening">In ascolto… Rilascia per verificare</string>
+    <string name="voice_processing">Preparazione del riepilogo…</string>
+    <string name="voice_review">Verifica gli articoli dettati</string>
+    <string name="voice_check">Verifica ogni articolo. Nulla viene aggiunto prima della conferma.</string>
+    <string name="voice_add">Aggiungi alla lista della spesa</string>
+    <string name="voice_permission">Consenti il microfono per dettare su questo dispositivo. Poi tieni di nuovo premuto il pulsante. I dati locali restano disponibili.</string>
+    <string name="voice_unavailable">Il riconoscimento vocale sul dispositivo non è disponibile. Puoi scrivere la spesa; i dati locali restano disponibili.</string>
+    <string name="voice_error">La voce non è stata riconosciuta. Riprova o scrivi la spesa. I dati locali restano disponibili.</string>
+    <string name="voice_import_error">Alcuni articoli non sono stati aggiunti. Le righe già aggiunte sono state rimosse dal riepilogo. I dati locali restano disponibili.</string>
+    <string name="voice_continue">Continua</string>
+    <string name="voice_unknown">Parola non riconosciuta</string>
 </resources>

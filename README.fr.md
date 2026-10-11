@@ -46,6 +46,7 @@ entièrement facultatif.
 Fonctionnalités principales :
 
 - **plusieurs listes**, avec quantités et unités (`12`, `1,5 kg`) ;
+- **dictée vocale** en maintenant le bouton microphone, avec récapitulatif modifiable avant ajout ; moteur et modèles des six langues embarqués, sans recours au réseau ;
 - **autocomplétion instantanée et hors ligne**, tolérante aux fautes de frappe, qui apprend les
   produits achetés le plus souvent ;
 - **historique** des produits les plus ajoutés, proposé en touchant le champ de recherche vide

@@ -145,3 +145,5 @@ under the same license. Full text: [`LICENSE`](LICENSE).
 The catalog data comes from [Open Food Facts](https://world.openfoodfacts.org) and remains under
 the [ODbL](https://opendatacommons.org/licenses/odbl/1-0/) license. The files in
 `app/src/main/assets/catalog/` are a derived database produced by `scripts/generate-catalog.py`.
+- **voice dictation** by holding the microphone button, with an editable review before adding;
+  bundled offline speech engine and models for all six languages, with no network fallback;

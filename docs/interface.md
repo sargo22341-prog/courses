@@ -121,6 +121,38 @@ téléphone les coupe). Aucune bibliothèque ajoutée.
   couleurs en 400 ms au lieu de basculer d'un coup (`animatedColorScheme`). Changer de langue
   recrée l'activité (Android) : pas d'animation propre à l'application.
 
+## Dictée des courses
+
+Le bouton microphone en bas à droite permet de dicter plusieurs articles. Maintenir le bouton
+pendant la phrase, puis relâcher pour préparer le récapitulatif. Au premier usage, une explication
+précède la demande de permission microphone ; après autorisation, maintenir à nouveau le bouton.
+Après un refus définitif, le dialogue permet d’ouvrir les paramètres de l’application.
+
+Par exemple : « Je voudrais dans ma liste de courses 500 g de pâtes du yaourt du café et des
+céréales ». Les noms, quantités et unités sont modifiables dans le récapitulatif ; chaque ligne
+peut être supprimée. Rien n’est ajouté avant « Ajouter à la liste de courses ». Annuler abandonne
+le brouillon. La transcription originale reste affichée pour vérifier les résultats.
+Un mot non reconnu est signalé et bloque l’ajout de sa ligne jusqu’à correction ou suppression.
+
+La reconnaissance utilise un moteur Vosk livré avec les modèles des six langues, exclusivement sur l’appareil.
+Il n’y a ni appel à une IA externe ni fichier audio enregistré par courses. L’écoute est limitée
+à une minute et s’arrête en arrière-plan. Avec un lecteur d’écran, activer une fois pour démarrer
+et une deuxième fois pour arrêter. Voir [les limites](limites-connues.md) et
+[ADR 0029](adr/0029-dictee-locale-avec-validation.md).
+
+Le bouton micro garde une position fixe pendant l’écoute et le traitement. Dès l’appui,
+il grossit de 56 à environ 101 dp et s’entoure d’un halo pulsant de 168 à 196 dp,
+aux couleurs du thème, visible autour du doigt. L’état reste annoncé aux
+lecteurs d’écran. La dictée accepte les nombres français avec des traits d’union
+(« vingt-et-un »), les décimales chiffre par chiffre (« un virgule deux cinq litres »)
+et les quantités successives sans conjonction (« deux pommes trois yaourts »).
+La validation du récapitulatif reste nécessaire.
+Les expressions de quantités couvrent aussi les derniers produits du catalogue et leur
+premier mot au singulier (« deux sac poubelle »), dans la limite du vocabulaire embarqué.
+Si une quantité manque, le même audio est relu localement avec le contexte linguistique
+du modèle. La quantité n’est reprise que si le produit correspond sans ambiguïté ;
+« de » seul ne devient jamais automatiquement « deux ». Voir [ADR 0030](adr/0030-recoupement-local-des-quantites-vocales.md).
+
 ## Orientation
 
 Portrait uniquement : l'écran ne pivote pas quand on tourne le téléphone

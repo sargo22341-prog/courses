@@ -37,12 +37,46 @@ adb shell am instrument -w org.opensources.courses.test/androidx.test.runner.And
 
 Sur un émulateur jetable, `connectedDebugAndroidTest` convient.
 
+## Échantillon de dictée synthétique
+
+`VoskEngineTest` vérifie sur l’appareil le chargement des six modèles embarqués et le décodage
+du silence. Son test de phrase française est activé en fournissant un WAV synthétique PCM,
+mono, 16 bits, 16 kHz (sans voix personnelle). Aucun fichier de test audio n’est livré dans l’app.
+
+```powershell
+adb push <fichier-synthetique.wav> /data/local/tmp/courses-voice-fixture.wav
+adb shell am instrument -w -e class org.opensources.courses.feature.voice.data.VoskEngineTest -e voiceFixture /data/local/tmp/courses-voice-fixture.wav org.opensources.courses.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Phrase attendue : « Je voudrais du café et trois yaourts et cinq cents grammes de pâtes ».
+Le test vérifie les articles et leurs quantités après transcription par le moteur réel. Sans
+l’argument `voiceFixture`, seul ce test est ignoré explicitement. Supprimer l’échantillon
+temporaire du téléphone après l’essai. Cela ne remplace pas une validation avec le microphone
+et la voix de l’utilisateur en conditions réelles.
+
+Le cas « Deux sacs poubelle » possède aussi un test acoustique qui appelle le décodeur de
+production, avec sa seconde passe locale :
+
+```powershell
+adb push <deux-sacs-poubelle-synthetique.wav> /data/local/tmp/courses-two-bin-bags.wav
+adb shell am instrument -w -e class org.opensources.courses.feature.voice.data.VoskEngineTest#syntheticBinBagsKeepSpokenCount -e binBagsFixture /data/local/tmp/courses-two-bin-bags.wav org.opensources.courses.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Ce WAV suit le même format PCM ; le test est ignoré sans `binBagsFixture`. La synthèse
+doit être locale (par exemple une voix française Windows déjà installée). Le fichier temporaire
+est retiré après l’essai. `VoiceQuantityTranscriptResolverTest` vérifie aussi qu’un simple
+article ne devient pas une quantité, qu’un autre produit ne correspond pas et que des doublons
+ambigus ne déclenchent pas de correction.
+L’argument optionnel `-e binBagsQuantity 1` permet de tester « Des sacs poubelle » sans
+inventer une quantité ; `-e binBagsQuantity 3` vérifie « Trois sacs poubelle » avec son WAV.
+
 ## Couverture par sujet
 
 | Sujet | Tests |
 | --- | --- |
 | Autocomplétion, ranking, recherche floue (hors fil principal, formes normalisées enregistrées) | `SuggestionRankerTest`, `SearchSuggestionsUseCaseTest`, `FuzzyMatcherTest`, `TextNormalizerTest` |
 | Création, doublons, produit personnalisé, quantité tapée (cumul ou remplacement) | `AddItemUseCaseTest` |
+| Dictée locale, quantités en lettres, validation avant écriture, reprise après échec partiel, maintien/relâchement | `VoiceEntryParserTest`, `VoiceViewModelTest`, `VoiceComponentsTest`, `VoskEngineTest` (six modèles réels) |
 | Quantité tapée avec le nom, suggestion exacte au pluriel, « − » / « + » | `ItemEntryParserTest`, `ExactSuggestionFinderTest`, `QuantityStepperTest`, `ShoppingViewModelTest`, `ShoppingScreenTest` |
 | Ordre des listes (glisser-déposer, Monter / Descendre, nouvelles listes à la fin, rien à synchroniser) | `ListsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ListsRouteTest` |
 | Historique (ordre, produits déjà dans la liste exclus, réglage, vidage) | `ProductHistoryUseCaseTest`, `ShoppingViewModelTest`, `SettingsViewModelTest`, `RoomRepositoriesTest` (Room réel), `ShoppingScreenTest`, `HistorySectionTest` |

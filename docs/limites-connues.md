@@ -142,3 +142,29 @@ Ce qui n'est pas terminé, pas possible ou pas vérifié. Toute nouvelle limite 
   bureau (plus petite largeur ≥ 600 dp), Android 16 et plus ignorent le verrou en portrait
   ([ADR 0027](adr/0027-portrait-uniquement.md)) ; l'application s'y affiche aussi en paysage, sans
   mise en page dédiée. Non vérifié sur ce type d'appareil.
+
+## Dictée vocale
+
+La dictée utilise Vosk et les modèles des six langues, livrés avec l’application. Aucun service
+vocal Android ou Google n’est nécessaire. Les modèles ajoutent environ 240 Mio au paquet ; le
+premier usage extrait le modèle choisi dans le stockage privé. Un manque de stockage, un
+microphone indisponible ou une permission refusée produit une erreur visible ; la saisie
+clavier et les données locales restent disponibles.
+
+L’analyse locale comprend des séparateurs et quantités simples, pas toutes les formulations
+possibles. Les nombres complexes en lettres, les aliments énumérés sans séparateur et les
+noms contenant une conjonction peuvent demander une correction dans le récapitulatif. Les
+ambiguïtés sont soumises à l’utilisateur, sans correction par une IA distante.
+Le moteur peut confondre des sons proches, par exemple « deux yaourts » et « de yaourt » ;
+une seconde passe locale recoupe les quantités manquantes lorsque le nom du produit correspond
+sans ambiguïté ([ADR 0030](adr/0030-recoupement-local-des-quantites-vocales.md)). Elle peut allonger
+le traitement et ne garantit pas de lever toutes les confusions : il faut vérifier les quantités
+dans le récapitulatif, même si la phrase semble correcte.
+Le vocabulaire vocal est guidé par le catalogue livré. Un nom inconnu du modèle ou une marque
+inhabituelle peut apparaître comme « Mot non reconnu » et nécessite une correction explicite.
+
+Limites : une minute d’écoute, 90 secondes au total avec le traitement, 4 000 caractères et 50 articles. Le brouillon
+ne survit pas à la destruction du processus. La qualité de transcription dépend du moteur,
+du microphone et du bruit ambiant. Les tests sur appareil chargent les modèles embarqués
+et peuvent décoder une phrase synthétique française ; cela ne valide pas la qualité avec la
+voix de l’utilisateur en conditions réelles.

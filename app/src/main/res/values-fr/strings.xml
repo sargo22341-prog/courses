@@ -216,4 +216,16 @@
     <string name="ha_sync_offline">Hors connexion. Les modifications seront envoyées plus tard.</string>
     <string name="ha_sync_skipped">Activez et configurez Home Assistant d’abord.</string>
     <string name="ha_rename_note">Renommer une liste ne change pas son nom dans Home Assistant.</string>
+    <string name="voice_hold">Maintenir pour dicter les courses</string>
+    <string name="voice_listening">Écoute… Relâchez pour vérifier</string>
+    <string name="voice_processing">Préparation du récapitulatif…</string>
+    <string name="voice_review">Vérifier les articles dictés</string>
+    <string name="voice_check">Vérifiez chaque article. Rien ne sera ajouté avant votre confirmation.</string>
+    <string name="voice_add">Ajouter à la liste de courses</string>
+    <string name="voice_permission">Autorisez le microphone pour dicter les courses sur cet appareil. Une fois autorisé, maintenez à nouveau le bouton. Vos données locales restent disponibles.</string>
+    <string name="voice_unavailable">La reconnaissance vocale sur cet appareil est indisponible. Vous pouvez saisir vos courses au clavier ; vos données locales restent disponibles.</string>
+    <string name="voice_error">La voix n’a pas pu être reconnue. Réessayez ou saisissez vos courses. Vos données locales restent disponibles.</string>
+    <string name="voice_import_error">Certains articles n’ont pas pu être ajoutés. Les lignes déjà ajoutées ont été retirées du récapitulatif. Vos données locales restent disponibles.</string>
+    <string name="voice_continue">Continuer</string>
+    <string name="voice_unknown">Mot non reconnu</string>
 </resources>

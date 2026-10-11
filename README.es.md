@@ -44,6 +44,7 @@ listas `todo` de una instancia autoalojada de **Home Assistant**. Es totalmente 
 Funciones principales:
 
 - **varias listas**, con cantidades y unidades (`12`, `1,5 kg`);
+- **dictado por voz** manteniendo pulsado el micrófono, con resumen editable antes de añadir; motor y modelos locales de seis idiomas incluidos, sin alternativa por red;
 - **autocompletado instantáneo y sin conexión**, tolerante a errores de escritura, que aprende
   los productos que compras con más frecuencia;
 - **historial** de los productos más añadidos, que se propone al tocar el campo de búsqueda vacío

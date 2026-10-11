@@ -44,6 +44,8 @@ décision, ses conséquences et les alternatives écartées.
 | [0026](0026-listes-mealie.md) | Listes Mealie : texte lu comme quantité + aliment, intégration demandée au registre | acceptée |
 | [0027](0027-portrait-uniquement.md) | Interface en portrait uniquement | acceptée |
 | [0028](0028-base-exclue-des-sauvegardes-cloud.md) | Listes et historique exclus des sauvegardes cloud, gardés en transfert d'appareil | acceptée |
+| [0029](0029-dictee-locale-avec-validation.md) | Dictée locale avec récapitulatif modifiable avant ajout | acceptée |
+| [0030](0030-recoupement-local-des-quantites-vocales.md) | Recouper localement les quantités omises par le vocabulaire vocal guidé | acceptée |
 
 ## Modèle
 

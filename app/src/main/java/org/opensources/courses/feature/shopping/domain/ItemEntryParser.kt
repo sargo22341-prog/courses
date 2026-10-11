@@ -10,6 +10,12 @@ package org.opensources.courses.feature.shopping.domain
  * "2 bouteilles" is two of a product named "bouteilles", never a unit guessed from a word.
  */
 object ItemEntryParser {
+    /** A measure with no product yet, used to keep spoken links such as "500 g du riz" together. */
+    fun isMeasuredQuantity(text: String): Boolean = MEASURE_ONLY.matches(text.trim())
+
+    /** Shared with the local speech vocabulary, so voice and keyboard accept the same units. */
+    fun spokenUnits(): Set<String> = UNITS.keys
+
     fun parse(text: String): ItemEntry {
         val clean = text.trim().replace(WHITESPACE, " ")
         return measuredFirst(clean) ?: countedFirst(clean) ?: quantityLast(clean) ?: ItemEntry(clean)
@@ -66,6 +72,7 @@ object ItemEntryParser {
     private const val NAME = """(\p{L}.*)"""
 
     private val MEASURED_FIRST = Regex("""($NUMBER)\s*($UNIT)\.?\s+$LINK$NAME""", RegexOption.IGNORE_CASE)
+    private val MEASURE_ONLY = Regex("""$NUMBER\s*(?:$UNIT)\.?""", RegexOption.IGNORE_CASE)
     private val COUNTED_FIRST = Regex("""(?:$TIMES\s*)?($NUMBER)(?:\s*$TIMES)?\s+$NAME""", RegexOption.IGNORE_CASE)
     private val QUANTITY_LAST =
         Regex("""(\p{L}.*?)\s+(?:$TIMES\s*($NUMBER)|($NUMBER)\s*$TIMES|($NUMBER)\s*($UNIT)\.?)""", RegexOption.IGNORE_CASE)

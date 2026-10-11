@@ -9,6 +9,7 @@ import org.opensources.courses.feature.shopping.domain.ShoppingItem
 
 data class ShoppingUiState(
     val isLoading: Boolean = true,
+    val listId: String? = null,
     val listName: String = "",
     val toBuy: List<ShoppingItem> = emptyList(),
     /** [toBuy] grouped by shop section; null when the "Ranger par catégorie" setting is off. */

@@ -217,4 +217,16 @@
     <string name="ha_sync_offline">Sem ligação. As alterações serão enviadas mais tarde.</string>
     <string name="ha_sync_skipped">Ative e configure primeiro o Home Assistant.</string>
     <string name="ha_rename_note">Mudar o nome de uma lista não altera o seu nome no Home Assistant.</string>
+    <string name="voice_hold">Mantenha premido para ditar as compras</string>
+    <string name="voice_listening">A ouvir… Solte para rever</string>
+    <string name="voice_processing">A preparar o resumo…</string>
+    <string name="voice_review">Rever artigos ditados</string>
+    <string name="voice_check">Verifique cada artigo. Nada é adicionado antes da confirmação.</string>
+    <string name="voice_add">Adicionar à lista de compras</string>
+    <string name="voice_permission">Permita o microfone para ditar neste dispositivo. Depois, mantenha novamente o botão premido. Os dados locais continuam disponíveis.</string>
+    <string name="voice_unavailable">O reconhecimento de voz neste dispositivo não está disponível. Pode escrever as compras; os dados locais continuam disponíveis.</string>
+    <string name="voice_error">Não foi possível reconhecer a voz. Tente novamente ou escreva as compras. Os dados locais continuam disponíveis.</string>
+    <string name="voice_import_error">Não foi possível adicionar alguns artigos. As linhas já adicionadas foram retiradas do resumo. Os dados locais continuam disponíveis.</string>
+    <string name="voice_continue">Continuar</string>
+    <string name="voice_unknown">Palavra não reconhecida</string>
 </resources>

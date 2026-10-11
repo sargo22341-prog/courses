@@ -238,4 +238,16 @@
     <string name="ha_sync_offline">Offline. Changes will be sent later.</string>
     <string name="ha_sync_skipped">Enable and configure Home Assistant first.</string>
     <string name="ha_rename_note">Renaming a list does not change its name in Home Assistant.</string>
+    <string name="voice_hold">Hold to dictate groceries</string>
+    <string name="voice_listening">Listening… Release to review</string>
+    <string name="voice_processing">Preparing your review…</string>
+    <string name="voice_review">Review dictated items</string>
+    <string name="voice_check">Check each item. Nothing is added until you confirm.</string>
+    <string name="voice_add">Add to shopping list</string>
+    <string name="voice_permission">Allow microphone access to dictate groceries on this device. After granting access, hold the button again. Your local data remains available.</string>
+    <string name="voice_unavailable">On-device speech recognition is unavailable. You can still type your groceries; your local data remains available.</string>
+    <string name="voice_error">Speech could not be recognized. Try again or type your groceries. Your local data remains available.</string>
+    <string name="voice_import_error">Some items could not be added. Successfully added rows were removed from this review. Your local data remains available.</string>
+    <string name="voice_continue">Continue</string>
+    <string name="voice_unknown">Unrecognized word</string>
 </resources>

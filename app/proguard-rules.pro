@@ -7,3 +7,9 @@
 # and every release build failed with "Unable to create converter". Network DTOs are kept (their
 # names can still be obfuscated). Guarded by RetrofitKeepRulesTest.
 -keep,allowobfuscation @kotlinx.serialization.Serializable class org.opensources.courses.**.data.remote.**
+
+# Vosk calls its native engine through JNA, whose native bindings inspect these names.
+-keep class com.sun.jna.** { *; }
+-keep class org.vosk.** { *; }
+# JNA's optional desktop adapters reference AWT, which does not exist on Android.
+-dontwarn java.awt.**

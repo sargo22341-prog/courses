@@ -9,7 +9,7 @@ coreKtx = "1.19.1"
 coroutines = "1.11.0"
 datastore = "1.2.1"
 espresso = "3.7.0"
-gradleVersions = "0.65.0"
+gradleVersions = "0.66.0"
 hilt = "2.60.1"
 hiltAndroidx = "1.4.0"
 junit = "4.13.2"
@@ -24,7 +24,7 @@ serialization = "1.11.0"
 versionCatalogUpdate = "1.1.1"
 zxing = "3.5.4"
 vosk = "0.3.75"
-jna = "5.18.1"
+jna = "5.19.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }

@@ -7,5 +7,3 @@ liste des commits. Détails : [docs/release.md](docs/release.md).
 
 <!-- notes -->
 
-- Correction des vérifications après une mise à jour du catalogue sous Windows.
-- Catalogue alimentaire mis à jour depuis Open Food Facts.

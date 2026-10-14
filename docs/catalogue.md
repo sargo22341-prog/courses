@@ -41,8 +41,12 @@ python scripts/generate-catalog.py --no-verify  # sans les vérifications Gradle
 Tout est automatique sauf le commit. Le script compare les produits qu'il vient de calculer à ceux
 des fichiers déjà présents et, **seulement s'ils diffèrent**, monte la version du catalogue (dans
 les fichiers et dans `AssetTaxonomyCatalogSource.VERSION`), ajoute la ligne de note dans
-`RELEASE_NOTES.md` et lance les vérifications Gradle d'`AGENTS.md`. Sans changement réel, il ne
-touche à rien : la date de génération seule ne crée pas de diff. Un fichier absent est réécrit sans
+`RELEASE_NOTES.md`. Les vérifications Gradle d'`AGENTS.md` sont lancées même sans changement,
+sauf avec `--no-verify` : relancer le script permet donc de revérifier après un échec. Sous Windows,
+le JDK d'Android Studio est utilisé s'il est installé, même si `JAVA_HOME` désigne un autre JDK ;
+sinon, l'environnement Java est conservé. Les vérifications ont un délai maximal de 20 minutes.
+Sans changement réel, il ne touche à aucun fichier : la date de génération seule ne crée pas de diff.
+Un fichier absent est réécrit sans
 monter la version.
 Nettoyage appliqué : nom obligatoire dans la langue ; exclusion des appellations protégées (AOP/IGP)
 et des entrées liées à une origine ; au plus 4 mots et 40 caractères ; aucun chiffre

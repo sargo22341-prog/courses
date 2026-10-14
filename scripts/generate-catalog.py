@@ -20,8 +20,9 @@ Tout est automatique sauf le commit. Le script télécharge les sources, régén
 1. incrémente la version du catalogue, dans les fichiers générés et dans
    `AssetTaxonomyCatalogSource.VERSION` — sans quoi les applications déjà installées ne
    réimporteraient jamais les nouvelles données ;
-2. ajoute la ligne de note de version dans `RELEASE_NOTES.md` ;
-3. lance les vérifications Gradle.
+2. ajoute la ligne de note de version dans `RELEASE_NOTES.md`.
+
+Les vérifications Gradle sont lancées même si les produits sont inchangés, sauf avec `--no-verify`.
 
 Sans changement, il ne touche à rien : pas de version montée, pas de note, pas de diff à commiter.
 
@@ -56,9 +57,10 @@ RELEASE_NOTES = Path("RELEASE_NOTES.md")
 RELEASE_NOTES_MARKER = "<!-- notes -->"
 RELEASE_NOTE = "- Catalogue alimentaire mis à jour depuis Open Food Facts."
 
-# Vérifications d'AGENTS.md, lancées telles quelles après un changement.
+# Vérifications d'AGENTS.md, y compris lors d'une relance après un échec.
 GRADLE_TASKS = [":app:assembleDebug", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileDebugAndroidTestKotlin"]
 DEFAULT_JAVA_HOME = r"C:\Program Files\Android\Android Studio\jbr"
+CHECK_TIMEOUT_SECONDS = 20 * 60
 
 CATEGORIES_JSON_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
 CATEGORIES_TXT_URL = (
@@ -360,14 +362,24 @@ def add_release_note(root: Path) -> bool:
 
 
 def run_checks(root: Path) -> None:
-    """Les vérifications d'AGENTS.md, avec le JDK d'Android Studio si l'environnement n'en donne pas."""
+    """Les vérifications d'AGENTS.md, avec le JDK d'Android Studio lorsqu'il est installé."""
     gradle = root / ("gradlew.bat" if os.name == "nt" else "gradlew")
     environment = dict(os.environ)
-    if not environment.get("JAVA_HOME") and Path(DEFAULT_JAVA_HOME).exists():
+    # Sous Windows, Java 17 fait échouer le remplacement des fichiers DataStore dans les tests.
+    # AGENTS.md prescrit le JDK d'Android Studio, même si JAVA_HOME désigne un autre JDK.
+    if os.name == "nt" and (Path(DEFAULT_JAVA_HOME) / "bin" / "java.exe").is_file():
         environment["JAVA_HOME"] = DEFAULT_JAVA_HOME
     # flush : la sortie de Gradle arrive directement sur le terminal, sans passer par ce tampon.
     print(f"\nVérifications : {' '.join(GRADLE_TASKS)}", flush=True)
-    result = subprocess.run([str(gradle), *GRADLE_TASKS, "--console=plain"], cwd=root, env=environment)
+    try:
+        result = subprocess.run(
+            [str(gradle), *GRADLE_TASKS, "--console=plain"],
+            cwd=root,
+            env=environment,
+            timeout=CHECK_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        sys.exit("\nLes vérifications ont dépassé 20 minutes : ne pas commiter en l'état.")
     if result.returncode != 0:
         sys.exit("\nLes vérifications ont échoué : ne pas commiter en l'état.")
 
@@ -427,6 +439,8 @@ def main() -> None:
 
     if not changed and not first_generation:
         print("\nAucun produit n'a changé : rien à régénérer, ni version à monter, ni à commiter.")
+        if not arguments.no_verify:
+            run_checks(root)
         return
 
     # Les fichiers manquants sont réécrits à la version courante ; seules de vraies données

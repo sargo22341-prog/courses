@@ -7,4 +7,3 @@ liste des commits. Détails : [docs/release.md](docs/release.md).
 
 <!-- notes -->
 
-- Update libs

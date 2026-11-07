@@ -7,5 +7,4 @@ la GitHub Release, puis vide la liste dans le commit `Version X.Y.Z`. Sans notes
 liste des commits. Détails : [docs/release.md](docs/release.md).
 
 <!-- notes -->
-- Mise à jour des outils de build (Android Gradle Plugin, KSP, Gradle) et de la CI.
 

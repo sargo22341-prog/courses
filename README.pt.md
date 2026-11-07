@@ -78,7 +78,7 @@ Capturas feitas num emulador com dados fictícios.
 Não existe versão publicada numa loja de aplicações: o APK assinado de cada versão está anexado
 às releases GitHub do repositório, ou a aplicação pode ser compilada a partir do código-fonte.
 
-Requisitos: Android Studio recente (JDK 21 incluído), SDK Android 37 e um telemóvel ou emulador
+Requisitos: Android Studio recente (JDK 25 incluído), SDK Android 37 e um telemóvel ou emulador
 com, no mínimo, **Android 17 (API 37)**.
 
 ```powershell

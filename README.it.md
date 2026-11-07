@@ -79,7 +79,7 @@ Schermate acquisite su un emulatore con dati fittizi.
 Non esiste una versione pubblicata su uno store: l'APK firmato di ogni versione è allegato alle
 release GitHub del repository, oppure l'app può essere compilata dai sorgenti.
 
-Requisiti: Android Studio recente (JDK 21 incluso), SDK Android 37 e un telefono o emulatore con
+Requisiti: Android Studio recente (JDK 25 incluso), SDK Android 37 e un telefono o emulatore con
 almeno **Android 17 (API 37)**.
 
 ```powershell

@@ -82,7 +82,7 @@ Captures prises sur un émulateur avec des données fictives.
 Il n'existe pas de version publiée sur un store : l'APK signé de chaque version est joint aux
 releases GitHub du dépôt, ou l'application se compile depuis les sources.
 
-Prérequis : Android Studio récent (JDK 21 embarqué), SDK Android 37, et un téléphone ou un
+Prérequis : Android Studio récent (JDK 25 embarqué), SDK Android 37, et un téléphone ou un
 émulateur sous **Android 17 (API 37)** minimum.
 
 ```powershell

@@ -80,7 +80,7 @@ No hay ninguna versión publicada en una tienda de aplicaciones: el APK firmado 
 adjunta a las releases de GitHub del repositorio, o la aplicación se compila desde el código
 fuente.
 
-Requisitos: Android Studio reciente (JDK 21 incluido), SDK de Android 37 y un teléfono o emulador
+Requisitos: Android Studio reciente (JDK 25 incluido), SDK de Android 37 y un teléfono o emulador
 con **Android 17 (API 37)** como mínimo.
 
 ```powershell

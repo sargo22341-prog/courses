@@ -3,8 +3,7 @@
 # Sur main : montée de version, APK release signé, commit + tag vX.Y.Z et GitHub Release
 # dont le texte vient de RELEASE_NOTES.md (liste vidée dans le commit de version).
 # Fonctionnement, secrets requis et limites : docs/release.md et docs/adr/0021-release-automatique-github-actions.md.
-# Actions épinglées par commit, pas par tag déplaçable : le job de release manipule la clé de signature.
-# Pour les mettre à jour, changer le SHA et le commentaire de version ensemble.
+# Actions référencées par leur version majeure (@vN), à jour au dernier tag stable.
 name: CI
 
 on:
@@ -34,7 +33,7 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - uses: gradle/actions/setup-gradle@v6
 
@@ -85,7 +84,7 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - uses: gradle/actions/setup-gradle@v6
 

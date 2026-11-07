@@ -75,7 +75,7 @@ Screenshots taken on an emulator with fictitious data.
 There is no release on an app store: the signed APK of each version is attached to the
 repository's GitHub releases, or the app can be built from source.
 
-Requirements: a recent Android Studio (bundled JDK 21), Android SDK 37, and a phone or emulator
+Requirements: a recent Android Studio (bundled JDK 25), Android SDK 37, and a phone or emulator
 running **Android 17 (API 37)** or later.
 
 ```powershell

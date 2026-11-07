@@ -81,7 +81,7 @@ Screenshots auf einem Emulator mit fiktiven Daten.
 Es gibt keine Veröffentlichung in einem App-Store: Die signierte APK jeder Version liegt den
 GitHub-Releases des Repositorys bei, oder die App wird aus den Quellen gebaut.
 
-Voraussetzungen: aktuelles Android Studio (mitgeliefertes JDK 21), Android SDK 37 und ein Telefon
+Voraussetzungen: aktuelles Android Studio (mitgeliefertes JDK 25), Android SDK 37 und ein Telefon
 oder Emulator mit mindestens **Android 17 (API 37)**.
 
 ```powershell

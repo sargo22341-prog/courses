@@ -6,7 +6,7 @@ Les règles obligatoires pour toute modification sont dans [`AGENTS.md`](../AGEN
 
 ## Prérequis
 
-- Android Studio récent (JDK 21 embarqué) ;
+- Android Studio récent (JDK 25 embarqué) ;
 - SDK Android 37 installé ;
 - un appareil ou un émulateur **Android 17 (API 37)**.
 

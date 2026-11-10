@@ -7,4 +7,4 @@ la GitHub Release, puis vide la liste dans le commit `Version X.Y.Z`. Sans notes
 liste des commits. Détails : [docs/release.md](docs/release.md).
 
 <!-- notes -->
-
+- Mise à jour interne : Gradle 9.9.1 et bytecode Java 25, sans changement visible dans l'application.

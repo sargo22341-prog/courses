@@ -42,8 +42,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     buildFeatures {
@@ -59,6 +59,8 @@ android {
     }
 
     packaging {
+        // JNA ships libjnidispatch.so already stripped: AGP cannot strip it again and warns.
+        jniLibs.keepDebugSymbols += "**/libjnidispatch.so"
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             pickFirsts += "/META-INF/androidx/**/LICENSE.txt"
@@ -76,11 +78,23 @@ android {
 
 kotlin {
     compilerOptions {
-        // Keep Kotlin and Java bytecode aligned regardless of Android Studio's bundled JDK.
-        jvmTarget.set(JvmTarget.JVM_17)
+        // Keep Kotlin and Java bytecode aligned on JDK 25 (the JDK bundled with Android Studio and used by the CI).
+        jvmTarget.set(JvmTarget.JVM_25)
         // AGENTS.md rule 10: a Kotlin warning fails the build, like a Lint warning.
         allWarningsAsErrors = true
     }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    // Every javac lint category is on and warnings are errors, except two raised only by tool-generated
+    // code we cannot edit: dangling-doc-comments (AGP's BuildConfig.java) and processing (Hilt's
+    // aggregating sentinels that no processor claims).
+    options.compilerArgs.addAll(listOf("-Xlint:all,-dangling-doc-comments,-processing", "-Werror"))
+}
+
+tasks.withType<Test>().configureEach {
+    // Same reason as org.gradle.jvmargs: datastore's protobuf calls sun.misc.Unsafe, a third-party jar.
+    jvmArgs("--sun-misc-unsafe-memory-access=allow")
 }
 
 room {
